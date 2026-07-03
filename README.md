@@ -5,6 +5,10 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/status-vision%20%2F%20pre--alpha-orange.svg)](#roadmap)
 [![Discussions](https://img.shields.io/badge/discussions-welcome-brightgreen.svg)](https://github.com/aipoch/open-science/discussions)
+[![Follow on X](https://img.shields.io/badge/Follow-%40aipoch__ai-000000?style=flat&logo=x)](https://x.com/aipoch_ai)
+[![Join Discord](https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?style=flat&logo=discord&logoColor=white)](https://discord.gg/85dKfuGM9)
+
+**📣 We're building this in public.** Follow the architecture take shape and join the debates as they happen — 🐦 **[@aipoch_ai on X](https://x.com/aipoch_ai)** and 💬 **[our Discord](https://discord.gg/85dKfuGM9)** are where it's actually discussed, before it ever lands in a doc like this one.
 
 > This document is the founding vision for Open Science. There is no working software yet — this is the architecture and philosophy we're recruiting contributors around. If that's the stage you like to join a project at, keep reading.
 
@@ -28,11 +32,27 @@
 
 A working scientist's day is a tour of a dozen disconnected tools: a reference manager, a Jupyter kernel, an SSH session into a cluster, six browser tabs of database web forms (UniProt, PDB, GEO, ClinVar...), a stats package, and a manuscript editor that knows nothing about any of the above. None of these tools talk to each other. None of them remember what you did yesterday. Reproducing your own analysis from three months ago is often harder than doing it the first time.
 
+```mermaid
+flowchart LR
+    A[Reference Manager] --> Z((Researcher))
+    B["Jupyter / R / Notebooks"] --> Z
+    C["SSH into HPC Cluster"] --> Z
+    D["Database Web Forms<br/>UniProt · PDB · GEO"] --> Z
+    E[Stats Package] --> Z
+    F[Manuscript Editor] --> Z
+    Z -.-> X[["No shared memory.<br/>No reproducibility.<br/>No provenance."]]
+
+    style Z fill:#f9f9f9,stroke:#999
+    style X fill:#fff0f0,stroke:#e33,stroke-width:1px,stroke-dasharray: 5 5
+```
+
 Anthropic's [Claude Science](https://www.anthropic.com/news/claude-science-ai-workbench) is the clearest articulation yet of what an AI-native answer to this looks like: a coordinating agent with specialist sub-agents for genomics, proteomics, structural biology and cheminformatics; native rendering of scientific artifacts; a reviewer agent that checks citations and calculations; and direct integration with the databases and compute scientists already use. It's a genuinely good sketch of the destination.
 
 But it is also a single vendor's closed, subscription-gated product — one model family, one company's infrastructure, one roadmap, one pricing policy, one data-handling agreement. A university lab in a country without Anthropic billing, a hospital that legally cannot send patient data to a third-party API, an independent researcher who wants to run everything on a local GPU box, or a team that simply wants to read the code that touches their data — none of them have a seat at that table.
 
 Science is a public good. We think the software layer that increasingly mediates how science gets done should be inspectable, forkable, and free of a single corporate gatekeeper — the same argument that got Linux under every cloud and JupyterHub under every university. Open Science is an attempt to build that layer from first principles: not a proxy or a jailbreak of someone else's product (see [What This Is Not](#what-this-is-not)), but an independent, open implementation of the same category of tool.
+
+> Debating whether this problem framing is even right? That's a Discord conversation, not a GitHub Issue — **[come argue with us](https://discord.gg/85dKfuGM9)**.
 
 ## Vision
 
@@ -49,6 +69,20 @@ We're not trying to out-feature Claude Science. We're trying to make sure the ca
 
 These are the constraints we won't trade away as the project grows:
 
+```mermaid
+flowchart TD
+    Core((Open Science<br/>Design Principles))
+    Core --> P1["Model-agnostic core"]
+    Core --> P2["Local-first &<br/>data-sovereign"]
+    Core --> P3["Reproducibility<br/>is not optional"]
+    Core --> P4["Skills are plain files,<br/>not plugins"]
+    Core --> P5["Human-in-the-loop<br/>by construction"]
+    Core --> P6["Composability<br/>over monolith"]
+    Core --> P7["Trust is verified,<br/>not assumed"]
+
+    style Core fill:#eef5ff,stroke:#3366cc,stroke-width:2px
+```
+
 - **Model-agnostic core.** The orchestrator talks to LLMs through a pluggable gateway. Claude, GPT, Gemini, DeepSeek, Qwen, or a locally-hosted open-weight model behind vLLM/Ollama are all first-class citizens — including using different models for different agents based on cost and capability.
 - **Local-first, data-sovereign by default.** Self-hosting is the default deployment target, not an enterprise upsell. Your data, your compute, your keys, unless you explicitly choose a hosted path.
 - **Reproducibility is not optional.** Every artifact — figure, table, claim — ships with the code, environment, and data lineage that produced it. This is a property of the system, not a discipline we hope researchers maintain by hand.
@@ -60,6 +94,36 @@ These are the constraints we won't trade away as the project grows:
 ## What We're Building
 
 Open Science is organized around eight cooperating layers:
+
+```mermaid
+flowchart TB
+    subgraph IF["8 · Interfaces"]
+        CLI["CLI / SDK"]
+        Desktop["Desktop App"]
+        Web["Self-hosted Web App"]
+    end
+
+    IF --> Core
+
+    subgraph Core["1 · Orchestration Core"]
+        Coordinator["Generalist Coordinator Agent"]
+        Specialists["Specialist Sub-Agents<br/>genomics · proteomics · chem · social science"]
+        Reviewer["Reviewer / Verifier Agent"]
+        Coordinator --> Specialists
+        Specialists --> Reviewer
+    end
+
+    Core --> Models["2 · Model Layer<br/>Claude · GPT · Gemini · DeepSeek · Qwen · local"]
+    Core --> Skills["3 · Skills Commons<br/>versioned, forkable agent skills"]
+    Core --> Data["4 · Data & Knowledge Layer<br/>PubMed · UniProt · PDB · ChEMBL · GEO · private data"]
+    Core --> Compute["5 · Compute Fabric<br/>laptop → HPC/Slurm → cloud GPU"]
+
+    Specialists --> Artifacts["6 · Scientific Artifacts & Notebooks<br/>structures · genome tracks · figures · manuscripts"]
+    Reviewer --> Provenance["7 · Verification & Provenance<br/>citation + unit + stats checks, lineage graph"]
+    Artifacts --> Provenance
+
+    style Core fill:#eef5ff,stroke:#3366cc,stroke-width:2px
+```
 
 ### 1. Orchestration Core
 A generalist coordinating agent that plans multi-step research tasks and delegates to specialist sub-agents (genomics, single-cell, proteomics, structural biology, cheminformatics — and, unlike most current tools in this space, non-life-science domains like social science and economics from day one). A dedicated reviewer agent audits the coordinator's output before it reaches the researcher.
@@ -89,6 +153,15 @@ A CLI and SDK for scripting and embedding, a local desktop app for individual re
 
 This repository is the core engine; it's designed to grow alongside two sibling projects already in the org:
 
+```mermaid
+flowchart LR
+    Skills["aipoch/medical-research-skills<br/>hundreds of ready-made skills"] --> Core
+    Index["aipoch/openai4s<br/>map of the AI4S landscape"] -.->|prior art & integration targets| Core
+    Core[["aipoch/open-science<br/>orchestration engine (this repo)"]] --> Output(["A working AI research partner"])
+
+    style Core fill:#eef5ff,stroke:#3366cc,stroke-width:2px
+```
+
 - **[aipoch/medical-research-skills](https://github.com/aipoch/medical-research-skills)** — hundreds of ready-made agent skills for protocol design, data analysis, and academic writing. This is the default skill pack for the life-sciences vertical of Open Science.
 - **[aipoch/openai4s](https://github.com/aipoch/openai4s)** — a living index of the open-source AI-for-Science landscape. It's both our map of prior art and a source of components worth integrating rather than reinventing.
 
@@ -102,21 +175,35 @@ Open Science is the piece that was missing: the orchestration layer that actuall
 
 ## Roadmap
 
+```mermaid
+flowchart LR
+    P0["Phase 0<br/>Vision & Architecture<br/>(now)"] --> P1["Phase 1<br/>Core Loop<br/>orchestrator · gateway · CLI"]
+    P1 --> P2["Phase 2<br/>Multi-Agent<br/>specialists · artifacts"]
+    P2 --> P3["Phase 3<br/>Compute & Trust<br/>HPC/cloud · reviewer · desktop app"]
+    P3 --> P4["Phase 4<br/>Commons<br/>marketplace · hosted option · governance"]
+
+    style P0 fill:#fff4e5,stroke:#e69500,stroke-width:2px
+```
+
 - **Phase 0 — Vision & Architecture (now).** This document, RFCs for each layer above, and community formation.
 - **Phase 1 — Core Loop.** Orchestrator, model gateway, CLI, and a skill runtime compatible with the `aipoch/medical-research-skills` format — enough to run single-agent literature and data-analysis workflows end to end.
 - **Phase 2 — Multi-Agent.** Specialist sub-agents, agent hierarchies, reproducible notebook execution, and native artifact rendering.
 - **Phase 3 — Compute & Trust.** HPC/cloud compute fabric integration, the reviewer/verifier agent, and the desktop app.
 - **Phase 4 — Commons.** Public skills marketplace, an optional hosted offering, and institutional governance/audit features for labs that need them.
 
-We'll turn each phase into tracked issues and RFCs as contributors join — this roadmap is a starting hypothesis, not a fixed spec.
+We'll turn each phase into tracked issues and RFCs as contributors join — this roadmap is a starting hypothesis, not a fixed spec. Phase kickoffs and priority calls get announced on **[X](https://x.com/aipoch_ai)** first, and debated in **[Discord](https://discord.gg/85dKfuGM9)** before they get written down here.
 
 ## Get Involved
 
 This project is at the stage where architecture decisions are still being made — the best way to have influence is to show up now.
 
-- Open a [Discussion](https://github.com/aipoch/open-science/discussions) if you want to propose or debate a piece of the architecture above.
-- Open an [Issue](https://github.com/aipoch/open-science/issues) for concrete proposals, especially RFCs for Phase 1 components.
-- If you maintain a relevant open-source tool already cataloged (or missing) from [openai4s](https://github.com/aipoch/openai4s), tell us — integration beats reinvention.
+| | |
+|---|---|
+| 🐦 **X** | Follow **[@aipoch_ai](https://x.com/aipoch_ai)** for build-in-public updates, roadmap calls, and announcements. |
+| 💬 **Discord** | **[Join the community](https://discord.gg/85dKfuGM9)** — this is where architecture debates, RFC drafts, and skill-writing happen in real time. |
+| 🐛 **Issues** | Open an [Issue](https://github.com/aipoch/open-science/issues) for concrete proposals, especially RFCs for Phase 1 components. |
+| 🗣️ **Discussions** | Open a [Discussion](https://github.com/aipoch/open-science/discussions) if you want to propose or debate a piece of the architecture above. |
+| 🔭 **Prior art** | Maintain a relevant open-source tool? Check [openai4s](https://github.com/aipoch/openai4s) — integration beats reinvention. |
 
 ## License
 
