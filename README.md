@@ -29,6 +29,7 @@
 - [Roadmap](#roadmap)
 - [Get Involved](#get-involved)
 - [License](#license)
+- [Star History](#star-history)
 
 ---
 
@@ -243,3 +244,13 @@ This project is at the stage where architecture decisions are still being made â
 ## License
 
 Apache License 2.0 (proposed â€” see [LICENSE](LICENSE)).
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=aipoch%2Fopen-science&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=aipoch/open-science&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=aipoch/open-science&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/image?repos=aipoch/open-science&type=date&legend=top-left" />
+ </picture>
+</a>
