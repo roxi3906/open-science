@@ -2,11 +2,11 @@
 
 **An open-source, model-agnostic AI workbench for scientific discovery.**
 
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/status-vision%20%2F%20pre--alpha-orange.svg)](#roadmap)
-[![Discussions](https://img.shields.io/badge/discussions-welcome-brightgreen.svg)](https://github.com/aipoch/open-science/discussions)
-[![Follow on X](https://img.shields.io/badge/Follow-%40aipoch__ai-000000?style=flat&logo=x)](https://x.com/aipoch_ai)
-[![Join Discord](https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?style=flat&logo=discord&logoColor=white)](https://discord.gg/85dKfuGM9)
+[![License](https://img.shields.io/badge/License-Apache--2.0-4dabf7?style=for-the-badge)](LICENSE)
+![Status](https://img.shields.io/badge/Status-Vision%20%2F%20Pre--Alpha-ff6b6b?style=for-the-badge)
+[![Discussions](https://img.shields.io/badge/Discussions-Welcome-9775fa?style=for-the-badge)](https://github.com/aipoch/open-science/discussions)
+[![Follow on X](https://img.shields.io/badge/Follow%20on%20X-%40aipoch__ai-212529?style=for-the-badge&logo=x&logoColor=white)](https://x.com/aipoch_ai)
+[![Discord](https://img.shields.io/badge/Discord-Join%20the%20Community-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/85dKfuGM9)
 
 **📣 We're building this in public.** Follow the architecture take shape and join the debates as they happen — 🐦 **[@aipoch_ai on X](https://x.com/aipoch_ai)** and 💬 **[our Discord](https://discord.gg/85dKfuGM9)** are where it's actually discussed, before it ever lands in a doc like this one.
 
