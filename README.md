@@ -187,27 +187,25 @@ A CLI and SDK for scripting and embedding, a local desktop app for individual re
 
 ## Relationship to the aipoch Ecosystem
 
-This repository is the core engine; it's designed to grow alongside two sibling projects already in the org:
+This repository is the core engine; it's designed to grow alongside a sibling project already in the org:
 
 ```mermaid
 flowchart LR
     Skills["aipoch/medical-research-skills<br/>hundreds of ready-made skills"] --> Core
-    Index["aipoch/openai4s<br/>map of the AI4S landscape"] -.->|prior art & integration targets| Core
     Core[["aipoch/open-science<br/>orchestration engine (this repo)"]] --> Output(["A working AI research partner"])
 
     style Core fill:#eef5ff,stroke:#3366cc,stroke-width:2px
 ```
 
 - **[aipoch/medical-research-skills](https://github.com/aipoch/medical-research-skills)** — hundreds of ready-made agent skills for protocol design, data analysis, and academic writing. This is the default skill pack for the life-sciences vertical of Open Science.
-- **[aipoch/openai4s](https://github.com/aipoch/openai4s)** — a living index of the open-source AI-for-Science landscape. It's both our map of prior art and a source of components worth integrating rather than reinventing.
 
-Open Science is the piece that was missing: the orchestration layer that actually runs skills against data and compute, rather than a list of skills or a list of related projects.
+Open Science is the piece that was missing: the orchestration layer that actually runs skills against data and compute, rather than a list of skills.
 
 ## What This Is Not
 
 - **Not a proxy or reskin of Anthropic's Claude Science.** Projects like [CSswitch](https://github.com/SuperJJ007/CSswitch) repoint the official Claude Science client at third-party model APIs. That's a clever hack, but it's still Anthropic's client, Anthropic's UX, and Anthropic's constraints underneath. Open Science shares no code with that product — it's an independent implementation of the same problem space, built to be self-hosted and inspected from the ground up.
 - **Not tied to any single model vendor.** Anthropic's models are a great option through the gateway, not a dependency.
-- **Not a finished product.** As of this writing, this repository documents the architecture and is actively recruiting the contributors who will build it. If you're looking for something you can `pip install` today, this isn't there yet — [openai4s](https://github.com/aipoch/openai4s) is a better place to find working tools in the meantime.
+- **Not a finished product.** As of this writing, this repository documents the architecture and is actively recruiting the contributors who will build it. If you're looking for something you can `pip install` today, this isn't there yet.
 
 ## Roadmap
 
@@ -239,7 +237,6 @@ This project is at the stage where architecture decisions are still being made �
 | 💬 **Discord** | **[Join the community](https://discord.gg/85dKfuGM9)** — this is where architecture debates, RFC drafts, and skill-writing happen in real time. |
 | 🐛 **Issues** | Open an [Issue](https://github.com/aipoch/open-science/issues) for concrete proposals, especially RFCs for Phase 1 components. |
 | 🗣️ **Discussions** | Open a [Discussion](https://github.com/aipoch/open-science/discussions) if you want to propose or debate a piece of the architecture above. |
-| 🔭 **Prior art** | Maintain a relevant open-source tool? Check [openai4s](https://github.com/aipoch/openai4s) — integration beats reinvention. |
 
 ## License
 
