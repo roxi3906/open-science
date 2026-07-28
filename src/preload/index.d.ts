@@ -39,6 +39,7 @@ import type {
   ProbeResult
 } from '../shared/compute'
 import type { DirListing, DownloadDest, LocalFile } from '../shared/remote-fs'
+import type { LocalDirListing, LocalRoots } from '../shared/local-fs'
 import type { OpenLogFileResult, RevealLogFileResult } from '../shared/logs'
 import type { OpenSessionFromNotificationRequest } from '../shared/notifications'
 import type {
@@ -446,6 +447,18 @@ interface OpenScienceAPI {
     finalizeSession(request: FinalizeUploadSessionRequest): Promise<UploadedAttachment[]>
     // Reads a bounded preview from upload storage using the same preview result shape as artifacts.
     readPreview(request: ReadArtifactPreviewRequest): Promise<ArtifactPreviewResult>
+  }
+  localFs: {
+    // Lists a directory on the machine Kiro runs on (the "This computer" browser).
+    listDir(path: string): Promise<LocalDirListing>
+    // Reads a bounded preview of a local file (same result shape as artifacts/uploads).
+    readPreview(request: ReadArtifactPreviewRequest): Promise<ArtifactPreviewResult>
+    // Home directory + friendly machine name for the browser's initial location and label.
+    getRoots(): Promise<LocalRoots>
+    // Reveals a local file in the OS file manager.
+    reveal(path: string): Promise<void>
+    // Opens a local file with the OS default application; resolves to '' on success.
+    openPath(path: string): Promise<string>
   }
   notebook: {
     state(request: NotebookSessionRequest): Promise<NotebookSessionState>

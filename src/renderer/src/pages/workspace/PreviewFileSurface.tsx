@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import type { PreviewFileItem } from '@/stores/preview-workbench-store'
 
+import { LocalFileHeaderActions } from './LocalFileHeaderActions'
 import { ManagedFileDownloadButton } from './ManagedFileDownloadButton'
 import { PreviewFileContent } from './previews/PreviewFileContent'
 
@@ -58,15 +59,21 @@ const PreviewFileHeader = ({
             <MiddleEllipsisFileName name={item.name} />
           </span>
         </TooltipTrigger>
-        <TooltipContent className={tooltipClassName}>{item.title}</TooltipContent>
+        <TooltipContent className={tooltipClassName}>
+          {item.source === 'local' ? item.path : item.title}
+        </TooltipContent>
       </Tooltip>
     </TooltipProvider>
-    <ManagedFileDownloadButton
-      source={item.source ?? 'artifact'}
-      path={item.path}
-      suggestedName={item.name}
-      className="bg-transparent shadow-none"
-    />
+    {item.source === 'local' ? (
+      <LocalFileHeaderActions path={item.path} tooltipClassName={tooltipClassName} />
+    ) : (
+      <ManagedFileDownloadButton
+        source={item.source ?? 'artifact'}
+        path={item.path}
+        suggestedName={item.name}
+        className="bg-transparent shadow-none"
+      />
+    )}
     {onOpenFullScreen ? (
       <TooltipProvider delayDuration={200}>
         <Tooltip>

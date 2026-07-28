@@ -45,6 +45,7 @@ import {
 import { registerManagedPreviewIpcHandlers } from './managed-preview-ipc'
 import { registerManagedPreviewProtocol } from './managed-preview-protocol'
 import { ManagedPreviewResources } from './managed-preview-resources'
+import type { ManagedPreviewSource } from '../shared/preview-resources'
 import {
   createOfficePreviewFrameProcessResolver,
   createOfficePreviewProcessMemoryReader
@@ -85,6 +86,8 @@ import { SessionPersistenceCoordinator } from './session-persistence/coordinator
 import { type SessionPersistenceBackend } from './session-persistence/ipc'
 import { tryDecryptKey } from './settings/crypto'
 import { registerSettingsIpcHandlers } from './settings/ipc'
+import { registerLocalFsIpcHandlers } from './local-fs/ipc'
+import { LocalFsService } from './local-fs/service'
 import { getAppClaudeConfigDir } from './settings/provider-env'
 import { createDefaultSettingsService, type SettingsService } from './settings/service'
 import type { StoredConnectors } from './settings/types'
@@ -221,14 +224,18 @@ const registerIpcHandlers = async ({
   const artifactRunRegistry = new ArtifactRunRegistry()
   // Share one upload repository so composer staging, prompt finalization, and previews agree.
   const uploadRepository = createDefaultUploadRepository()
+  // Shared local-fs service backs both the "This computer" browser IPC and the managed-preview
+  // resolver below, so path validation stays identical across both entry points.
+  const localFsService = new LocalFsService()
   // One source-neutral resolver keeps previews and user-requested exports on identical trust checks.
   const resolveManagedFilePath = (
-    source: 'artifact' | 'upload',
+    source: ManagedPreviewSource,
     request: { path: string }
-  ): Promise<string> =>
-    source === 'artifact'
-      ? artifactRepository.resolveManagedFilePath(request)
-      : uploadRepository.resolveManagedUploadPath(request)
+  ): Promise<string> => {
+    if (source === 'artifact') return artifactRepository.resolveManagedFilePath(request)
+    if (source === 'upload') return uploadRepository.resolveManagedUploadPath(request)
+    return localFsService.resolveFilePath(request)
+  }
   // One registry owns short-lived capability URLs for both managed artifact repositories.
   const previewResources = new ManagedPreviewResources({
     resolvePath: resolveManagedFilePath
@@ -711,6 +718,7 @@ const registerIpcHandlers = async ({
     runtimeRef.current ? runtimeRef.current.getActiveArtifactRunIds() : []
   )
   registerUploadIpcHandlers(uploadRepository)
+  registerLocalFsIpcHandlers(localFsService)
   registerSessionPersistenceIpcHandlers(sessionPersistenceBackend, reviewRepository)
   registerProjectFilesIpcHandlers(
     projectFilesRepository,

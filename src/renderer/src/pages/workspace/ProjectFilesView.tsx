@@ -1,4 +1,4 @@
-import { Check, ChevronDown, File, Folder, Paperclip, Plus, Server } from 'lucide-react'
+import { Check, ChevronDown, File, Folder, Monitor, Paperclip, Plus, Server } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
@@ -35,6 +35,7 @@ import { createPreviewFileItem } from './preview-file-item'
 import type { MessageArtifact } from './preview-file-item'
 import { FilePreviewDialog } from './FilePreviewDialog'
 import { FileBrowserModal } from '../settings/FileBrowserModal'
+import { LocalFileBrowser } from './LocalFileBrowser'
 import { getPreviewThumbnailReadEncoding } from './preview-support'
 import { createKeyedRequestReader } from './project-file-preview-queue'
 import { isUnavailableFileError, FILE_MISSING_TAG } from './previews/preview-errors'
@@ -567,7 +568,8 @@ const ProjectFilesFilterMenu = ({
   onSelect,
   canLoadMoreOptions,
   onLoadMoreOptions,
-  onBrowseRemoteHost
+  onBrowseRemoteHost,
+  onBrowseLocal
 }: {
   label: string
   options: ProjectFilesFilterOption[]
@@ -576,6 +578,7 @@ const ProjectFilesFilterMenu = ({
   canLoadMoreOptions: boolean
   onLoadMoreOptions: () => void
   onBrowseRemoteHost: (providerId: string) => void
+  onBrowseLocal: () => void
 }): React.JSX.Element => {
   const hosts = useComputeStore((state) => state.hosts)
   const openSettingsToCompute = useSettingsStore((state) => state.openSettingsToCompute)
@@ -621,6 +624,25 @@ const ProjectFilesFilterMenu = ({
               onSelect={onSelect}
             />
           ))}
+        </DropdownMenuGroup>
+
+        {/* LOCAL section: browse files on the machine Kiro runs on */}
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel>LOCAL</DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuItem className="gap-2" onSelect={() => onBrowseLocal()}>
+            <Monitor
+              className="size-4 shrink-0 text-text-300"
+              strokeWidth={1.8}
+              aria-hidden="true"
+            />
+            <span className="min-w-0 flex-1 truncate">This computer</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled className="gap-2 text-muted-foreground">
+            <Plus className="size-4 shrink-0" strokeWidth={1.8} aria-hidden="true" />
+            <span>Add local folder…</span>
+            <span className="ml-auto shrink-0 text-[11px]">Soon</span>
+          </DropdownMenuItem>
         </DropdownMenuGroup>
 
         {/* REMOTE section: SSH compute hosts */}
@@ -785,6 +807,7 @@ const ProjectFilesViewContent = ({
 
   // Remote file browser modal state — set to a providerId when a REMOTE host is selected.
   const [browseProviderId, setBrowseProviderId] = useState<string | undefined>(undefined)
+  const [localBrowserOpen, setLocalBrowserOpen] = useState(false)
   const handleIndexChanged = useCallback(
     (event: ProjectFilesChangedEvent): void => {
       const currentSessions = useSessionStore.getState().sessions
@@ -1102,6 +1125,7 @@ const ProjectFilesViewContent = ({
           canLoadMoreOptions={Boolean(index.groups.nextCursor) && !index.groups.isLoading}
           onLoadMoreOptions={() => void index.loadMoreGroups()}
           onBrowseRemoteHost={(providerId) => setBrowseProviderId(providerId)}
+          onBrowseLocal={() => setLocalBrowserOpen(true)}
         />
         <div className="text-[11px] text-text-300">{visibleFileCount} files</div>
       </div>
@@ -1268,6 +1292,7 @@ const ProjectFilesViewContent = ({
         onClose={() => setBrowseProviderId(undefined)}
         initialProviderId={browseProviderId}
       />
+      <LocalFileBrowser open={localBrowserOpen} onClose={() => setLocalBrowserOpen(false)} />
     </div>
   )
 }

@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>本机文件 · 专用 Header — 视觉伴生 v2</title>
+  <style>
+    :root {
+      --bg-10: hsl(60 14% 99%); --bg-000: hsl(0 0% 100%); --bg-200: hsl(60 11% 95%);
+      --bg-300: hsl(45 12% 93%); --bg-400: hsl(45 10% 88%);
+      --ink: 60 2% 12%;
+      --border: #dededa;
+      --text-000: hsl(0 0% 7%); --text-100: hsl(43 3% 47%); --text-300: hsl(43 3% 57%);
+      --primary: oklch(0.47 0.105 184); --primary-fg: oklch(0.985 0.008 180);
+      --accent: oklch(0.87 0.115 82); --accent-fg: oklch(0.2 0.03 62);
+      --muted: #ececea; --muted-fg: #646762;
+      --ring: oklch(0.58 0.11 184);
+      --green: #22c55e; --danger: hsl(0 45% 38%);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg-200); color: var(--text-000);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased; padding: 28px; line-height: 1.5;
+    }
+    h1 { font-size: 17px; font-weight: 650; margin-bottom: 3px; }
+    .sub { color: var(--muted-fg); font-size: 12.5px; margin-bottom: 24px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 1440px; }
+    .wide { grid-column: 1 / -1; }
+    .screen {
+      background: var(--bg-000); border: 1px solid var(--border); border-radius: 14px;
+      overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
+      display: flex; flex-direction: column;
+    }
+    .screen-label {
+      font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+      color: var(--muted-fg); padding: 13px 16px 7px;
+    }
+    .screen-label b { color: var(--primary); font-weight: 700; }
+    .frame { margin: 0 14px 14px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .note { font-size: 12px; color: var(--muted-fg); padding: 0 16px 14px; line-height: 1.6; }
+    .note b { color: var(--text-000); font-weight: 600; }
+    .note code { background: var(--bg-200); border-radius: 4px; padding: 1px 5px;
+      font-family: ui-monospace,monospace; font-size: 11.5px; }
+    .legend { display: flex; gap: 12px; flex-wrap: wrap; padding: 0 16px 14px; font-size: 11px; color: var(--muted-fg); }
+    .legend .k { display: inline-flex; align-items: center; gap: 5px; }
+    .kbd { border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 5px;
+      padding: 0 5px; font-size: 11px; font-family: ui-monospace,monospace; background: var(--bg-000); }
+    /* icon helper */
+    .ico { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; vertical-align: -2px; flex: none; }
+    .ico-s { width: 12px; height: 12px; }
+    /* buttons */
+    .btn { display: inline-flex; align-items: center; gap: 5px; border: 1px solid transparent;
+      border-radius: 7px; font-size: 12.5px; font-weight: 500; padding: 5px 9px; cursor: pointer;
+      background: transparent; color: var(--text-000); white-space: nowrap; }
+    .btn.ghost { } .btn.ghost:hover { background: var(--bg-200); }
+    .btn.outline { border-color: var(--border); background: var(--bg-000); }
+    .btn.icon { padding: 5px; } .btn.icon:hover { background: var(--bg-200); }
+    /* row helpers */
+    .row { display: flex; align-items: center; }
+    .sep { height: 1px; background: var(--border); margin: 5px 2px; }
+    /* chip */
+    .chip { display: inline-flex; align-items: center; gap: 5px; background: var(--primary);
+      color: var(--primary-fg); border-radius: 999px; padding: 3px 10px; font-size: 11.5px; font-weight: 600; }
+    .new-badge { font-size: 9px; font-weight: 700; color: var(--primary);
+      border: 1px solid color-mix(in oklch, var(--primary), white 55%);
+      background: color-mix(in oklch, var(--primary), white 90%);
+      border-radius: 5px; padding: 1px 5px; letter-spacing: .03em; }
+    /* --- dropdown menu --- */
+    .menu { background: var(--bg-000); border: 1px solid var(--border); border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12); padding: 5px; font-size: 13px; }
+    .menu-label { font-size: 10.5px; font-weight: 600; color: var(--muted-fg);
+      padding: 6px 8px 3px; letter-spacing: .04em; text-transform: uppercase; }
+    .mi { display: flex; align-items: center; gap: 8px; padding: 7px 8px;
+      border-radius: 8px; cursor: pointer; font-size: 13px; }
+    .mi:hover { background: var(--bg-200); }
+    .mi.active { background: color-mix(in oklch, var(--primary), white 88%); }
+    .mi .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mi .ct { color: var(--text-300); font-size: 11px; }
+    .mi .chk { color: var(--primary); }
+    .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+    .dot.on { background: var(--green); } .dot.off { background: hsl(var(--ink)/0.25); }
+    /* --- file browser toolbar/listing --- */
+    .toolbar { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); padding: 9px 12px; }
+    .addr { flex: 1; display: flex; align-items: center; height: 28px; border: 1px solid var(--border);
+      border-radius: 7px; background: var(--bg-200); padding: 0 9px;
+      font-family: ui-monospace,monospace; font-size: 12px; gap: 6px; }
+    .list-hdr { display: grid; grid-template-columns: 1fr 80px 82px;
+      background: var(--bg-200); border-bottom: 1px solid var(--border);
+      padding: 5px 14px; font-size: 10px; text-transform: uppercase;
+      letter-spacing: .05em; color: var(--muted-fg); }
+    .list-hdr .r { text-align: right; }
+    .frow { display: grid; grid-template-columns: 1fr 80px 82px; align-items: center;
+      padding: 7px 14px; font-size: 13px; cursor: pointer;
+      border-bottom: 1px solid hsl(var(--ink)/0.05); }
+    .frow:hover { background: var(--bg-200); }
+    .frow.sel { background: color-mix(in oklch, var(--primary), white 92%); }
+    .fnm { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .fnm span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fr { text-align: right; color: var(--text-300); font-size: 12px; }
+    .fold-c { color: #38bdf8; } .file-c { color: var(--text-300); }
+    /* --- preview panel --- */
+    .panel-bg { background: var(--bg-10); padding: 10px; display: flex; flex-direction: column; gap: 0; }
+    .tab-bar { display: flex; align-items: center; gap: 4px; padding: 0 4px 8px; overflow-x: auto; }
+    .tab { display: flex; align-items: center; gap: 4px; height: 30px; padding: 0 8px 0 10px;
+      border-radius: 7px; font-size: 12px; max-width: 160px; cursor: pointer; }
+    .tab.active { background: var(--bg-300); color: var(--text-000); font-weight: 500; }
+    .tab.inactive { color: var(--text-300); }
+    .tab.inactive:hover { background: var(--bg-200); color: var(--text-100); }
+    .tab .tnm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tab .tc { border-radius: 4px; padding: 2px; color: inherit; opacity: 0; }
+    .tab.active .tc, .tab:hover .tc { opacity: 1; }
+    /* the card */
+    .card { border-radius: 8px; background: var(--bg-000);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06);
+      display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+    /* --- local-specific header --- */
+    .local-hdr {
+      display: flex; align-items: center; gap: 0;
+      height: 36px; border-bottom: 1px solid var(--border);
+      background: var(--bg-000); padding: 0 6px 0 10px; flex-shrink: 0;
+    }
+    .local-hdr .machine-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--bg-200); border: 1px solid var(--border); border-radius: 6px;
+      padding: 2px 8px; font-size: 11.5px; font-weight: 600; color: var(--text-000);
+      margin-right: 8px; flex-shrink: 0;
+    }
+    .local-hdr .path {
+      flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      font-family: ui-monospace, monospace; font-size: 11.5px; color: var(--text-100);
+    }
+    .local-hdr .path .seg { color: var(--text-300); }
+    .local-hdr .path .filename { color: var(--text-000); font-weight: 500; }
+    /* action menu dropdown */
+    .action-menu {
+      position: relative; display: inline-block;
+    }
+    .action-dropdown {
+      background: var(--bg-000); border: 1px solid var(--border); border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.14); padding: 5px; width: 220px;
+      font-size: 12.5px;
+    }
+    .ai { display: flex; align-items: center; gap: 9px; padding: 7px 8px;
+      border-radius: 7px; cursor: pointer; }
+    .ai:hover { background: var(--bg-200); }
+    .ai.danger:hover { background: color-mix(in srgb, var(--danger), white 90%); color: var(--danger); }
+    .ai .akbd { margin-left: auto; font-size: 10.5px; color: var(--text-300);
+      font-family: ui-monospace, monospace; }
+    /* content area */
+    .preview-body { flex: 1; overflow: auto; background: var(--bg-000); padding: 20px 24px; }
+    .md { max-width: 640px; margin: 0 auto; font-size: 13.5px; line-height: 1.75; }
+    .md h2 { font-size: 20px; margin: 0 0 12px; }
+    .md h3 { font-size: 14px; text-transform: uppercase; letter-spacing: .05em;
+      color: var(--text-100); margin: 18px 0 6px; }
+    .md p { color: #33352f; margin-bottom: 10px; }
+    .md code { background: var(--bg-200); border-radius: 4px; padding: 1px 5px;
+      font-family: ui-monospace,monospace; font-size: 12px; }
+    .md pre { background: #1c1e1b; color: #e6e6df; border-radius: 9px; padding: 14px 16px;
+      font-family: ui-monospace,monospace; font-size: 12px; line-height: 1.6; margin-bottom: 14px;
+      overflow: auto; }
+    .tok-k { color: #7dd3c0; } .tok-s { color: #e5c07b; } .tok-c { color: #6b7280; }
+    /* annotation callout */
+    .ann { border-left: 3px solid var(--accent); background: color-mix(in oklch, var(--accent), white 78%);
+      padding: 9px 13px; border-radius: 0 8px 8px 0; font-size: 12px;
+      color: oklch(0.2 0.03 62); margin-bottom: 16px; line-height: 1.6; }
+    .ann b { font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>本机文件 · 独立预览面板 Tab + 专用 Header — 视觉伴生 v2</h1>
+  <div class="sub">本机文件不内联；点开后作为独立 <b>预览面板 tab</b> 打开，并使用<b>专用 header + 操作菜单</b>（区别于 artifact/upload 的下载型 header）。配色取自 <code>main.css</code>。</div>
+  <div class="grid">
+
+    <!-- ① dropdown entry -->
+    <div class="screen">
+      <div class="screen-label">① Artifacts 下拉 — 新增 <b>本机 / This computer</b> 入口</div>
+      <div class="frame" style="padding:10px;background:var(--bg-10)">
+        <div class="row" style="justify-content:space-between;margin-bottom:8px">
+          <div class="btn outline"><svg class="ico" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Artifacts<svg class="ico-s ico" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></div>
+          <span style="font-size:11px;color:var(--text-300)">128 files</span>
+        </div>
+        <div class="menu">
+          <div class="menu-label">Artifacts</div>
+          <div class="mi active"><svg class="ico" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span class="nm">All artifacts</span><svg class="ico chk" viewBox="0 0 24 24" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span class="ct">128</span></div>
+          <div class="mi"><svg class="ico" viewBox="0 0 24 24"><path d="m16 6-8.4 8.4a2 2 0 0 0 2.8 2.8l8.4-8.4a4 4 0 0 0-5.7-5.7l-8.4 8.4a6 6 0 0 0 8.5 8.5"/></svg><span class="nm">Your uploads</span><span class="ct">14</span></div>
+          <div class="sep"></div>
+          <div class="menu-label">This computer</div>
+          <div class="mi"><svg class="ico" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span class="nm">Roxi’s MacBook Pro</span><span class="new-badge">本机</span></div>
+          <div class="mi" style="color:var(--text-300)"><svg class="ico" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg><span class="nm">Add local folder…</span><span class="ct" style="font-style:italic">稍后</span></div>
+          <div class="sep"></div>
+          <div class="menu-label">Remote</div>
+          <div class="mi"><span class="dot on"></span><svg class="ico" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg><span class="nm">hpc-login-01</span></div>
+        </div>
+      </div>
+      <div class="note"><b>本机</b> 与 Remote 主机并列成组，显示机器名（<code>os.hostname()</code>）。选中后打开文件浏览器（沿用远程 <code>FileBrowserModal</code> 骨架，独立弹窗），从中打开文件 → 生成独立预览 tab。</div>
+    </div>
+
+    <!-- ② preview panel tab with dedicated local header -->
+    <div class="screen wide">
+      <div class="screen-label">② 独立预览面板 Tab — <b>本机文件专用 header</b>（机器名 + 绝对路径 + 专用操作菜单）</div>
+      <div class="frame panel-bg" style="margin-bottom:0">
+        <div class="tab-bar">
+          <div class="tab inactive"><svg class="ico-s ico" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><span class="tnm">results.csv</span><svg class="ico-s ico tc" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></div>
+          <div class="tab active"><svg class="ico-s ico" viewBox="0 0 24 24" style="color:#38bdf8"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/></svg><span class="tnm">genome_summary.md</span><svg class="ico-s ico tc" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></div>
+          <div class="tab inactive"><span class="tnm">structure.pdb</span><svg class="ico-s ico tc" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></div>
+        </div>
+        <div class="card" style="height:400px">
+          <!-- DEDICATED LOCAL HEADER -->
+          <div class="local-hdr">
+            <span class="machine-chip"><svg class="ico-s ico" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>MacBook Pro</span>
+            <span class="path"><span class="seg">/Users/roxi/Documents/datasets/</span><span class="filename">genome_summary.md</span></span>
+            <span class="btn icon ghost" title="Reveal in Finder"><svg class="ico" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg></span>
+            <span class="btn icon ghost" title="更多操作"><svg class="ico" viewBox="0 0 24 24" stroke-width="2.2"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg></span>
+            <span class="btn icon ghost" title="全屏"><svg class="ico" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></span>
+            <span class="btn icon ghost" title="关闭 tab"><svg class="ico" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></span>
+          </div>
+          <div class="preview-body">
+            <div class="md">
+              <div class="ann"><b>专用 header 区别于 artifact header：</b> 左侧 <b>机器名 chip</b> + <b>可点击的绝对路径面包屑</b>（artifact 只显示文件名），右侧操作从"下载"换成 <b>Reveal in Finder</b> + <b>“…”菜单</b>（见 ②B）。内容区 <code>PreviewFileContent</code> 完全复用。</div>
+              <h2>Genome Assembly Summary</h2>
+              <p>Assembly of <code>SRR1234567</code> completed — <b>N50 = 2.4 Mb</b> across 148 contigs.</p>
+              <h3>Key metrics</h3>
+              <pre><span class="tok-c"># assembly-stats</span>
+<span class="tok-k">total_length</span>: <span class="tok-s">312,884,001</span>
+<span class="tok-k">gc_content</span>:  <span class="tok-s">0.412</span>
+<span class="tok-k">longest</span>:     <span class="tok-s">8,912,004</span></pre>
+              <p>渲染管线（<code>preview-registry</code>）覆盖 Markdown / 代码 / CSV / xlsx / PDF / 图片 / molecule / pptx / docx。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="legend">
+        <span class="k"><b>header 差异点：</b></span>
+        <span class="k">🖥 机器名 chip</span>
+        <span class="k">绝对路径面包屑（可点击导航）</span>
+        <span class="k">Reveal in Finder 快捷键</span>
+        <span class="k">“…” 操作菜单</span>
+        <span class="k">全屏 · 关闭 tab</span>
+      </div>
+    </div>
+
+    <!-- ②B action menu -->
+    <div class="screen">
+      <div class="screen-label">②B <b>“…” 操作菜单</b> — 本机文件专属动作</div>
+      <div class="frame" style="padding:12px;background:var(--bg-10)">
+        <div class="local-hdr" style="border:1px solid var(--border);border-radius:8px;margin-bottom:10px">
+          <span class="machine-chip"><svg class="ico-s ico" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>MacBook Pro</span>
+          <span class="path"><span class="seg">…/datasets/</span><span class="filename">genome_summary.md</span></span>
+          <span class="btn icon" style="background:var(--bg-200)" title="更多操作"><svg class="ico" viewBox="0 0 24 24" stroke-width="2.2"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg></span>
+        </div>
+        <div class="action-dropdown" style="margin-left:auto;width:230px">
+          <div class="ai"><svg class="ico" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg><span>Reveal in Finder</span></div>
+          <div class="ai"><svg class="ico" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span>Copy path</span><span class="akbd">⌘C</span></div>
+          <div class="ai"><svg class="ico" viewBox="0 0 24 24"><path d="M4 4h16v16H4z" fill="none"/><path d="M8 12h8M12 8v8"/></svg><span>Open with default app</span></div>
+          <div class="sep"></div>
+          <div class="ai"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16"/></svg><span>Save as artifact</span></div>
+        </div>
+      </div>
+      <div class="note"><b>本机文件无"下载"语义</b>（已在本地）。菜单动作：<code>shell.showItemInFolder</code> / 复制路径 / <code>shell.openPath</code> / 复制进项目 artifact 库。<b>Save as artifact</b> 仅当有活动项目时出现。</div>
+    </div>
+
+    <!-- ③ Go to -->
+    <div class="screen">
+      <div class="screen-label">③ 文件浏览器内 “Go to” — Home 固定 · Pin / Unpin</div>
+      <div class="frame" style="padding:12px;background:var(--bg-10)">
+        <div class="toolbar" style="border:1px solid var(--border);border-radius:8px;background:var(--bg-000);margin-bottom:10px">
+          <span class="btn icon ghost"><svg class="ico" viewBox="0 0 24 24"><path d="m5 12 7-7 7 7M12 5v14"/></svg></span>
+          <span class="btn ghost" style="background:var(--bg-200)"><svg class="ico-s ico" viewBox="0 0 24 24"><path d="M12 21s-7-6.4-7-11a7 7 0 1 1 14 0c0 4.6-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Go to<svg class="ico-s ico" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></span>
+          <span class="addr">/Users/roxi/Documents/datasets</span>
+          <span class="btn icon ghost"><svg class="ico" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5"/></svg></span>
+        </div>
+        <div class="menu" style="width:280px">
+          <div class="menu-label">位置</div>
+          <div class="mi"><svg class="ico-s ico" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5M5 9.5V21h14V9.5"/></svg><span class="nm">Home</span><span class="ct">固定</span></div>
+          <div class="sep"></div>
+          <div class="mi"><svg class="ico-s ico" viewBox="0 0 24 24"><path d="M12 17v5M9 10.8V4h6v6.8l2 3.2H7z"/></svg><span class="nm">Pin current folder</span></div>
+          <div class="menu-label">已 Pin 的目录</div>
+          <div class="mi"><svg class="ico-s ico" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span class="nm">datasets</span><span class="btn icon" style="padding:2px" title="Unpin"><svg class="ico-s ico" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></span></div>
+          <div class="mi"><svg class="ico-s ico" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span class="nm">projects/opensci</span><span class="btn icon" style="padding:2px" title="Unpin"><svg class="ico-s ico" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></span></div>
+        </div>
+      </div>
+      <div class="note"><b>Home</b> 恒定置顶不可删。当前目录已 pin → 右侧显示 Unpin(✕)。持久化复用 <code>computeBookmarks</code> 同款机制（新键 <code>localBookmarks</code>）。</div>
+    </div>
+
+  </div>
+</body>
+</html>
+
