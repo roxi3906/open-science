@@ -50,8 +50,8 @@ describe.runIf(process.platform === 'win32')('Windows notebook shell integration
     async () => {
       const result = await runPowerShell(`
 Write-Output "分析完成"
-Write-Output "__OPEN_SCIENCE_PSMODULEPATH__=$env:PSModulePath"
-Write-Output "__OPEN_SCIENCE_INTERNAL__=[$env:OPEN_SCIENCE_PSMODULEPATH]"
+Write-Output "__APP_PSMODULEPATH__=$env:PSModulePath"
+Write-Output "__APP_INTERNAL__=[$env:OPEN_SCIENCE_PSMODULEPATH]"
 `)
 
       expect(result).toMatchObject({ exitCode: 0 })
@@ -61,12 +61,12 @@ Write-Output "__OPEN_SCIENCE_INTERNAL__=[$env:OPEN_SCIENCE_PSMODULEPATH]"
       expect(programFiles).toBeTruthy()
       expect(windowsRoot).toBeTruthy()
       if (!programFiles || !windowsRoot) throw new Error('Missing standard Windows path variables.')
-      const modulePath = result.stdout.match(/^__OPEN_SCIENCE_PSMODULEPATH__=(.*)$/mu)?.[1]?.trim()
+      const modulePath = result.stdout.match(/^__APP_PSMODULEPATH__=(.*)$/mu)?.[1]?.trim()
       expect(modulePath?.split(';').map((entry) => entry.toLowerCase())).toEqual([
         `${programFiles}\\WindowsPowerShell\\Modules`.toLowerCase(),
         `${windowsRoot}\\System32\\WindowsPowerShell\\v1.0\\Modules`.toLowerCase()
       ])
-      expect(result.stdout).toContain('__OPEN_SCIENCE_INTERNAL__=[]')
+      expect(result.stdout).toContain('__APP_INTERNAL__=[]')
     },
     POWERSHELL_TEST_TIMEOUT_MS
   )

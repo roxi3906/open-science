@@ -3,7 +3,7 @@ import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { OpenScienceLogoLoader } from './OpenScienceLogoLoader'
+import { BrandLogoLoader } from './BrandLogoLoader'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -29,7 +29,7 @@ const createTestMediaQuery = (matches: boolean): TestMediaQuery => {
   }
 }
 
-describe('OpenScienceLogoLoader', () => {
+describe('BrandLogoLoader', () => {
   let container: HTMLDivElement
   let root: Root
   let devicePixelRatioDescriptor: PropertyDescriptor | undefined
@@ -107,7 +107,7 @@ describe('OpenScienceLogoLoader', () => {
     })
     vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined)
 
-    act(() => root.render(<OpenScienceLogoLoader />))
+    act(() => root.render(<BrandLogoLoader />))
     context.arc = vi.fn()
     now = 1_000
     act(() => animationFrames.shift()?.(now))
@@ -116,7 +116,7 @@ describe('OpenScienceLogoLoader', () => {
     vi.mocked(context.arc).mockClear()
     act(() => root.render(null))
     now = 2_000
-    act(() => root.render(<OpenScienceLogoLoader />))
+    act(() => root.render(<BrandLogoLoader />))
     const remountedFrameArc = vi.mocked(context.arc).mock.calls.at(-1)
 
     expect(firstFrameArc).toBeDefined()
@@ -216,7 +216,7 @@ describe('OpenScienceLogoLoader', () => {
         animationFrames.delete(id)
       })
 
-    act(() => root.render(<OpenScienceLogoLoader />))
+    act(() => root.render(<BrandLogoLoader />))
 
     const canvas = container.querySelector<HTMLCanvasElement>('canvas')
     expect(canvas).not.toBeNull()

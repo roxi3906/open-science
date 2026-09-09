@@ -98,7 +98,7 @@ const decide = async (commandId: string, host: string, port: number): Promise<Ga
   const policy = destinationPolicy
   if (!policy) {
     violations.record(commandId, `deny network-outbound ${host}:${port} (policy unavailable)`)
-    return { allowed: false, message: 'OPEN_SCIENCE_NETWORK_POLICY_BLOCKED' }
+    return { allowed: false, message: 'Open-Science:NETWORK_POLICY_BLOCKED' }
   }
   const verdict = await policy.inspect(host, port)
   if (verdict.kind === 'allow') return { allowed: true, address: verdict.address }
@@ -107,8 +107,8 @@ const decide = async (commandId: string, host: string, port: number): Promise<Ga
     return {
       allowed: false,
       message: verdict.configurable
-        ? 'OPEN_SCIENCE_NETWORK_DOMAIN_BLOCKED: This domain is not in Settings > Network > Allowed domains.'
-        : 'OPEN_SCIENCE_NETWORK_POLICY_BLOCKED: This destination is blocked by the Notebook network policy.'
+        ? 'Open-Science:NETWORK_DOMAIN_BLOCKED: This domain is not in Settings > Network > Allowed domains.'
+        : 'Open-Science:NETWORK_POLICY_BLOCKED: This destination is blocked by the Notebook network policy.'
     }
   }
   let allowed = false
@@ -122,7 +122,7 @@ const decide = async (commandId: string, host: string, port: number): Promise<Ga
   return {
     allowed: false,
     message:
-      'OPEN_SCIENCE_NETWORK_DOMAIN_BLOCKED: This domain is not in Settings > Network > Allowed domains.'
+      'Open-Science:NETWORK_DOMAIN_BLOCKED: This domain is not in Settings > Network > Allowed domains.'
   }
 }
 

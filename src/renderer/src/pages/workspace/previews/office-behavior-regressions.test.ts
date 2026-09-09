@@ -95,7 +95,7 @@ describe('Office behavior through real parsers and adapters', () => {
     )
     vi.stubGlobal('cancelAnimationFrame', (id: number) => window.clearTimeout(id))
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null)
-    vi.stubGlobal('__openScienceTestTableHarness', harness)
+    vi.stubGlobal('__appTestTableHarness', harness)
     Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
       configurable: true,
       value: vi.fn()

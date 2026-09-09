@@ -53,7 +53,7 @@ const withNonce = (lines: string[]): string =>
     .join('\n')
 
 const noLaunchRecoveryOutput = [
-  'OPEN_SCIENCE_DISPATCH_RECOVERY_V1',
+  'open-science-dispatch-recovery-v1',
   'workdir:0',
   'exit_code:',
   'pid:',
@@ -104,13 +104,13 @@ const makeJob = (overrides: Partial<ComputeJob> = {}): ComputeJob => ({
   output_manifest: undefined,
   harvest_config: undefined,
   timeout_seconds: 3600,
-  remote_workdir: '~/.openscience/jobs/job-1',
+  remote_workdir: '~/.open-science/jobs/job-1',
   remote_handle: JSON.stringify({
     pid: 1234,
-    exit_code_path: '~/.openscience/jobs/job-1/exit_code',
-    stdout_path: '~/.openscience/jobs/job-1/stdout',
-    stderr_path: '~/.openscience/jobs/job-1/stderr',
-    workdir: '~/.openscience/jobs/job-1'
+    exit_code_path: '~/.open-science/jobs/job-1/exit_code',
+    stdout_path: '~/.open-science/jobs/job-1/stdout',
+    stderr_path: '~/.open-science/jobs/job-1/stderr',
+    workdir: '~/.open-science/jobs/job-1'
   }),
   exit_code: undefined,
   stdout_tail: undefined,
@@ -287,9 +287,9 @@ describe('JobPoller', () => {
         driver: 'slurm',
         version: 1,
         scheduler_job_id: '321',
-        workdir: '~/.openscience/jobs/job-1',
-        stdout_path: '~/.openscience/jobs/job-1/stdout',
-        stderr_path: '~/.openscience/jobs/job-1/stderr'
+        workdir: '~/.open-science/jobs/job-1',
+        stdout_path: '~/.open-science/jobs/job-1/stdout',
+        stderr_path: '~/.open-science/jobs/job-1/stderr'
       })
     })
     const update = vi.fn((_id: string, updates: unknown) =>
@@ -1402,7 +1402,7 @@ describe('JobPoller', () => {
     const runner = makeSshRunner({
       exitCode: 0,
       stdout: [
-        'OPEN_SCIENCE_DISPATCH_RECOVERY_V1',
+        'open-science-dispatch-recovery-v1',
         'workdir:1',
         'exit_code:',
         'pid:1234',
@@ -1519,7 +1519,7 @@ describe('JobPoller', () => {
     const run = vi.fn().mockResolvedValueOnce({
       exitCode: 0,
       stdout: [
-        'OPEN_SCIENCE_DISPATCH_RECOVERY_V1',
+        'open-science-dispatch-recovery-v1',
         'workdir:1',
         'exit_code:0',
         'pid:1234',
@@ -2418,13 +2418,13 @@ describe('JobPoller sub-batching (per-job output budget)', () => {
     const jobs = Array.from({ length: 10 }, (_, i) =>
       makeJob({
         job_id: `job-${i}`,
-        remote_workdir: `~/.openscience/jobs/job-${i}`,
+        remote_workdir: `~/.open-science/jobs/job-${i}`,
         remote_handle: JSON.stringify({
           pid: 1000 + i,
-          exit_code_path: `~/.openscience/jobs/job-${i}/exit_code`,
-          stdout_path: `~/.openscience/jobs/job-${i}/stdout`,
-          stderr_path: `~/.openscience/jobs/job-${i}/stderr`,
-          workdir: `~/.openscience/jobs/job-${i}`
+          exit_code_path: `~/.open-science/jobs/job-${i}/exit_code`,
+          stdout_path: `~/.open-science/jobs/job-${i}/stdout`,
+          stderr_path: `~/.open-science/jobs/job-${i}/stderr`,
+          workdir: `~/.open-science/jobs/job-${i}`
         })
       })
     )
@@ -2478,13 +2478,13 @@ describe('JobPoller sub-batching (per-job output budget)', () => {
     const jobs = Array.from({ length: 10 }, (_, i) =>
       makeJob({
         job_id: `job-${i}`,
-        remote_workdir: `~/.openscience/jobs/job-${i}`,
+        remote_workdir: `~/.open-science/jobs/job-${i}`,
         remote_handle: JSON.stringify({
           pid: 1000 + i,
-          exit_code_path: `~/.openscience/jobs/job-${i}/exit_code`,
-          stdout_path: `~/.openscience/jobs/job-${i}/stdout`,
-          stderr_path: `~/.openscience/jobs/job-${i}/stderr`,
-          workdir: `~/.openscience/jobs/job-${i}`
+          exit_code_path: `~/.open-science/jobs/job-${i}/exit_code`,
+          stdout_path: `~/.open-science/jobs/job-${i}/stdout`,
+          stderr_path: `~/.open-science/jobs/job-${i}/stderr`,
+          workdir: `~/.open-science/jobs/job-${i}`
         })
       })
     )

@@ -49,7 +49,7 @@ const makeJob = (overrides: Partial<ComputeJob> = {}): ComputeJob => ({
   output_manifest: undefined,
   harvest_config: undefined,
   timeout_seconds: 3600,
-  remote_workdir: '~/.openscience/jobs/job-1',
+  remote_workdir: '~/.open-science/jobs/job-1',
   remote_handle: undefined,
   exit_code: 0,
   stdout_tail: 'hello',
@@ -89,7 +89,7 @@ describe('emitJobNotification', () => {
       exit_code: 0,
       left_on_remote: JSON.stringify([
         {
-          uri: 'ssh://biowulf/~/.openscience/jobs/job-1/big.tar',
+          uri: 'ssh://biowulf/~/.open-science/jobs/job-1/big.tar',
           size_mb: 200,
           reason: 'exceeds_max_file_mb'
         }

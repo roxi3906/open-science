@@ -85,8 +85,8 @@ describe('Compute Job recovery behavior', () => {
       allowUnencryptedPersistence: true,
       remoteWorkdir:
         process.platform === 'win32'
-          ? `/scratch/.openscience/jobs/${id}`
-          : join(db.storageRoot, '.openscience', 'jobs', id),
+          ? `/scratch/.open-science/jobs/${id}`
+          : join(db.storageRoot, '.open-science', 'jobs', id),
       inputManifest
     })
     return (await db.repositories.jobs.get(id))!
@@ -151,9 +151,9 @@ describe('Compute Job recovery behavior', () => {
         launchEntered.resolve()
         return launchResponse.promise
       }
-      if (command.includes('OPEN_SCIENCE_DISPATCH_RECOVERY_V1')) {
+      if (command.includes('open-science-dispatch-recovery-v1')) {
         return success(
-          'OPEN_SCIENCE_DISPATCH_RECOVERY_V1\nworkdir:1\nexit_code:\npid:4242\ncwd_match:1'
+          'open-science-dispatch-recovery-v1\nworkdir:1\nexit_code:\npid:4242\ncwd_match:1'
         )
       }
       return success(command.includes('kill -TERM') ? 'terminated' : 'absent')
@@ -200,8 +200,8 @@ describe('Compute Job recovery behavior', () => {
             : 'workdir:1\nexit_code:\npid:\ncwd_match:0'
       const run = vi.fn<ComputeConnectionLease['run']>(async (command) =>
         success(
-          command.includes('OPEN_SCIENCE_DISPATCH_RECOVERY_V1')
-            ? `OPEN_SCIENCE_DISPATCH_RECOVERY_V1\n${observation}`
+          command.includes('open-science-dispatch-recovery-v1')
+            ? `open-science-dispatch-recovery-v1\n${observation}`
             : 'absent'
         )
       )
@@ -353,8 +353,8 @@ describe('Compute Job recovery behavior', () => {
     )
     const confirmed = deferred()
     const run = vi.fn<ComputeConnectionLease['run']>(async (command) =>
-      command.includes('OPEN_SCIENCE_DISPATCH_RECOVERY_V1')
-        ? success('OPEN_SCIENCE_DISPATCH_RECOVERY_V1\nworkdir:0\nexit_code:\npid:\ncwd_match:0')
+      command.includes('open-science-dispatch-recovery-v1')
+        ? success('open-science-dispatch-recovery-v1\nworkdir:0\nexit_code:\npid:\ncwd_match:0')
         : { ...success(), exitCode: 1, stderr: 'No such file or directory' }
     )
     const runtime = createComputeJobRuntime(

@@ -1,3 +1,4 @@
+import { legacyDataFolderName } from './brand-migration/data-root-names'
 import { existsSync } from 'node:fs'
 import { basename, isAbsolute, join, normalize, resolve, sep } from 'node:path'
 
@@ -48,7 +49,7 @@ const resolveStorageRoot = resolveConfigRoot
 
 // Visible, no-space data folder name. NO space: runtime/ holds conda/venv whose tools break on
 // spaced paths. dev gets a suffix so it never shares data with a packaged build.
-const dataFolderName = (): string => (app.isPackaged ? 'OpenScience' : 'OpenScience-DEV')
+const dataFolderName = (): string => (app.isPackaged ? 'Open-Science' : 'Open-Science-DEV')
 
 // The data root the app derives from a user-picked (or default) parent directory: always
 // `<parent>/<dataFolderName()>`. The app never lets the user point directly at a data root - only
@@ -58,11 +59,11 @@ const dataRootForParent = (parent: string): string => join(parent, dataFolderNam
 const defaultDataParent = (): string => resolveE2eStorageRoot() ?? app.getPath('home')
 
 // Converts a user-PICKED directory into the data root. Normally appends the data folder name
-// (`<picked>/OpenScience`), but when the user navigated INTO and selected the OpenScience folder
+// (`<picked>/Open-Science`), but when the user navigated INTO and selected the Open-Science folder
 // itself (its basename already equals the data folder name), it is used as-is. Without this,
-// picking the existing/default data folder would derive `<picked>/OpenScience/OpenScience` — a
+// picking the existing/default data folder would derive `<picked>/Open-Science/Open-Science` — a
 // doubled, non-existent path that reports "data folder not found" on the next launch. The name
-// match is case-insensitive on Windows (its filesystem is), so `...\openscience` is still
+// match is case-insensitive on Windows (its filesystem is), so `...\open-science` is still
 // recognized as the data folder rather than doubled.
 const dataRootForPicked = (picked: string): string => {
   const resolved = resolve(picked)
@@ -76,11 +77,11 @@ const dataRootForPicked = (picked: string): string => {
 // Migratable directories also mark an existing (pre-§20) config root with user data. runtime/ is
 // excluded because it is rebuildable and remains behind after relocation; counting it would keep
 // the legacy fallback stuck on the config root after the user's real data had moved away.
-// Default data root for a fresh install is `~/OpenScience` (dev `~/OpenScience-DEV`). A legacy
-// install - config root already holds data and never got an OpenScience subdir - keeps its data
+// Default data root for a fresh install is `~/Open-Science` (dev `~/Open-Science-DEV`). A legacy
+// install - config root already holds data and never got an Open-Science subdir - keeps its data
 // where it is instead of silently splitting an existing user's data across two locations. But this
 // legacy fallback applies ONLY while settings.dataRoot is unset. A migration becomes committed when
-// settings explicitly points at `<home>/OpenScience`; directory existence alone is not evidence,
+// settings explicitly points at `<home>/Open-Science`; directory existence alone is not evidence,
 // because a failed copy cleanup may leave a markerless partial tree behind.
 const computeDefaultDataRoot = (): string => {
   const configRoot = resolveConfigRoot()
@@ -98,11 +99,15 @@ const computeDefaultDataRoot = (): string => {
     !existsSync(join(configRoot, dataFolderName())) &&
     !homeDefaultIsCommitted
 
-  return isLegacyInstall ? configRoot : homeDefault
+  if (isLegacyInstall) return configRoot
+  // Read-only discovery of the released default. Startup must migrate it before repositories open;
+  // never silently choose an empty new directory because settings.dataRoot was historically unset.
+  const previousDefault = join(defaultDataParent(), legacyDataFolderName(app.isPackaged))
+  return !homeDefaultIsCommitted && existsSync(previousDefault) ? previousDefault : homeDefault
 }
 
 // The parent directory whose derived data root is the default location. Feeding this back through
-// the parent-based relocation flow (inspect/migrate) reproduces the default `<home>/OpenScience`
+// the parent-based relocation flow (inspect/migrate) reproduces the default `<home>/Open-Science`
 // exactly, which is how Settings offers a one-click "return to default" from a custom root. The
 // only default that is NOT `<parent>/dataFolderName()` is an untouched legacy install (default =
 // config root), and that case never reaches the reset UI — it is already the default, so no reset

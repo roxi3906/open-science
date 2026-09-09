@@ -8,6 +8,7 @@ import {
 import {
   appMcpToolIdentities,
   appMcpServerAliases,
+  modelFacingAppMcpToolName,
   renderAppMcpToolReferences,
   resolveCanonicalMcpToolIdentity
 } from './app-mcp-names'
@@ -26,9 +27,24 @@ const APP_MCP_CODEC_CASES = appMcpToolIdentities().flatMap((identity) => {
 
 describe('resolveCanonicalMcpToolIdentity', () => {
   it.each([
+    ['opencode', 'app_notebook_notebook_execute'],
+    ['codebuddy', 'mcp__app_notebook__notebook_execute'],
+    ['codex', 'mcp.open-science-notebook.notebook_execute']
+  ] as const)(
+    'routes the current %s tool name back to the same durable permission identity',
+    (framework, name) => {
+      expect(
+        modelFacingAppMcpToolName(framework, 'open-science-notebook', 'notebook_execute')
+      ).toBe(name)
+      expect(resolveCanonicalMcpToolIdentity(name, ['open-science-notebook'])).toBe(
+        'open-science-notebook/notebook_execute'
+      )
+    }
+  )
+  it.each([
     ['claude-code', 'mcp__open-science-notebook__'],
-    ['codebuddy', 'mcp__open_science_notebook__'],
-    ['opencode', 'open_science_notebook_'],
+    ['codebuddy', 'mcp__app_notebook__'],
+    ['opencode', 'app_notebook_'],
     ['codex', '']
   ] as const)('renders the memory query references for %s', (frameworkId, prefix) => {
     expect(
@@ -126,7 +142,7 @@ describe('resolveCanonicalMcpToolIdentity', () => {
       'mcp__open-science-plan__update_step_status'
     ],
     ['codex', 'generate_plan', 'update_step_status'],
-    ['opencode', 'open_science_plan_generate_plan', 'open_science_plan_update_step_status']
+    ['opencode', 'app_plan_generate_plan', 'app_plan_update_step_status']
   ] as const)(
     'renders the same planning policy with callable names for %s',
     (frameworkId, generateTool, updateTool) => {

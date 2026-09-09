@@ -132,7 +132,7 @@ describe('patched spreadsheet window cache', () => {
     SpreadsheetWorker.responseDelayMs = 0
     SpreadsheetWorker.pendingRequests = 0
     SpreadsheetWorker.maxPendingRequests = 0
-    vi.stubGlobal('__openScienceTestTableHarness', tableHarness)
+    vi.stubGlobal('__appTestTableHarness', tableHarness)
     vi.stubGlobal('Worker', SpreadsheetWorker)
     Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
       configurable: true,

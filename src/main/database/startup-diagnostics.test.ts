@@ -30,7 +30,7 @@ describe('buildStartupDiagnostics', () => {
     const error = new Error(
       [
         'config=/Volumes/Config Space/.open-science/open-science.db',
-        'data=/mnt/research/OpenScience/notebook/run.json',
+        'data=/mnt/research/Open-Science/notebook/run.json',
         'other=/srv/customer/private.db',
         'file=file:///Volumes/External/private.db',
         String.raw`windows=D:\Clients\Acme\private.db`,
@@ -42,7 +42,7 @@ describe('buildStartupDiagnostics', () => {
     const result = buildStartupDiagnostics(error, {
       home: '/Users/alice',
       configRoot: '/Volumes/Config Space/.open-science/',
-      dataRoot: '/mnt/research/OpenScience/'
+      dataRoot: '/mnt/research/Open-Science/'
     })
 
     expect(result).toContain('<config-root>/open-science.db')

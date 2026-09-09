@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 
 import { ErrorNotice, type ErrorNoticeTone } from '@/components/error-notice'
-import { OpenScienceLogoLoader } from '@/components/OpenScienceLogoLoader'
+import { BrandLogoLoader } from '@/components/BrandLogoLoader'
 import { StartupIssueDialog } from '@/components/startup-issue-dialog'
 import type {
   DatabaseStartupErrorCode,
@@ -150,7 +150,7 @@ const DatabaseStartupGate = ({ children }: DatabaseStartupGateProps): React.JSX.
       >
         <section className="flex w-full max-w-md flex-col items-center text-center">
           <div className="flex flex-col items-center gap-14">
-            <OpenScienceLogoLoader />
+            <BrandLogoLoader />
             <div className="flex flex-col items-center gap-4">
               <span className="text-sm text-muted-foreground">
                 {state.phase === 'migrating'

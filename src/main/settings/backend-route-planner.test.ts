@@ -733,16 +733,13 @@ describe('BackendRoutePlanner provider candidates', () => {
     ])
     expect(plan.codexBridgeTools?.map(({ namespace, name }) => `${namespace}/${name}`)).toEqual(
       expect.arrayContaining([
-        'mcp__open_science_notebook/notebook_execute',
-        'mcp__open_science_artifacts/write_artifact_file',
-        'mcp__open_science_skills/request_skill_import'
+        'mcp__app_notebook/notebook_execute',
+        'mcp__app_artifacts/write_artifact_file',
+        'mcp__app_skills/request_skill_import'
       ])
     )
     expect(plan.reviewerBridgeTools?.map(({ namespace, name }) => `${namespace}/${name}`)).toEqual(
-      expect.arrayContaining([
-        'mcp__open_science_reviewer/read_turn',
-        'mcp__open_science_reviewer/submit_findings'
-      ])
+      expect.arrayContaining(['mcp__app_reviewer/read_turn', 'mcp__app_reviewer/submit_findings'])
     )
     expect(plan.codexBridgeTools).not.toEqual(
       expect.arrayContaining([...(plan.reviewerBridgeTools ?? [])])

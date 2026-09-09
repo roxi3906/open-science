@@ -14822,7 +14822,7 @@ describe('v4 runtime bindings & agent tools', () => {
         'python'
       ),
       current: posix.join(
-        '/mnt/new/OpenScience',
+        '/mnt/new/Open-Science',
         'runtime',
         'envs',
         DEFAULT_PY_ENV,
@@ -14844,7 +14844,7 @@ describe('v4 runtime bindings & agent tools', () => {
         'python'
       ),
       current: posix.join(
-        '/Volumes/New/OpenScience',
+        '/Volumes/New/Open-Science',
         'runtime',
         'envs',
         DEFAULT_PY_ENV,
@@ -14858,7 +14858,7 @@ describe('v4 runtime bindings & agent tools', () => {
       environment: DEFAULT_PY_ENV,
       provenance: 'app-managed' as const,
       previous: win32.join('D:\\Old\\OpenScience', 'runtime', 'envs', '.p', 'python.exe'),
-      current: win32.join('E:\\New\\OpenScience', 'runtime', 'envs', '.p', 'python.exe')
+      current: win32.join('E:\\New\\Open-Science', 'runtime', 'envs', '.p', 'python.exe')
     },
     {
       scenario: 'windows-legacy-default',
@@ -14866,7 +14866,7 @@ describe('v4 runtime bindings & agent tools', () => {
       environment: DEFAULT_PY_ENV,
       provenance: 'app-managed' as const,
       previous: 'd:\\OLD\\OPENSCIENCE\\runtime\\envs\\DEFAULT-PYTHON\\PYTHON.EXE',
-      current: win32.join('E:\\New\\OpenScience', 'runtime', 'envs', '.p', 'python.exe')
+      current: win32.join('E:\\New\\Open-Science', 'runtime', 'envs', '.p', 'python.exe')
     },
     {
       scenario: 'linux-named',
@@ -14874,7 +14874,7 @@ describe('v4 runtime bindings & agent tools', () => {
       environment: 'analysis',
       provenance: 'agent-created' as const,
       previous: posix.join('/mnt/old/OpenScience', 'runtime', 'envs', 'analysis', 'bin', 'python'),
-      current: posix.join('/mnt/new/OpenScience', 'runtime', 'envs', 'analysis', 'bin', 'python')
+      current: posix.join('/mnt/new/Open-Science', 'runtime', 'envs', 'analysis', 'bin', 'python')
     },
     {
       scenario: 'windows-named',
@@ -14882,7 +14882,7 @@ describe('v4 runtime bindings & agent tools', () => {
       environment: 'analysis',
       provenance: 'agent-created' as const,
       previous: win32.join('D:\\Old\\OpenScience', 'runtime', 'envs', 'analysis', 'python.exe'),
-      current: win32.join('E:\\New\\OpenScience', 'runtime', 'envs', 'analysis', 'python.exe')
+      current: win32.join('E:\\New\\Open-Science', 'runtime', 'envs', 'analysis', 'python.exe')
     },
     {
       scenario: 'linux-disabled-default',
@@ -14898,7 +14898,7 @@ describe('v4 runtime bindings & agent tools', () => {
         'python'
       ),
       current: posix.join(
-        '/mnt/new/OpenScience',
+        '/mnt/new/Open-Science',
         'runtime',
         'envs',
         DEFAULT_PY_ENV,
@@ -14915,7 +14915,7 @@ describe('v4 runtime bindings & agent tools', () => {
       environment: DEFAULT_PY_ENV,
       provenance: 'app-managed',
       previous: win32.join('D:\\Old\\OpenScience', 'runtime', 'envs', '.p', 'python.exe'),
-      current: win32.join('E:\\New\\OpenScience', 'runtime', 'envs', '.p', 'python.exe'),
+      current: win32.join('E:\\New\\Open-Science', 'runtime', 'envs', '.p', 'python.exe'),
       status: 'unavailable',
       reason: 'repair-required'
     }
@@ -15045,7 +15045,7 @@ describe('v4 runtime bindings & agent tools', () => {
       'python'
     )
     const current = posix.join(
-      '/mnt/new/OpenScience',
+      '/mnt/new/Open-Science',
       'runtime',
       'envs',
       'analysis',

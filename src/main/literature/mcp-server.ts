@@ -64,7 +64,7 @@ const literatureReadPresentation = (result: unknown): UnknownRecord | undefined 
 
 const createPresentationBlock = (result: unknown): UnknownRecord | undefined => {
   const presentation = literatureReadPresentation(result)
-  return presentation ? { openScienceLiteraturePresentation: presentation } : undefined
+  return presentation ? { 'open-science-literature-presentation': presentation } : undefined
 }
 
 const createLiteratureMcpServer = (handler: LiteratureMcpHandler): ModelContextProtocolServer => {

@@ -33,7 +33,7 @@ const createDatabaseBeforeLiteratureFoundation = async (client: PrismaClient): P
   await client.$executeRawUnsafe('ALTER TABLE "ArtifactVersion" DROP COLUMN "contentBlobId"')
   await client.$executeRawUnsafe('DROP TABLE "ContentBlob"')
   await client.$executeRawUnsafe(
-    `DELETE FROM "_open_science_migrations"
+    `DELETE FROM "_open-science-migrations"
      WHERE "id" >= '0030_literature_foundation'`
   )
 }
@@ -65,7 +65,7 @@ describe('Content blob migration', () => {
       )
     }
     await client.$executeRawUnsafe(
-      `DELETE FROM "_open_science_migrations" WHERE "id" >= '0030_literature_foundation'`
+      `DELETE FROM "_open-science-migrations" WHERE "id" >= '0030_literature_foundation'`
     )
 
     await expect(migrateApplicationDatabase(client)).resolves.toMatchObject({
@@ -97,8 +97,8 @@ describe('Content blob migration', () => {
         await migrateApplicationDatabase(client)
         await client.$executeRawUnsafe(
           schema === 'pre-ledger'
-            ? 'DELETE FROM "_open_science_migrations"'
-            : `DELETE FROM "_open_science_migrations" WHERE "id" >= '0030_literature_foundation'`
+            ? 'DELETE FROM "_open-science-migrations"'
+            : `DELETE FROM "_open-science-migrations" WHERE "id" >= '0030_literature_foundation'`
         )
       }
 
@@ -232,7 +232,7 @@ describe('Content blob migration', () => {
       // The fixture rewinds the ledger after changing data; discard its earlier recovery snapshot.
       await rm(`${databasePath}.before-0030_literature_foundation.backup`, { force: true })
       await client.$executeRawUnsafe(
-        `DELETE FROM "_open_science_migrations" WHERE "id" >= '0030_literature_foundation'`
+        `DELETE FROM "_open-science-migrations" WHERE "id" >= '0030_literature_foundation'`
       )
       await migrateApplicationDatabase(client)
       expect(await readContent()).toEqual(before)

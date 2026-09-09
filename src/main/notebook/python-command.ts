@@ -176,7 +176,7 @@ safe_names = (
 )
 safe_builtins = {name: getattr(builtins, name) for name in safe_names}
 safe_builtins["__import__"] = restricted_import
-namespace = {"__builtins__": safe_builtins, "__name__": "__open_science_helper_validation__"}
+namespace = {"__builtins__": safe_builtins, "__name__": "__app_helper_validation__"}
 exec(compile(request["source"], "<registered-helper>", "exec"), namespace, namespace)
 missing = [name for name in request["exports"] if name not in namespace or not callable(namespace[name])]
 if missing:

@@ -150,8 +150,8 @@ const createCommands = (persisted: Partial<SettingsSnapshot>): CommandMocks => {
     setNotebookNetwork: vi.fn((settings) => {
       const saved = {
         allowedDomains: settings.allowedDomains,
-        disabledOpenScienceDomainGroups: settings.disabledOpenScienceDomainGroups,
-        disabledOpenScienceDomains: settings.disabledOpenScienceDomains
+        disabledAppDomainGroups: settings.disabledAppDomainGroups,
+        disabledAppDomains: settings.disabledAppDomains
       }
       persisted.notebookNetwork = saved
       return Promise.resolve(saved)
@@ -469,8 +469,8 @@ describe('settings preferences slice', () => {
   it('persists Notebook network settings as one global policy', async () => {
     const notebookNetwork = {
       allowedDomains: ['data.example.org'],
-      disabledOpenScienceDomainGroups: ['literature'],
-      disabledOpenScienceDomains: ['rest.uniprot.org']
+      disabledAppDomainGroups: ['literature'],
+      disabledAppDomains: ['rest.uniprot.org']
     } as const satisfies NotebookNetworkSettings
 
     await expect(

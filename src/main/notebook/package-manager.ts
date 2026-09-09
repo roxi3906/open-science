@@ -1251,7 +1251,7 @@ const githubSource = (spec: string): Extract<NotebookPackageSource, { type: 'git
 }
 
 const bioconductorVersionFromLog = (result: SpawnResult): string | undefined =>
-  /^OPEN_SCIENCE_BIOC_VERSION\t(.+)$/mu.exec(`${result.stdout}\n${result.stderr}`)?.[1]?.trim()
+  /^open-science-bioc-version\t(.+)$/mu.exec(`${result.stdout}\n${result.stderr}`)?.[1]?.trim()
 
 const resolveInstallMicromamba = (
   deps: Partial<InstallDeps>
@@ -1822,7 +1822,7 @@ export async function installPackages(
       (req.installer === 'biocmanager'
         ? bootstrap('BiocManager') +
           `BiocManager::install(c(${vector}), lib=${JSON.stringify(rLib)}, ask=FALSE, update=FALSE); ` +
-          `cat("OPEN_SCIENCE_BIOC_VERSION\\t", as.character(BiocManager::version()), "\\n", sep="")`
+          `cat("open-science-bioc-version\\t", as.character(BiocManager::version()), "\\n", sep="")`
         : bootstrap('remotes') +
           `invisible(lapply(c(${vector}), function(repo) remotes::install_github(repo, ` +
           `lib=${JSON.stringify(rLib)}, dependencies=TRUE, upgrade="never")))`)

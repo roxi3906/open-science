@@ -191,7 +191,7 @@ const launchEnvironment = (
   return environment
 }
 
-const launchOpenScience = async (
+const launchApp = async (
   { storageRoot, userDataRoot, fakeAgentBinRoot }: LaunchRoots,
   fakeAgentEnabled: boolean,
   fakeRemoteItEnabled: boolean,
@@ -351,6 +351,19 @@ class ElectronAppHarness implements ElectronApp {
     )
     try {
       await mkdir(harness.roots.storageRoot, { recursive: true })
+      // English locator journeys can opt into an isolated preference on non-English developer Macs.
+      // This affects only the disposable test profile; the application/system locale is unchanged.
+      if (process.env.OPEN_SCIENCE_E2E_INITIAL_LOCALE === 'en') {
+        await writeFile(
+          join(harness.roots.storageRoot, 'settings.json'),
+          JSON.stringify({
+            version: 3,
+            providers: [],
+            localePreference: 'en'
+          }),
+          'utf8'
+        )
+      }
       await writeFile(harness.roots.fakeRemoteItState, JSON.stringify({ services: [] }), 'utf8')
       await writeFakeAgentLauncher(harness.roots.fakeAgentBinRoot)
       await writeFakeRemoteItCommands(harness.roots.fakeRemoteItRoot)
@@ -866,7 +879,7 @@ class ElectronAppHarness implements ElectronApp {
   }
 
   private async launch(): Promise<void> {
-    this.application = await launchOpenScience(
+    this.application = await launchApp(
       this.roots,
       this.fakeAgentEnabled,
       this.fakeRemoteItEnabled,

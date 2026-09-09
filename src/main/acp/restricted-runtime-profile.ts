@@ -5,7 +5,7 @@ import type { ResolvedAgentBackend } from '../agent-framework'
 import { isolateCodeBuddyEnvironment } from '../agent-framework/codebuddy'
 import { CODEX_SUBSCRIPTION_PROVIDER_ID } from '../../shared/settings'
 import { prepareCodexRuntimeHomeAuthentication } from '../settings/codex-auth'
-import { OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION } from '../skills/runtime-mcp-server'
+import { APP_SKILL_RUNTIME_SESSION_OPTION } from '../skills/runtime-mcp-server'
 
 type RestrictedRuntimeProfile = Readonly<{
   agentName: string
@@ -51,8 +51,8 @@ const removeSkillRuntimeCapability = (
   source: Readonly<Record<string, unknown>> | undefined
 ): Record<string, unknown> => {
   const sessionOptions = { ...source }
-  const runtime = record(sessionOptions[OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION])
-  delete sessionOptions[OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION]
+  const runtime = record(sessionOptions[APP_SKILL_RUNTIME_SESSION_OPTION])
+  delete sessionOptions[APP_SKILL_RUNTIME_SESSION_OPTION]
   if (typeof runtime.root !== 'string') return sessionOptions
 
   const withoutRuntimeRoot = (value: unknown): unknown[] | undefined => {

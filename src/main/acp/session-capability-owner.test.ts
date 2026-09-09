@@ -40,8 +40,8 @@ describe('ACP session capability owner', () => {
   it.each([
     [claudeCodeFramework, 'open-science-library'],
     [codexFramework, 'open-science-library'],
-    [codeBuddyFramework, 'open-science-library'],
-    [opencodeFramework, 'open_science_library']
+    [codeBuddyFramework, 'app_library'],
+    [opencodeFramework, 'app_library']
   ] as const)(
     'always mounts the Literature Library for a primary %s Session',
     async (framework, modelFacingName) => {
@@ -121,7 +121,7 @@ describe('ACP session capability owner', () => {
       sessionCwd: '/workspace/delegate',
       projectId: 'project'
     })
-    const notebook = provision.mcpServers.find((server) => server.name === 'open_science_notebook')
+    const notebook = provision.mcpServers.find((server) => server.name === 'app_notebook')
 
     expect(notebook && 'env' in notebook ? notebook.env : []).toContainEqual({
       name: 'OPEN_SCIENCE_NOTEBOOK_MEMORY_TOOLS',
@@ -206,7 +206,7 @@ describe('ACP session capability owner', () => {
   it.each([
     [claudeCodeFramework, 'open-science-literature'],
     [codexFramework, 'open-science-literature'],
-    [opencodeFramework, 'open_science_literature']
+    [opencodeFramework, 'app_literature']
   ] as const)(
     'mounts Literature once enabled and keeps it in the capability descriptor for %s',
     async (framework, modelFacingName) => {
@@ -388,7 +388,7 @@ describe('ACP session capability owner', () => {
       sessionCwd: '/workspace/child',
       projectId: 'project-1'
     })
-    const artifact = provision.mcpServers.find((server) => server.name === 'open_science_artifacts')
+    const artifact = provision.mcpServers.find((server) => server.name === 'app_artifacts')
 
     expect(artifact && 'env' in artifact ? artifact.env : []).toContainEqual({
       name: 'OPEN_SCIENCE_ARTIFACT_CURRENT_RUN_FILE',
@@ -399,7 +399,7 @@ describe('ACP session capability owner', () => {
   it.each([
     [claudeCodeFramework, 'open-science-host-message'],
     [codexFramework, 'open-science-host-message'],
-    [opencodeFramework, 'open_science_host_message']
+    [opencodeFramework, 'app_host_message']
   ] as const)(
     'provisions only the relationship-bound Side chat message tool for %s',
     async (framework, modelFacingName) => {
@@ -455,7 +455,7 @@ describe('ACP session capability owner', () => {
   it.each([
     [claudeCodeFramework, 'open-science-plan'],
     [codexFramework, 'open-science-plan'],
-    [opencodeFramework, 'open_science_plan']
+    [opencodeFramework, 'app_plan']
   ] as const)('projects the same Session Plan tools for %s', async (framework, modelFacingName) => {
     const release = vi.fn()
     const owner = createOwner({
@@ -516,7 +516,7 @@ describe('ACP session capability owner', () => {
     expect(provision.descriptor.capabilities).toEqual(['plan'])
     expect(provision.mcpServers).toEqual([
       expect.objectContaining({
-        name: 'open_science_plan',
+        name: 'app_plan',
         env: expect.arrayContaining([
           { name: 'OPEN_SCIENCE_PLAN_PROJECT_ID', value: 'project-1' },
           { name: 'OPEN_SCIENCE_PLAN_SESSION_ID', value: 'session-1' }
@@ -1070,9 +1070,9 @@ describe('ACP session capability owner', () => {
       'host-llm'
     ])
     expect(primary.descriptor.modelFacingMcpServerNames).toEqual([
-      'open_science_artifacts',
-      'open_science_notebook',
-      'open_science_skills'
+      'app_artifacts',
+      'app_notebook',
+      'app_skills'
     ])
     expect(primary.descriptor.canonicalMcpServerNames).toEqual([
       'open-science-artifacts',
@@ -1112,7 +1112,7 @@ describe('ACP session capability owner', () => {
       'open-science-artifacts',
       'open-science-notebook'
     ],
-    ['opencode', opencodeFramework, true, false, 'open_science_artifacts', 'open_science_notebook'],
+    ['opencode', opencodeFramework, true, false, 'app_artifacts', 'app_notebook'],
     [
       'codex-response',
       codexFramework,

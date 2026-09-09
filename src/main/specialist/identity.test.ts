@@ -45,8 +45,8 @@ describe('buildSpecialistIdentityAppend', () => {
 
   it('closes the identity boundary and preserves app-owned constraints', () => {
     const text = buildSpecialistIdentityAppend(makeProfile())
-    expect(text).toContain('<open_science_specialist_identity>')
-    expect(text).toContain('</open_science_specialist_identity>')
+    expect(text).toContain('<open-science-specialist-identity>')
+    expect(text).toContain('</open-science-specialist-identity>')
     expect(text).toContain('does not grant capabilities or permissions')
     expect(text).toContain('provider/model safety')
     expect(text).toContain('tool, workflow, provenance, and exact-output rules')

@@ -79,7 +79,7 @@ export const hashCommand = (command: string): string =>
 // This is called both at submit time (to return immediately) and by the dispatcher.
 export const computeRemoteWorkdir = (scratchRoot: string | undefined, jobId: string): string => {
   const root = scratchRoot?.trim() || '~'
-  return `${root}/.openscience/jobs/${jobId}`
+  return `${root}/.open-science/jobs/${jobId}`
 }
 
 // Quotes a remote path for safe interpolation into a remote shell command, while still allowing a

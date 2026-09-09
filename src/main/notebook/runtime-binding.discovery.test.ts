@@ -13,7 +13,7 @@ describe('runtime discovery enablement', () => {
     '%s: lists the enabled system Python without probing the disabled managed Python',
     async (platform) => {
       const paths = platform === 'win32' ? win32 : posix
-      const dataRoot = platform === 'win32' ? 'C:\\OpenScience' : '/OpenScience'
+      const dataRoot = platform === 'win32' ? 'C:\\Open-Science' : '/Open-Science'
       const runtimeRoot = join(dataRoot, 'runtime')
       const managed = paths.join(dataRoot, 'runtime', 'envs', 'default-python', 'python')
       const system = paths.join(dataRoot, 'anaconda3', 'python')

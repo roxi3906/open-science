@@ -56,7 +56,7 @@ describe('Reviewer paged preview runtime', () => {
     ['pptx', 'target slide two']
   ] as const)('returns only requested rendered %s target', async (format, expectedText) => {
     await import('./main')
-    const initialization = await window.__openScienceReviewerPagedPreview.initialize({
+    const initialization = await window.__appReviewerPagedPreview.initialize({
       sessionId: 'session-1',
       resource: {
         id: 'resource-1',
@@ -78,10 +78,10 @@ describe('Reviewer paged preview runtime', () => {
       expect.objectContaining({ extension: format, targetPages: [2] })
     )
     await expect(
-      window.__openScienceReviewerPagedPreview.preparePage({ pageNumber: 2 })
+      window.__appReviewerPagedPreview.preparePage({ pageNumber: 2 })
     ).resolves.toMatchObject({ pageNumber: 2, text: expectedText, rect })
-    await expect(
-      window.__openScienceReviewerPagedPreview.preparePage({ pageNumber: 1 })
-    ).rejects.toThrow(/not admitted/i)
+    await expect(window.__appReviewerPagedPreview.preparePage({ pageNumber: 1 })).rejects.toThrow(
+      /not admitted/i
+    )
   })
 })

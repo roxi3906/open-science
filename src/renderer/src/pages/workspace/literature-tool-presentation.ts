@@ -1,3 +1,7 @@
+import {
+  readLiteraturePresentation,
+  canonicalizeAppToolIdentity
+} from '../../../../shared/brand-migration'
 type LiteratureToolAction = 'format' | 'read' | 'search' | 'save'
 
 type LiteratureToolSummary = Readonly<{
@@ -61,7 +65,7 @@ const unwrapArguments = (value: unknown): UnknownRecord => {
 }
 
 const normalizeIdentity = (value: string): string =>
-  value
+  canonicalizeAppToolIdentity(value.trim().toLowerCase())
     .trim()
     .toLowerCase()
     .replace(/^mcp(?:__|\.)/u, '')
@@ -159,10 +163,7 @@ const collectOutputRecords = (value: unknown, depth = 0): UnknownRecord[] => {
   return [direct, ...nested.flatMap(collect)]
 }
 
-const presentationRecord = (output: UnknownRecord | undefined): UnknownRecord | undefined =>
-  output && isRecord(output.openScienceLiteraturePresentation)
-    ? output.openScienceLiteraturePresentation
-    : undefined
+const presentationRecord = readLiteraturePresentation
 
 const isLiteratureOutputRecord = (output: UnknownRecord): boolean =>
   isRecord(output.document) ||

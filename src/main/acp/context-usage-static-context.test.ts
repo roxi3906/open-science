@@ -19,15 +19,15 @@ describe('contextUsageMcpSections', () => {
     })
 
     const text = sections.map((section) => section.text).join('\n')
-    expect(text).not.toContain('open_science_activity_begin_activity_group')
-    expect(text).toContain('open_science_artifacts_write_artifact_file')
-    expect(text).toContain('open_science_notebook_notebook_execute')
-    expect(text).toContain('open_science_skills_request_skill_import')
+    expect(text).not.toContain('app_activity_begin_activity_group')
+    expect(text).toContain('app_artifacts_write_artifact_file')
+    expect(text).toContain('app_notebook_notebook_execute')
+    expect(text).toContain('app_skills_request_skill_import')
     expect(text).not.toContain('open-science-activity_begin_activity_group')
     expect(text).not.toContain('open-science-artifacts_write_artifact_file')
     expect(text).not.toContain('open-science-notebook_notebook_execute')
     expect(text).not.toContain('open-science-skills_request_skill_import')
-    expect(text).not.toContain('mcp__open_science_notebook__notebook_execute')
+    expect(text).not.toContain('mcp__app_notebook__notebook_execute')
   })
 
   it('uses Codex MCP tool names in its serialized schema baseline', () => {
@@ -39,7 +39,7 @@ describe('contextUsageMcpSections', () => {
 
     const text = sections.map((section) => section.text).join('\n')
     expect(text).toContain('mcp.open-science-notebook.notebook_execute')
-    expect(text).not.toContain('mcp__open_science_notebook__notebook_execute')
+    expect(text).not.toContain('mcp__app_notebook__notebook_execute')
   })
 
   it('keeps the notebook schema plus scoped guidance within the static context budget', () => {
@@ -92,7 +92,7 @@ describe('contextUsageMcpSections', () => {
     })
 
     const text = sections.map((section) => section.text).join('\n')
-    expect(text).toContain('mcp__open_science_notebook__notebook_execute')
+    expect(text).toContain('mcp__app_notebook__notebook_execute')
     expect(text).not.toContain('mcp.open-science-notebook.notebook_execute')
   })
 
@@ -108,7 +108,7 @@ describe('contextUsageMcpSections', () => {
       'mcp-schema:open-science-notebook'
     ])
     expect(sections.map(({ text }) => text).join('\n')).toContain(
-      'mcp__open_science_notebook__notebook_execute'
+      'mcp__open-science-notebook__notebook_execute'
     )
     expect(sections.map(({ text }) => text).join('\n')).not.toContain('request_skill_import')
   })

@@ -14,7 +14,7 @@ import { opencodeFramework } from '../agent-framework/opencode'
 import type { ExplicitAgentBackendTarget } from '../settings/backend-resolver'
 import {
   LOAD_SKILL_TOOL_CALLABLE_NAME,
-  OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION
+  APP_SKILL_RUNTIME_SESSION_OPTION
 } from '../skills/runtime-mcp-server'
 import { ImageInputCompatibilityOwner } from './image-input-compatibility-owner'
 import { AcpSessionPresentationPolicy } from './session-presentation-policy'
@@ -242,7 +242,7 @@ describe('RestrictedInferenceRunner', () => {
             },
             network: { allowUnixSockets: ['/preserved.sock'] }
           },
-          [OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION]: {
+          [APP_SKILL_RUNTIME_SESSION_OPTION]: {
             command: '/app/open-science',
             entryPath: '/app/main.js',
             root: projectionRoot
@@ -267,7 +267,7 @@ describe('RestrictedInferenceRunner', () => {
       presentation.metaArg._meta?.claudeCode as { options?: Record<string, unknown> } | undefined
     )?.options
 
-    expect(prepared.sessionOptions).not.toHaveProperty(OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION)
+    expect(prepared.sessionOptions).not.toHaveProperty(APP_SKILL_RUNTIME_SESSION_OPTION)
     expect(prepared.sessionOptions?.additionalDirectories).toEqual(['/preserved-directory'])
     expect(prepared.sessionOptions?.sandbox).toEqual({
       filesystem: {
@@ -302,7 +302,7 @@ describe('RestrictedInferenceRunner', () => {
           join(sourceConfigDir, 'system-prompt.md')
         ],
         sessionOptions: {
-          [OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION]: {
+          [APP_SKILL_RUNTIME_SESSION_OPTION]: {
             command: '/app/open-science',
             entryPath: '/app/main.js',
             root: '/runtime-support/agent-skills/codebuddy/revision'
@@ -325,7 +325,7 @@ describe('RestrictedInferenceRunner', () => {
     ).resolves.toBe('{"models":[]}\n')
     expect(prepared.args?.slice(-2)).toEqual(['--tools', ''])
     expect(prepared.args).not.toContain('--system-prompt-file')
-    expect(prepared.sessionOptions).not.toHaveProperty(OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION)
+    expect(prepared.sessionOptions).not.toHaveProperty(APP_SKILL_RUNTIME_SESSION_OPTION)
     expect(prepared.systemPromptAppends).toEqual(['Do not use tools.'])
     expect(prepared.persistentSystemPrompt).toBeUndefined()
   })

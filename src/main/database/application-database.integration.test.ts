@@ -698,7 +698,7 @@ describe('application database (integration)', () => {
     await removeAgentMemoryTriggers(client)
     // Simulate a current pre-ledger schema with the targeted legacy table shape.
     await client.$executeRawUnsafe('DROP TABLE "ManagedFileVersionWriteOperation"')
-    await client.$executeRawUnsafe('DROP TABLE "_open_science_migrations"')
+    await client.$executeRawUnsafe('DROP TABLE "_open-science-migrations"')
     await client.$executeRawUnsafe('ALTER TABLE "Project" DROP COLUMN "agentContext"')
     await removeComputePasswordAuthSchema(client)
     await removeComputeAnalysisSchema(client)
@@ -787,7 +787,7 @@ describe('application database (integration)', () => {
     await removeAgentMemoryTriggers(client)
     // Simulate a current pre-ledger schema with the targeted legacy table shape.
     await client.$executeRawUnsafe('DROP TABLE "ManagedFileVersionWriteOperation"')
-    await client.$executeRawUnsafe('DROP TABLE "_open_science_migrations"')
+    await client.$executeRawUnsafe('DROP TABLE "_open-science-migrations"')
     await client.$executeRawUnsafe('ALTER TABLE "Project" DROP COLUMN "agentContext"')
     await removeComputePasswordAuthSchema(client)
     await removeComputeAnalysisSchema(client)
@@ -848,7 +848,7 @@ describe('application database (integration)', () => {
   })
 
   it('backs up legacy data through the shared client on a portable storage path', async () => {
-    storageRoot = await mkdtemp(join(tmpdir(), 'open science 数据 legacy backup-'))
+    storageRoot = await mkdtemp(join(tmpdir(), 'open-science 数据 legacy backup-'))
     const databasePath = join(storageRoot, 'open-science.db')
     const backupPath = `${databasePath}.before-0001_runtime_schema_baseline.backup`
     const seedClient = createProjectDbClient(storageRoot)
@@ -888,7 +888,7 @@ describe('application database (integration)', () => {
       ).resolves.toEqual([{ id: 'legacy-project', name: 'Preserved' }])
       await expect(
         backupClient.$queryRaw<Array<{ name: string }>>`
-          SELECT "name" FROM "sqlite_schema" WHERE "name" = '_open_science_migrations'
+          SELECT "name" FROM "sqlite_schema" WHERE "name" = '_open-science-migrations'
         `
       ).resolves.toEqual([])
     } finally {

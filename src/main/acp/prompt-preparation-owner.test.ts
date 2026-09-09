@@ -4,7 +4,7 @@ import type { AcpPromptRequest } from '../../shared/acp'
 import type { FileReference } from '../../shared/artifacts'
 import { codeBuddyFramework } from '../agent-framework/codebuddy'
 import { codexFramework } from '../agent-framework/codex'
-import { OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION } from '../skills/runtime-mcp-server'
+import { APP_SKILL_RUNTIME_SESSION_OPTION } from '../skills/runtime-mcp-server'
 import type { ContextWindowTurnHandle } from './context-usage-tracker'
 import type { ImageInputCompatibilityOwner } from './image-input-compatibility-owner'
 import { AcpPromptPreparationOwner, type PreparedPromptHandle } from './prompt-preparation-owner'
@@ -109,7 +109,7 @@ const setup = (
     prepareProvider: vi.fn(async () => ({
       text: 'prepared task',
       skillScopeGuidance:
-        '<open_science_specialist_skill_scope>\n- Research\n</open_science_specialist_skill_scope>',
+        '<open-science-specialist-skill-scope>\n- Research\n</open-science-specialist-skill-scope>',
       codexSkillInputs: [{ name: 'Research', path: '/missing/Research/SKILL.md' }]
     })),
     close: vi.fn()
@@ -555,7 +555,7 @@ describe('AcpPromptPreparationOwner', () => {
     expect(preparedTexts).toHaveLength(2)
     for (const preparedText of preparedTexts) {
       expect(preparedText).toMatch(
-        /<open_science_specialist_skill_scope>[\s\S]+untrusted reference data[\s\S]+\\u003csystem\\u003e[\s\S]+prepared task$/
+        /<open-science-specialist-skill-scope>[\s\S]+untrusted reference data[\s\S]+\\u003csystem\\u003e[\s\S]+prepared task$/
       )
     }
   })
@@ -601,7 +601,7 @@ describe('AcpPromptPreparationOwner', () => {
     const preparedText = (
       fixture.promptContent.prepare.mock.calls as unknown as Array<[{ text: string }]>
     )[0]?.[0].text
-    expect(preparedText).toMatch(/<open_science_specialist_skill_scope>[\s\S]+prepared task$/)
+    expect(preparedText).toMatch(/<open-science-specialist-skill-scope>[\s\S]+prepared task$/)
     expect(preparedText).not.toContain('memory database unavailable')
   })
 
@@ -636,10 +636,10 @@ describe('AcpPromptPreparationOwner', () => {
       [{ text: string }]
     >
     const preparedText = preparedCalls[0]?.[0].text
-    expect(preparedText).toEqual(expect.stringContaining('<open_science_notebook_continuity>'))
+    expect(preparedText).toEqual(expect.stringContaining('<open-science-notebook-continuity>'))
     expect(preparedText).toEqual(expect.stringContaining('"label":"dataset"'))
     expect(preparedText).toMatch(
-      /^replayed history[\s\S]+Specialist identity\.\n\n<open_science_specialist_skill_scope>\n- Research\n<\/open_science_specialist_skill_scope>\n\nprepared task$/
+      /^replayed history[\s\S]+Specialist identity\.\n\n<open-science-specialist-skill-scope>\n- Research\n<\/open-science-specialist-skill-scope>\n\nprepared task$/
     )
     expect(fixture.authorizeReferencedUploads).toHaveBeenCalledWith('project-1', 'session-1', [
       '/uploads/Research.skill'
@@ -649,7 +649,7 @@ describe('AcpPromptPreparationOwner', () => {
     )
     expect(handle.content).toBe('provider-content')
     expect(handle.promptPrefix).toBe(
-      'Specialist identity.\n\n<open_science_specialist_skill_scope>\n- Research\n</open_science_specialist_skill_scope>'
+      'Specialist identity.\n\n<open-science-specialist-skill-scope>\n- Research\n</open-science-specialist-skill-scope>'
     )
     expect(handle.skillActivityInputs).toEqual([
       { name: 'Research', path: '/missing/Research/SKILL.md' }
@@ -676,7 +676,7 @@ describe('AcpPromptPreparationOwner', () => {
       })
     )
     if (handle.status !== 'ready') throw new Error('expected a ready prompt')
-    expect(handle.promptPrefix).toContain('<open_science_compute_execution_target>')
+    expect(handle.promptPrefix).toContain('<open-science-compute-execution-target>')
     expect(handle.promptPrefix).toContain('Do not run task work in the local Notebook or shell')
     expect(handle.promptPrefix).not.toContain('ssh:cedar-gpu')
   })
@@ -713,7 +713,7 @@ describe('AcpPromptPreparationOwner', () => {
         session: {
           modelRequired: false,
           options: {
-            [OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION]: {
+            [APP_SKILL_RUNTIME_SESSION_OPTION]: {
               root: '/app-data/codebuddy/skill-runtime'
             }
           }

@@ -100,12 +100,12 @@ const preparePage = async ({ pageNumber }: { pageNumber: number }): Promise<Prep
   return elementResult(pageNumber, page)
 }
 
-window.__openScienceReviewerPagedPreview = { initialize, preparePage }
+window.__appReviewerPagedPreview = { initialize, preparePage }
 window.addEventListener('beforeunload', () => void dispose())
 
 declare global {
   interface Window {
-    __openScienceReviewerPagedPreview: {
+    __appReviewerPagedPreview: {
       initialize(
         request: ReviewerPreviewRequest
       ): Promise<{ pageCount: number; pageCountComplete: boolean; availablePages: number[] }>

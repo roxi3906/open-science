@@ -355,6 +355,7 @@ describe('Settings backend ownership architecture', () => {
       'markLegacyDataMovePromptDismissed',
       'markOnboardingComplete',
       'markPathsNormalized',
+      'migrateBrandIdentity',
       'rememberCodexAutoHttpsFallback',
       'removeCustomServer',
       'setActiveProvider',

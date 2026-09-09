@@ -8,10 +8,23 @@ Node.js SDK and command-line client for an Open-Science daemon running on the lo
 
 ## SDK quick start
 
-```js
-import { connectToOpenScience } from '@aipoch/open-science'
+The brand migration changes public JavaScript exports. Update SDK consumers together with the
+package upgrade; these are breaking API changes, and old export aliases are not provided:
 
-const client = await connectToOpenScience()
+| Previous export        | Current export |
+| ---------------------- | -------------- |
+| `connectToOpenScience` | `connect`      |
+| `OpenScienceClient`    | `Client`       |
+| `OpenScienceApiError`  | `ApiError`     |
+
+Update imports, constructors, type annotations, and `instanceof` checks. Errors now have
+`name === 'ApiError'`; prefer the documented error `code` over matching the class name string.
+The package name and CLI command remain `@aipoch/open-science` and `open-science`.
+
+```js
+import { connect } from '@aipoch/open-science'
+
+const client = await connect()
 const run = await client.startRun({
   project: 'systematic-review',
   prompt: 'Summarize the evidence.',

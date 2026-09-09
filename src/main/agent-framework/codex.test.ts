@@ -929,13 +929,13 @@ describe('codexFramework', () => {
     const framework = createCodexFramework({ platform: 'win32' })
     const config = framework.prepareModelConfig(
       { type: 'codex-isolated', apiEndpoints: ['responses'] },
-      { storageRoot: 'C:\\OpenScience', executablePath: 'C:\\runtime\\codex-acp.exe' }
+      { storageRoot: 'C:\\Open-Science', executablePath: 'C:\\runtime\\codex-acp.exe' }
     )
 
     expect(config.env).toMatchObject({
-      HOME: join('C:\\OpenScience', 'codex-subscription'),
-      USERPROFILE: join('C:\\OpenScience', 'codex-subscription'),
-      CODEX_HOME: join('C:\\OpenScience', 'codex-subscription')
+      HOME: join('C:\\Open-Science', 'codex-subscription'),
+      USERPROFILE: join('C:\\Open-Science', 'codex-subscription'),
+      CODEX_HOME: join('C:\\Open-Science', 'codex-subscription')
     })
   })
 

@@ -511,7 +511,7 @@ describe('runtime state ownership architecture', () => {
     ['../web-service/http-server', 'WebHttpServer'],
     ['electron', 'ipcMain'],
     ['../compute/application-commands', 'ComputeApplicationCommandDependencies'],
-    ['../../../packages/open-science/index', 'OpenScienceClient']
+    ['../../../packages/open-science/index', 'Client']
   ])('rejects direct future orchestration dependency on %s', (specifier, symbol) => {
     const source = `import { ${symbol} } from '${specifier}'`
 

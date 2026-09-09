@@ -69,7 +69,7 @@ describe('settings document store', () => {
     storageRoot = await mkdtemp(join(tmpdir(), 'open-science-settings-store-'))
     const store = new SettingsDocumentStore(storageRoot)
 
-    await expect(store.read()).resolves.toEqual({ version: 2, providers: [] })
+    await expect(store.read()).resolves.toEqual({ version: 3, providers: [] })
     await expect(
       store.mutate((settings) => ({ ...settings, notificationsEnabled: false }))
     ).resolves.toMatchObject({ providers: [], notificationsEnabled: false })
@@ -78,7 +78,7 @@ describe('settings document store', () => {
   it('rejects an oversized settings document before reading its contents', async () => {
     storageRoot = await mkdtemp(join(tmpdir(), 'open-science-settings-store-'))
     const settingsPath = join(storageRoot, 'settings.json')
-    await writeFile(settingsPath, '{"version":2,"providers":[]}\n', 'utf8')
+    await writeFile(settingsPath, '{"version":3,"providers":[]}\n', 'utf8')
     faults.reportedSize = 128 * 1024 * 1024 + 1
     vi.mocked(readFile).mockClear()
 
@@ -102,7 +102,7 @@ describe('settings document store', () => {
     )
 
     await expect(new SettingsDocumentStore(storageRoot).read()).resolves.toMatchObject({
-      version: 2,
+      version: 3,
       activeProviderId: 'provider-1',
       activeModel: 'model-1'
     })
@@ -113,7 +113,7 @@ describe('settings document store', () => {
     await writeFile(
       join(storageRoot, 'settings.json.1700000000000-1.tmp'),
       JSON.stringify({
-        version: 2,
+        version: 3,
         providers: [],
         notificationsEnabled: false
       }),
@@ -129,11 +129,11 @@ describe('settings document store', () => {
   it('does not skip a future Settings temp and recover an older format', async () => {
     storageRoot = await mkdtemp(join(tmpdir(), 'open-science-settings-store-temp-'))
     const temporaryName = 'settings.json.1700000000000-1.tmp'
-    const futureContents = '{"version":3,"futurePreference":"must-survive"}\n'
+    const futureContents = '{"version":4,"futurePreference":"must-survive"}\n'
     await writeFile(join(storageRoot, temporaryName), futureContents, 'utf8')
 
     await expect(new SettingsDocumentStore(storageRoot).read()).rejects.toThrow(
-      'Settings document version 3 is newer than supported version 2.'
+      'Settings document version 4 is newer than supported version 3.'
     )
     await expect(readFile(join(storageRoot, temporaryName), 'utf8')).resolves.toBe(futureContents)
     await expect(readdir(storageRoot)).resolves.toEqual([temporaryName])
@@ -143,13 +143,13 @@ describe('settings document store', () => {
     storageRoot = await mkdtemp(join(tmpdir(), 'open-science-settings-store-temp-'))
     const settingsPath = join(storageRoot, 'settings.json')
     const temporaryName = 'settings.json.1700000000000-1.tmp'
-    const primaryContents = '{"version":2,"providers":[]}\n'
-    const futureContents = '{"version":3,"futurePreference":"must-survive"}\n'
+    const primaryContents = '{"version":3,"providers":[]}\n'
+    const futureContents = '{"version":4,"futurePreference":"must-survive"}\n'
     await writeFile(settingsPath, primaryContents, 'utf8')
     await writeFile(join(storageRoot, temporaryName), futureContents, 'utf8')
 
     await expect(new SettingsDocumentStore(storageRoot).read()).rejects.toThrow(
-      'Settings document version 3 is newer than supported version 2.'
+      'Settings document version 4 is newer than supported version 3.'
     )
     await expect(readFile(settingsPath, 'utf8')).resolves.toBe(primaryContents)
     await expect(readFile(join(storageRoot, temporaryName), 'utf8')).resolves.toBe(futureContents)
@@ -174,7 +174,7 @@ describe('settings document store', () => {
     storageRoot = await mkdtemp(join(tmpdir(), 'open-science-settings-store-'))
     const settingsPath = join(storageRoot, 'settings.json')
     const futureContents = `${JSON.stringify({
-      version: 3,
+      version: 4,
       providers: [],
       futurePreference: 'must-survive'
     })}\n`
@@ -183,7 +183,7 @@ describe('settings document store', () => {
     const update = vi.fn((settings) => ({ ...settings, notificationsEnabled: false }))
 
     await expect(store.mutate(update)).rejects.toThrow(
-      'Settings document version 3 is newer than supported version 2.'
+      'Settings document version 4 is newer than supported version 3.'
     )
 
     expect(update).not.toHaveBeenCalled()
@@ -206,7 +206,7 @@ describe('settings document store', () => {
     storageRoot = await mkdtemp(join(tmpdir(), 'open-science-settings-store-'))
     const settingsPath = join(storageRoot, 'settings.json')
     const originalContents = `${JSON.stringify({
-      version: 2,
+      version: 3,
       providers: [],
       conversationSkillImportEnabled: false
     })}\n`
@@ -274,7 +274,7 @@ describe('settings document store', () => {
       ).resolves.toHaveLength(2)
 
       await expect(new SettingsDocumentStore(storageRoot).read()).resolves.toMatchObject({
-        version: 2,
+        version: 3,
         providers: []
       })
       await expect(readdir(storageRoot)).resolves.toEqual(['settings.json'])

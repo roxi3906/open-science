@@ -26,6 +26,10 @@ Var perMachineInstallDirCache
 Var perUserInstallDirCache
 Var perMachineDataBackup
 Var perUserDataBackup
+Var perMachineCurrentDataBackup
+Var perUserCurrentDataBackup
+Var retryCurrentDataBackup
+Var retryCurrentInstallDir
 Var dataProtectionFailed
 Var dataRestoreFailed
 
@@ -55,28 +59,28 @@ FunctionEnd
 # Move a data root outside the installation before the OLD uninstaller sees it. A deterministic
 # sibling path lets an elevated inner installer or a later retry recover data left by an
 # interrupted outer installer without relying on process-local registers.
-!macro preserveNestedDataRoot DIR BACKUP SLOT
+!macro preserveNestedDataRoot DIR BACKUP SLOT FOLDER
   StrCpy ${BACKUP} ""
   ${if} "${DIR}" != ""
     ClearErrors
     GetFullPathName $R2 "${DIR}\.."
     ${if} ${Errors}
-      DetailPrint `Could not safely preserve "${DIR}\OpenScience"; its parent path could not be resolved.`
+      DetailPrint `Could not safely preserve "${DIR}\${FOLDER}"; its parent path could not be resolved.`
       MessageBox MB_OK|MB_ICONSTOP "Open-Science could not safely protect its data folder before updating.$\r$\nThe existing data was left untouched."
       StrCpy $dataProtectionFailed "1"
     ${else}
       StrCpy ${BACKUP} "$R2\.open-science-update-data-${SLOT}"
-      ${if} ${FileExists} "${DIR}\OpenScience\*.*"
+      ${if} ${FileExists} "${DIR}\${FOLDER}\*.*"
         ${if} ${FileExists} "${BACKUP}\*.*"
-          DetailPrint `Could not safely preserve "${DIR}\OpenScience" because the backup path already exists: ${BACKUP}`
+          DetailPrint `Could not safely preserve "${DIR}\${FOLDER}" because the backup path already exists: ${BACKUP}`
           MessageBox MB_OK|MB_ICONSTOP "Open-Science found both the current data folder and an earlier update backup.$\r$\nNo data was changed. Please inspect:$\r$\n${BACKUP}"
           StrCpy ${BACKUP} ""
           StrCpy $dataProtectionFailed "1"
         ${else}
           ClearErrors
-          Rename "${DIR}\OpenScience" "${BACKUP}"
+          Rename "${DIR}\${FOLDER}" "${BACKUP}"
           ${if} ${Errors}
-            DetailPrint `Could not safely preserve "${DIR}\OpenScience"; leaving the existing installation untouched.`
+            DetailPrint `Could not safely preserve "${DIR}\${FOLDER}"; leaving the existing installation untouched.`
             MessageBox MB_OK|MB_ICONSTOP "Open-Science could not safely protect its data folder before updating.$\r$\nThe existing data was left untouched."
             StrCpy ${BACKUP} ""
             StrCpy $dataProtectionFailed "1"
@@ -95,24 +99,24 @@ FunctionEnd
   ${endif}
 !macroend
 
-!macro restoreNestedDataRoot DIR BACKUP
+!macro restoreNestedDataRoot DIR BACKUP FOLDER
   ${if} "${DIR}" != ""
   ${andIf} "${BACKUP}" != ""
     ${if} ${FileExists} "${BACKUP}\*.*"
-      ${if} ${FileExists} "${DIR}\OpenScience\*.*"
+      ${if} ${FileExists} "${DIR}\${FOLDER}\*.*"
         DetailPrint `The preserved data remains at: ${BACKUP}`
         MessageBox MB_OK|MB_ICONSTOP "Open-Science could not restore its data folder because the destination already exists.$\r$\nThe preserved data remains at:$\r$\n${BACKUP}"
         StrCpy $dataRestoreFailed "1"
       ${else}
         CreateDirectory "${DIR}"
         ClearErrors
-        Rename "${BACKUP}" "${DIR}\OpenScience"
+        Rename "${BACKUP}" "${DIR}\${FOLDER}"
         ${if} ${Errors}
           DetailPrint `The preserved data remains at: ${BACKUP}`
           MessageBox MB_OK|MB_ICONSTOP "Open-Science could not restore its data folder after updating.$\r$\nThe preserved data remains at:$\r$\n${BACKUP}"
           StrCpy $dataRestoreFailed "1"
         ${else}
-          DetailPrint `Restored the data folder to: ${DIR}\OpenScience`
+          DetailPrint `Restored the data folder to: ${DIR}\${FOLDER}`
           StrCpy ${BACKUP} ""
         ${endif}
       ${endif}
@@ -125,8 +129,11 @@ FunctionEnd
 
 !macro restoreAllNestedDataRoots
   StrCpy $dataRestoreFailed "0"
-  !insertmacro restoreNestedDataRoot $perMachineInstallDirCache $perMachineDataBackup
-  !insertmacro restoreNestedDataRoot $perUserInstallDirCache $perUserDataBackup
+  !insertmacro restoreNestedDataRoot $perMachineInstallDirCache $perMachineDataBackup OpenScience
+  !insertmacro restoreNestedDataRoot $perMachineInstallDirCache $perMachineCurrentDataBackup Open-Science
+  !insertmacro restoreNestedDataRoot $perUserInstallDirCache $perUserDataBackup OpenScience
+  !insertmacro restoreNestedDataRoot $perUserInstallDirCache $perUserCurrentDataBackup Open-Science
+  !insertmacro restoreNestedDataRoot $retryCurrentInstallDir $retryCurrentDataBackup Open-Science
 !macroend
 
 !macro quitIfDataRestoreFailed
@@ -145,8 +152,10 @@ FunctionEnd
   ${andIf} $installMode == "all"
     ${if} $perMachineInstallDirCache == $perUserInstallDirCache
       StrCpy $perMachineDataBackup $perUserDataBackup
+      StrCpy $perMachineCurrentDataBackup $perUserCurrentDataBackup
     ${elseif} ${UAC_IsAdmin}
-      !insertmacro preserveNestedDataRoot $perMachineInstallDirCache $perMachineDataBackup machine
+      !insertmacro preserveNestedDataRoot $perMachineInstallDirCache $perMachineDataBackup machine OpenScience
+      !insertmacro preserveNestedDataRoot $perMachineInstallDirCache $perMachineCurrentDataBackup machine-current Open-Science
     ${elseif} $perMachineInstallDirCache != ""
       # The unelevated assisted outer process stops on the install-mode page while its elevated
       # inner process completes the install. The inner process runs this same protection path.
@@ -165,7 +174,7 @@ FunctionEnd
 # directory. Preserve that callback and chain the final-mode data preflight after it.
 !macro customPageAfterChangeDir
   !ifdef MUI_PAGE_CUSTOMFUNCTION_PRE
-    !define openScienceOriginalInstFilesPre ${MUI_PAGE_CUSTOMFUNCTION_PRE}
+    !define appOriginalInstFilesPre ${MUI_PAGE_CUSTOMFUNCTION_PRE}
     !undef MUI_PAGE_CUSTOMFUNCTION_PRE
   !endif
   !define MUI_PAGE_CUSTOMFUNCTION_PRE protectNestedDataRootsForInstall
@@ -181,6 +190,10 @@ FunctionEnd
   StrCpy $perUserInstallDirCache ""
   StrCpy $perMachineDataBackup ""
   StrCpy $perUserDataBackup ""
+  StrCpy $perMachineCurrentDataBackup ""
+  StrCpy $perUserCurrentDataBackup ""
+  StrCpy $retryCurrentDataBackup ""
+  StrCpy $retryCurrentInstallDir ""
   StrCpy $dataProtectionFailed "0"
   StrCpy $dataRestoreFailed "0"
   ReadRegStr $perMachineInstallDirCache HKEY_LOCAL_MACHINE "${INSTALL_REGISTRY_KEY}" InstallLocation
@@ -221,7 +234,8 @@ FunctionEnd
     ${endif}
   ${endif}
   ${if} $R8 == "1"
-    !insertmacro preserveNestedDataRoot $perUserInstallDirCache $perUserDataBackup per-user
+    !insertmacro preserveNestedDataRoot $perUserInstallDirCache $perUserDataBackup per-user OpenScience
+    !insertmacro preserveNestedDataRoot $perUserInstallDirCache $perUserCurrentDataBackup per-user-current Open-Science
   ${endif}
 
   ${if} $dataProtectionFailed != "0"
@@ -273,8 +287,8 @@ FunctionEnd
   FunctionEnd
 
   Function protectNestedDataRootsForInstall
-    !ifdef openScienceOriginalInstFilesPre
-      Call ${openScienceOriginalInstFilesPre}
+    !ifdef appOriginalInstFilesPre
+      Call ${appOriginalInstFilesPre}
     !endif
     Call ensureExistingUninstallerIsWritable
     !insertmacro protectMachineDataRootForSelectedMode
@@ -344,6 +358,13 @@ FunctionEnd
     # would turn an update failure into silent data loss. Move the directory to a unique sibling
     # on the same volume before retrying, then restore it regardless of the retry's exit code.
     # A failed preserve leaves the original directory in place and aborts before the retry.
+    StrCpy $retryCurrentInstallDir "${DIR}"
+    !insertmacro preserveNestedDataRoot ${DIR} $retryCurrentDataBackup retry-current Open-Science
+    ${if} $dataProtectionFailed != "0"
+      !insertmacro restoreAllNestedDataRoots
+      SetErrorLevel 2
+      Quit
+    ${endif}
     StrCpy $R7 ""
     ${if} ${FileExists} "${DIR}\OpenScience\*.*"
       ClearErrors
@@ -442,6 +463,9 @@ FunctionEnd
       ${endif}
     ${endif}
   ${endif}
+  !insertmacro restoreNestedDataRoot $retryCurrentInstallDir $retryCurrentDataBackup Open-Science
+  !insertmacro quitIfDataRestoreFailed
+
 !macroend
 
 !macro customUnInstallCheck
@@ -464,7 +488,8 @@ FunctionEnd
     ${if} $perMachineInstallDirCache == $perUserInstallDirCache
       DetailPrint `Keeping the shared data folder protected for the matching per-user uninstall pass.`
     ${else}
-      !insertmacro restoreNestedDataRoot $perMachineInstallDirCache $perMachineDataBackup
+      !insertmacro restoreNestedDataRoot $perMachineInstallDirCache $perMachineDataBackup OpenScience
+      !insertmacro restoreNestedDataRoot $perMachineInstallDirCache $perMachineCurrentDataBackup Open-Science
       !insertmacro quitIfDataRestoreFailed
     ${endif}
   ${else}
@@ -494,7 +519,8 @@ FunctionEnd
   # The old uninstall may have removed its registry key, so restore using the path cached before
   # either pass rather than reading InstallLocation here. Recovery must finish first because the
   # still-preserved backup is what keeps a recreated data directory from short-circuiting retry.
-  !insertmacro restoreNestedDataRoot $perUserInstallDirCache $perUserDataBackup
+  !insertmacro restoreNestedDataRoot $perUserInstallDirCache $perUserDataBackup OpenScience
+  !insertmacro restoreNestedDataRoot $perUserInstallDirCache $perUserCurrentDataBackup Open-Science
   !insertmacro quitIfDataRestoreFailed
   Call ensureExistingUninstallerIsWritable
 !macroend

@@ -89,7 +89,7 @@ describe('opencodeFramework.prepareModelConfig', () => {
       file.path.endsWith('open-science.md')
     )
     expect(instructionsFile?.content).toBe(
-      'Use `open_science_notebook_notebook_execute` from `open_science_notebook`.\n\nThen call `open_science_artifacts_write_artifact_file`.'
+      'Use `app_notebook_notebook_execute` from `app_notebook`.\n\nThen call `app_artifacts_write_artifact_file`.'
     )
     const opencodeJson = config.configFiles?.find((file) => file.path.endsWith('opencode.json'))
     expect(JSON.parse(opencodeJson?.content ?? '{}').instructions).toContain(instructionsFile?.path)

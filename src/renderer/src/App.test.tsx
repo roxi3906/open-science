@@ -508,9 +508,9 @@ describe('App startup routing', () => {
     mocks.syncWindowFindAppearance.mockClear()
     mocks.syncUnreadTaskView.mockClear()
     const storageStatus = {
-      dataRoot: '/workspace/OpenScience',
+      dataRoot: '/workspace/Open-Science',
       isDefault: true,
-      defaultDataRoot: '/workspace/OpenScience',
+      defaultDataRoot: '/workspace/Open-Science',
       dataRootMissing: false,
       legacyDataMovePrompt: false,
       defaultParent: '/workspace'
@@ -1365,9 +1365,9 @@ describe('App startup routing', () => {
       new Error("No handler registered for 'storage:get-status'")
     )
     mocks.getInfo.mockResolvedValue({
-      dataRoot: '/workspace/OpenScience',
+      dataRoot: '/workspace/Open-Science',
       isDefault: true,
-      defaultDataRoot: '/workspace/OpenScience',
+      defaultDataRoot: '/workspace/Open-Science',
       dataRootMissing: false,
       legacyDataMovePrompt: false,
       defaultParent: '/workspace',
@@ -1721,7 +1721,7 @@ describe('App startup routing', () => {
     mocks.settings.isLoaded = true
     mocks.navigation.view = 'workspace'
     mocks.getStatus.mockResolvedValue({
-      dataRoot: '/Volumes/Science/OpenScience',
+      dataRoot: '/Volumes/Science/Open-Science',
       dataRootMissing: true,
       legacyDataMovePrompt: false,
       defaultParent: '/Users/example'
@@ -1737,7 +1737,7 @@ describe('App startup routing', () => {
         .canDeleteConversations
     ).toBe('true')
     expect(container.querySelector('[data-testid="missing-root"]')?.textContent).toBe(
-      '/Volumes/Science/OpenScience'
+      '/Volumes/Science/Open-Science'
     )
   })
 
@@ -1747,7 +1747,7 @@ describe('App startup routing', () => {
     mocks.sessionPersistence.isLoading = true
     mocks.sessionPersistence.isReady = false
     mocks.getStatus.mockResolvedValue({
-      dataRoot: '/Volumes/Science/OpenScience',
+      dataRoot: '/Volumes/Science/Open-Science',
       dataRootMissing: true,
       legacyDataMovePrompt: false,
       defaultParent: '/Users/example'
@@ -1756,7 +1756,7 @@ describe('App startup routing', () => {
     await render()
 
     expect(container.querySelector('[data-testid="missing-root"]')?.textContent).toBe(
-      '/Volumes/Science/OpenScience'
+      '/Volumes/Science/Open-Science'
     )
     expect(
       container.querySelector('[data-testid="session-persistence-startup-loading"]')

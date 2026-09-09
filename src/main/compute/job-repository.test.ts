@@ -230,7 +230,7 @@ describe('ComputeJob repository (SQLite integration)', () => {
       command: 'echo hello',
       commandHash: 'abc123',
       timeoutSeconds: 3600,
-      remoteWorkdir: '~/.openscience/jobs/test-job-1'
+      remoteWorkdir: '~/.open-science/jobs/test-job-1'
     })
 
     expect(created.job_id).toBe('test-job-1')
@@ -238,7 +238,7 @@ describe('ComputeJob repository (SQLite integration)', () => {
     expect(created.status).toBe('submitted')
     expect(created.command).toBe('echo hello')
     expect(created.timeout_seconds).toBe(3600)
-    expect(created.remote_workdir).toBe('~/.openscience/jobs/test-job-1')
+    expect(created.remote_workdir).toBe('~/.open-science/jobs/test-job-1')
     expect(created.producer_run_id).toBe('run-1')
     expect(created.file_evidence).toEqual(fileEvidence)
     expect(created.created_at).toBeGreaterThan(0)
@@ -257,13 +257,13 @@ describe('ComputeJob repository (SQLite integration)', () => {
     // update status to running.
     const updated = await repo.update('test-job-1', {
       status: 'running',
-      remoteHandle: JSON.stringify({ pid: 1234, workdir: '~/.openscience/jobs/test-job-1' }),
-      remoteWorkdir: '/scratch/.openscience/jobs/test-job-1',
+      remoteHandle: JSON.stringify({ pid: 1234, workdir: '~/.open-science/jobs/test-job-1' }),
+      remoteWorkdir: '/scratch/.open-science/jobs/test-job-1',
       startedAt: new Date()
     })
     expect(updated.status).toBe('running')
     expect(updated.started_at).toBeGreaterThan(0)
-    expect(updated.remote_workdir).toBe('/scratch/.openscience/jobs/test-job-1')
+    expect(updated.remote_workdir).toBe('/scratch/.open-science/jobs/test-job-1')
 
     // update to terminal.
     await repo.update('test-job-1', {

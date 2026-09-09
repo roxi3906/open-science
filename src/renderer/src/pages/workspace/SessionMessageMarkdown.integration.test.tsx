@@ -22,8 +22,8 @@ describe('SessionMessageMarkdown integration', () => {
       isLoaded: true,
       notebookNetwork: {
         allowedDomains: ['example.com'],
-        disabledOpenScienceDomainGroups: [],
-        disabledOpenScienceDomains: []
+        disabledAppDomainGroups: [],
+        disabledAppDomains: []
       }
     })
     container = document.createElement('div')

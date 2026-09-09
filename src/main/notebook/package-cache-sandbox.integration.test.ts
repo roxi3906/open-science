@@ -356,13 +356,13 @@ it.skipIf(process.platform === 'win32')(
       expect(discovered.status, discovered.stderr).toBe(0)
       const userSite = discovered.stdout.trim()
       mkdirSync(userSite, { recursive: true })
-      writeFileSync(join(userSite, 'open_science_user_site_sentinel.py'), 'VALUE = "private"\n')
+      writeFileSync(join(userSite, 'app_user_site_sentinel.py'), 'VALUE = "private"\n')
       mkdirSync(join(prefix, 'bin'), { recursive: true })
       writeFileSync(
         pip,
         [
           '#!/bin/sh',
-          `/usr/bin/python3 -c 'import open_science_user_site_sentinel' >/dev/null 2>&1`,
+          `/usr/bin/python3 -c 'import app_user_site_sentinel' >/dev/null 2>&1`,
           'test $? -ne 0'
         ].join('\n') + '\n'
       )

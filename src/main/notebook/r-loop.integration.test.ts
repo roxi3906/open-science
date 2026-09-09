@@ -104,15 +104,15 @@ const installBlankPngMaterializationTrace = (
   options: { capturePngVector?: string; materializeCapture?: boolean } = {}
 ): string =>
   [
-    '.open_science_test_png <- new.env(parent = emptyenv())',
-    `.open_science_test_png$blank_bytes <- ${blankPngVector}`,
-    `.open_science_test_png$capture_bytes <- ${options.capturePngVector ?? blankPngVector}`,
-    `.open_science_test_png$materialize_capture <- ${options.materializeCapture ? 'TRUE' : 'FALSE'}`,
+    '.app_test_png <- new.env(parent = emptyenv())',
+    `.app_test_png$blank_bytes <- ${blankPngVector}`,
+    `.app_test_png$capture_bytes <- ${options.capturePngVector ?? blankPngVector}`,
+    `.app_test_png$materialize_capture <- ${options.materializeCapture ? 'TRUE' : 'FALSE'}`,
     'trace(grDevices::png, quote({',
-    '  .open_science_test_png$filename <- filename',
+    '  .app_test_png$filename <- filename',
     '}), print = FALSE)',
     'trace(grDevices::dev.off, exit = quote({',
-    '  pattern <- .open_science_test_png$filename',
+    '  pattern <- .app_test_png$filename',
     '  figures_dir <- Sys.getenv("OPEN_SCIENCE_KERNEL_FIGURES_DIR")',
     '  if (is.character(pattern) && length(pattern) > 0L) {',
     '    pattern <- pattern[[1L]]',
@@ -121,9 +121,9 @@ const installBlankPngMaterializationTrace = (
     '    figures_dir_norm <- normalizePath(figures_dir, mustWork = FALSE)',
     '    is_capture_path <- nzchar(figures_dir) && (path_dir == figures_dir_norm || startsWith(path_dir, paste0(figures_dir_norm, .Platform$file.sep)))',
     '    should_materialize_blank <- grepl("open-science-blank-r-", pattern, fixed = TRUE)',
-    '    should_materialize_capture <- isTRUE(.open_science_test_png$materialize_capture) && is_capture_path',
-    '    if (should_materialize_blank && !file.exists(path)) writeBin(.open_science_test_png$blank_bytes, path)',
-    '    if (should_materialize_capture) writeBin(.open_science_test_png$capture_bytes, path)',
+    '    should_materialize_capture <- isTRUE(.app_test_png$materialize_capture) && is_capture_path',
+    '    if (should_materialize_blank && !file.exists(path)) writeBin(.app_test_png$blank_bytes, path)',
+    '    if (should_materialize_capture) writeBin(.app_test_png$capture_bytes, path)',
     '  }',
     '}), print = FALSE)'
   ].join('\n')
@@ -773,7 +773,7 @@ gate('r_loop.R', () => {
       const r = await send(
         [
           '{',
-          '  .open_science_test_png$materialize_capture <- TRUE',
+          '  .app_test_png$materialize_capture <- TRUE',
           '  grDevices::graphics.off()',
           '  user_png <- tempfile(fileext = ".png")',
           '  grDevices::png(user_png, width = 800, height = 600, res = 96)',
@@ -802,7 +802,7 @@ gate('r_loop.R', () => {
 
       const r = await send(
         [
-          '.open_science_test_png$materialize_capture <- TRUE',
+          '.app_test_png$materialize_capture <- TRUE',
           'grDevices::dev.control(displaylist = "inhibit")',
           'plot.new()'
         ].join('; ')
@@ -827,7 +827,7 @@ gate('r_loop.R', () => {
 
       const r = await send(
         [
-          '.open_science_test_png$materialize_capture <- TRUE',
+          '.app_test_png$materialize_capture <- TRUE',
           'setHook("before.plot.new", NULL, action = "replace")',
           'grDevices::dev.control(displaylist = "inhibit")',
           'plot.new()',
@@ -855,7 +855,7 @@ gate('r_loop.R', () => {
       const r = await send(
         [
           '{',
-          '  .open_science_test_png$materialize_capture <- TRUE',
+          '  .app_test_png$materialize_capture <- TRUE',
           '  setHook("before.plot.new", NULL, action = "replace")',
           '  setHook("grid.newpage", NULL, action = "replace")',
           '  grDevices::dev.control(displaylist = "inhibit")',
@@ -888,7 +888,7 @@ gate('r_loop.R', () => {
       const r = await send(
         [
           '{',
-          '  .open_science_test_png$materialize_capture <- TRUE',
+          '  .app_test_png$materialize_capture <- TRUE',
           '  setHook("before.plot.new", NULL, action = "replace")',
           '  setHook("grid.newpage", NULL, action = "replace")',
           '  grDevices::dev.control(displaylist = "inhibit")',
@@ -1081,18 +1081,18 @@ gate('r_loop.R', () => {
     try {
       const installTrace = await send(
         [
-          '.open_science_trace_counts <- c(png = 0L, dev.off = 0L)',
+          '.app_trace_counts <- c(png = 0L, dev.off = 0L)',
           'trace(grDevices::png, quote({',
-          '  .open_science_trace_counts["png"] <<- .open_science_trace_counts["png"] + 1L',
+          '  .app_trace_counts["png"] <<- .app_trace_counts["png"] + 1L',
           '}), print = FALSE)',
           'trace(grDevices::dev.off, quote({',
-          '  .open_science_trace_counts["dev.off"] <<- .open_science_trace_counts["dev.off"] + 1L',
+          '  .app_trace_counts["dev.off"] <<- .app_trace_counts["dev.off"] + 1L',
           '}), print = FALSE)'
         ].join('\n')
       )
       expect(installTrace.error).toBeNull()
 
-      const r = await send('print("text only"); print(.open_science_trace_counts)')
+      const r = await send('print("text only"); print(.app_trace_counts)')
       expect(r.error).toBeNull()
       expect(r.stdout).toContain('[1] "text only"')
       expect(r.stdout).toContain('png dev.off')

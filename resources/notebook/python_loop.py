@@ -404,34 +404,34 @@ sys.addaudithook(_protected_paths_audit)
 # `venv.create` is pure Python and can otherwise be reached through dynamically assembled names that
 # no source scanner can recognize. Patch both public entry points inside this persistent process; the
 # audit hook above independently rejects the characteristic pyvenv.cfg write and installer subprocesses.
-import venv as _open_science_venv
-_open_science_venv.create = _blocked_environment_mutation
-_open_science_venv.EnvBuilder.create = _blocked_environment_mutation
+import venv as _app_venv
+_app_venv.create = _blocked_environment_mutation
+_app_venv.EnvBuilder.create = _blocked_environment_mutation
 try:
-    import ensurepip as _open_science_ensurepip
-    _open_science_ensurepip.bootstrap = _blocked_environment_mutation
+    import ensurepip as _app_ensurepip
+    _app_ensurepip.bootstrap = _blocked_environment_mutation
 except ImportError:
     pass
 try:
-    import pip._internal as _open_science_pip_internal
-    import pip._internal.cli.main as _open_science_pip_cli
-    import pip._internal.commands as _open_science_pip_commands
-    _open_science_pip_internal.main = _blocked_environment_mutation
-    _open_science_pip_cli.main = _blocked_environment_mutation
+    import pip._internal as _app_pip_internal
+    import pip._internal.cli.main as _app_pip_cli
+    import pip._internal.commands as _app_pip_commands
+    _app_pip_internal.main = _blocked_environment_mutation
+    _app_pip_cli.main = _blocked_environment_mutation
 
     # `pip._internal.commands.create_command()` bypasses both public `main` functions and returns a
     # command object whose `main()` can mutate the current interpreter in-process. Guard the factory
     # as well as the concrete mutation command methods: the latter also covers direct construction of
     # InstallCommand/UninstallCommand without going through the factory. Inspection commands such as
     # `pip list` remain available.
-    _open_science_pip_create_command = _open_science_pip_commands.create_command
+    _app_pip_create_command = _app_pip_commands.create_command
     def _guarded_pip_create_command(name, *args, **kwargs):
         if str(name).strip().casefold() in ("install", "uninstall"):
             _blocked_environment_mutation()
-        return _open_science_pip_create_command(name, *args, **kwargs)
-    _open_science_pip_commands.create_command = _guarded_pip_create_command
-    if hasattr(_open_science_pip_cli, "create_command"):
-        _open_science_pip_cli.create_command = _guarded_pip_create_command
+        return _app_pip_create_command(name, *args, **kwargs)
+    _app_pip_commands.create_command = _guarded_pip_create_command
+    if hasattr(_app_pip_cli, "create_command"):
+        _app_pip_cli.create_command = _guarded_pip_create_command
 
     for _module_name, _class_name in (
         ("pip._internal.commands.install", "InstallCommand"),

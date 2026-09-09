@@ -20,7 +20,7 @@ import { isProductionDelegatedWorkFramework } from '../delegation/production-rea
 import { renderAppMcpToolReferences } from './app-mcp-names'
 import {
   LOAD_SKILL_TOOL_CALLABLE_NAME,
-  OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION,
+  APP_SKILL_RUNTIME_SESSION_OPTION,
   SKILL_RUNTIME_MCP_SERVER_NAME,
   createSkillRuntimeMcpServerConfig
 } from '../skills/runtime-mcp-server'
@@ -100,8 +100,8 @@ export const claudeCodeFramework: AgentFramework = {
     // settingSources:['user'] excludes workspace settings that could override the active provider.
     // Shared mode adds app-owned settings/plugins at the SDK flag layer via sessionOptions.
     const sessionOptions = { ...(ctx.sessionOptions ?? {}) }
-    const skillRuntime = recordValue(sessionOptions[OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION])
-    delete sessionOptions[OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION]
+    const skillRuntime = recordValue(sessionOptions[APP_SKILL_RUNTIME_SESSION_OPTION])
+    delete sessionOptions[APP_SKILL_RUNTIME_SESSION_OPTION]
     const skillRuntimeEnabled =
       ctx.skillRuntimeScope !== undefined &&
       (ctx.skillRuntimeScope === 'all' || ctx.skillRuntimeScope.length > 0) &&

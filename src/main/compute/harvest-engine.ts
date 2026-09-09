@@ -1,3 +1,4 @@
+import { legacyRemoteJobWorkdir } from '../brand-migration/remote-jobs'
 import { RetryableHarvestError } from './job-harvest-scheduler'
 /**
  * harvest-engine.ts — downloads a finished job's output files from the remote workdir.
@@ -577,7 +578,7 @@ const harvestJobUnchecked = async (
     signal: deps.signal
   })
 
-  const remoteWorkdir = job.remote_workdir ?? `~/.openscience/jobs/${job.job_id}`
+  const remoteWorkdir = job.remote_workdir ?? legacyRemoteJobWorkdir(undefined, job.job_id)
 
   // ── 3. Enumerate remote files ───────────────────────────────────────────────
   let remoteFiles: HarvestFileEntry[]

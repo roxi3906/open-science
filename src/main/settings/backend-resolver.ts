@@ -26,7 +26,7 @@ import { codeBuddyStorageDir } from '../agent-framework/codebuddy'
 import { opencodeConfigDir } from '../agent-framework/opencode'
 import { codexStorageDir, codexSubscriptionStorageDir } from '../agent-framework/codex'
 import { renderConnectorInstructions } from '../connectors/skill-doc'
-import { OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION } from '../skills/runtime-mcp-server'
+import { APP_SKILL_RUNTIME_SESSION_OPTION } from '../skills/runtime-mcp-server'
 import { buildProviderEnv } from './provider-env'
 import type { AgentRuntimeManager } from './agent-runtime-manager'
 import type { ConnectorSettingsModule } from './connector-settings'
@@ -68,13 +68,13 @@ export type AgentBackendResolutionContext = {
 
 const userSkillDirectorySystemPromptAppend = (storageRoot: string): string =>
   [
-    '<open_science_user_skill_directories>',
+    '<open-science-user-skill-directories>',
     `When the user explicitly asks you to author a new Skill, write its complete \`<name>/SKILL.md\` package under \`${join(storageRoot, 'skills', 'personal')}\`.`,
     `Externally obtained Skill packages that the user or application has directly copied are discovered under \`${join(storageRoot, 'skills', 'imported')}\`. This path is informational; do not download, unpack, or copy an external Skill there yourself.`,
     'For a GitHub URL, eligible attachment, Skill name or keywords, or any source requiring preview or confirmation, use `request_skill_import` when it is available; otherwise direct the user to the application import flow.',
     'Use a stable name of 1–64 lowercase letters or numbers separated by single hyphens.',
     'Changes in either directory are discovered automatically.',
-    '</open_science_user_skill_directories>'
+    '</open-science-user-skill-directories>'
   ].join('\n')
 
 export type AgentSpawnConfig = {
@@ -505,7 +505,7 @@ export class AgentBackendResolver {
         ...(framework.id === 'codebuddy' && includeSkillAndConnectorContext
           ? {
               sessionOptions: {
-                [OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION]: {
+                [APP_SKILL_RUNTIME_SESSION_OPTION]: {
                   command: process.execPath,
                   entryPath: this.skillRuntimeMcpEntryPath,
                   root: codeBuddySkillRuntimeRoot
@@ -573,7 +573,7 @@ export class AgentBackendResolver {
           denyWrite: [runtimeConfig.skillProjection.root]
         }
       },
-      [OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION]: {
+      [APP_SKILL_RUNTIME_SESSION_OPTION]: {
         command: process.execPath,
         entryPath: this.skillRuntimeMcpEntryPath,
         root: runtimeConfig.skillProjection.root

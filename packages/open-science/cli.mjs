@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url'
 
 import { findServiceState, readWebToken, resolveConfigRoot, STATE_FILE } from './config-root.mjs'
 import { codexLoginCommand } from './codex-login.mjs'
-import { connectToOpenScience, OpenScienceApiError } from './index.mjs'
+import { connect, ApiError } from './index.mjs'
 import { locateApp } from './locate-app.mjs'
 
 const DEFAULT_PORT = 44100
@@ -926,7 +926,7 @@ const writeDownload = async (response, output) => {
 }
 
 const TASK_DEPS = {
-  connect: (options) => connectToOpenScience(options),
+  connect: (options) => connect(options),
   readFile: (path) => readFile(path, 'utf8'),
   readBinaryFile: (path) => readFile(path),
   readStdin: () => readStreamText(process.stdin),
@@ -1014,12 +1014,12 @@ const supportsApplicationCommand = async (client, channel) => {
 const invokeApplicationCommand = async (client, channel, args = []) => {
   const bootstrap = await updateBootstrap(client)
   if (!Array.isArray(bootstrap.rpcChannels) || !bootstrap.rpcChannels.includes(channel)) {
-    throw new OpenScienceApiError(`Open-Science does not support ${channel}.`, {
+    throw new ApiError(`Open-Science does not support ${channel}.`, {
       code: 'command_unavailable'
     })
   }
   if (!Number.isInteger(bootstrap.rpcProtocolVersion)) {
-    throw new OpenScienceApiError('Open-Science does not expose a compatible RPC protocol.', {
+    throw new ApiError('Open-Science does not expose a compatible RPC protocol.', {
       code: 'command_unavailable'
     })
   }
@@ -1039,7 +1039,7 @@ const invokeApplicationCommand = async (client, channel, args = []) => {
   try {
     payload = await response.json()
   } catch {
-    throw new OpenScienceApiError('Open-Science RPC returned an invalid response.', {
+    throw new ApiError('Open-Science RPC returned an invalid response.', {
       code: 'invalid_response',
       status: response.status
     })
@@ -1049,13 +1049,13 @@ const invokeApplicationCommand = async (client, channel, args = []) => {
     payload?.protocolVersion !== bootstrap.rpcProtocolVersion ||
     typeof payload?.ok !== 'boolean'
   ) {
-    throw new OpenScienceApiError(
+    throw new ApiError(
       payload?.error?.message ?? 'Open-Science RPC returned an invalid response.',
       { code: payload?.error?.code ?? 'invalid_response', status: response.status }
     )
   }
   if (!payload.ok) {
-    throw new OpenScienceApiError(payload.error?.message ?? 'Open-Science command failed.', {
+    throw new ApiError(payload.error?.message ?? 'Open-Science command failed.', {
       code: payload.error?.code ?? 'command_failed',
       status: response.status
     })
@@ -1093,7 +1093,7 @@ export const updateCommand = async (options, dependencies = {}) => {
   const deps = {
     ensureService: (startOptions) => startCommand(startOptions, { ...DEFAULT_DEPS, log: quietLog }),
     stopService: (stopOptions) => stopCommand(stopOptions, { ...DEFAULT_DEPS, log: quietLog }),
-    connect: (connectOptions) => connectToOpenScience(connectOptions),
+    connect: (connectOptions) => connect(connectOptions),
     sleep,
     getBootstrap: updateBootstrap,
     supportsCommand: supportsApplicationCommand,
@@ -1282,7 +1282,7 @@ const resolveCliProject = async (client, selector) => {
   if (byName.length > 1) {
     throw new CliUsageError(`Project name is ambiguous: ${selector}. Use a project ID.`)
   }
-  throw new OpenScienceApiError(`Project not found: ${selector}`, { code: 'project_not_found' })
+  throw new ApiError(`Project not found: ${selector}`, { code: 'project_not_found' })
 }
 
 const resolveCliProjectId = async (client, selector) =>

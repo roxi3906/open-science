@@ -1,6 +1,6 @@
 const COMPUTE_ENVIRONMENT_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/u
 
-const COMPUTE_ENVIRONMENT_ROOT = '~/.openscience/environments'
+const COMPUTE_ENVIRONMENT_ROOT = '~/.open-science/environments'
 
 const computeEnvironmentPath = (name: string): string => {
   validateComputeEnvironmentName(name)
@@ -31,7 +31,12 @@ const environmentInsertionIndex = (lines: string[]): number => {
 const computeEnvironmentPreamble = (name: string): string[] => {
   const path = computeEnvironmentPath(name)
   return [
-    `OPEN_SCIENCE_ENV_FILE="$HOME/.openscience/environments/${name}.sh"`,
+    `OPEN_SCIENCE_ENV_FILE="$HOME/.open-science/environments/${name}.sh"`,
+    // Released user-managed activation files remain readable. An existing current path always wins,
+    // including an unreadable or broken file, so errors cannot silently activate another environment.
+    'if [ ! -e "$OPEN_SCIENCE_ENV_FILE" ] && [ ! -L "$OPEN_SCIENCE_ENV_FILE" ]; then',
+    `  OPEN_SCIENCE_ENV_FILE="$HOME/.openscience/environments/${name}.sh"`,
+    'fi',
     'if [ ! -r "$OPEN_SCIENCE_ENV_FILE" ]; then',
     `  printf '%s\n' 'Compute environment "${name}" is not configured at ${path}. Load the compute-env-setup Skill (bundled as os-compute-env-setup) to prepare setup instructions and validate a user-managed activation.' >&2`,
     '  exit 78',

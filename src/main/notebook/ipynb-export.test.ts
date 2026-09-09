@@ -75,7 +75,7 @@ describe('runDocumentToIpynb', () => {
       nbformat_minor: 5,
       metadata: {
         kernelspec: { name: 'python3', language: 'python' },
-        open_science: {
+        'open-science': {
           sessionId: 'session-123',
           projectId: 'default-project',
           appVersion: '1.2.3',
@@ -89,7 +89,7 @@ describe('runDocumentToIpynb', () => {
       execution_count: 1,
       source: ['print("hello")\n', '2 + 2'],
       metadata: {
-        open_science: {
+        'open-science': {
           runId: 'run-1',
           cellId: 'cell-1',
           source: 'agent',
@@ -166,14 +166,14 @@ describe('runDocumentToIpynb', () => {
       name: 'ir'
     })
     // Notebook-level environment follows the dominant (r) kernel's runs, not the python minority.
-    expect(notebook.metadata.open_science.environment).toBe('default-r')
+    expect(notebook.metadata['open-science'].environment).toBe('default-r')
     expect(notebook.cells[3]).toMatchObject({
       source: ['%%bash\n', 'pwd'],
-      metadata: { tags: ['open-science-bash'], open_science: { kernel: 'bash' } }
+      metadata: { tags: ['open-science-bash'], 'open-science': { kernel: 'bash' } }
     })
     expect(notebook.cells[4]).toMatchObject({
       source: ['%%javascript\n', 'await host.mcp()'],
-      metadata: { tags: ['open-science-repl'], open_science: { kernel: 'repl' } }
+      metadata: { tags: ['open-science-repl'], 'open-science': { kernel: 'repl' } }
     })
   })
 

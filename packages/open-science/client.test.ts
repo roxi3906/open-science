@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { PUBLIC_TERMINAL_FIXTURE } from '../../test/fixtures/renderer-contract-certification'
-import { connectToOpenScience, OpenScienceClient } from './index.mjs'
+import { connect, Client } from './index.mjs'
 
 const response = (status: number, payload: unknown): Response =>
   new Response(JSON.stringify(payload), {
@@ -50,9 +50,9 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })))
 })
 
-describe('OpenScienceClient', () => {
+describe('Client', () => {
   it('pins the SDK method inventory including Connector management', () => {
-    expect(Object.getOwnPropertyNames(OpenScienceClient.prototype).sort()).toEqual(
+    expect(Object.getOwnPropertyNames(Client.prototype).sort()).toEqual(
       [
         'constructor',
         'health',
@@ -94,7 +94,7 @@ describe('OpenScienceClient', () => {
 
   it('uses versioned endpoints for Session, Project-default, and Agent-routing configuration', async () => {
     const fetch = vi.fn().mockImplementation(async () => response(200, { data: { ok: true } }))
-    const client = new OpenScienceClient({
+    const client = new Client({
       baseUrl: 'http://127.0.0.1:44100',
       token: 'secret-token',
       fetch
@@ -176,7 +176,7 @@ describe('OpenScienceClient', () => {
           }
         })
       )
-    const client = new OpenScienceClient({
+    const client = new Client({
       baseUrl: 'http://127.0.0.1:44100',
       token: 'secret-token',
       fetch,
@@ -242,7 +242,7 @@ describe('OpenScienceClient', () => {
       })
     )
     const sleep = vi.fn().mockResolvedValue(undefined)
-    const client = new OpenScienceClient({
+    const client = new Client({
       baseUrl: 'http://127.0.0.1:44100',
       token: 'secret-token',
       fetch,
@@ -275,7 +275,7 @@ describe('OpenScienceClient', () => {
     vi.useFakeTimers()
     vi.setSystemTime(0)
     try {
-      const client = new OpenScienceClient({
+      const client = new Client({
         baseUrl: 'http://127.0.0.1:44100',
         token: 'secret-token',
         fetch,
@@ -305,7 +305,7 @@ describe('OpenScienceClient', () => {
           signal?.addEventListener('abort', () => reject(signal.reason), { once: true })
         })
       })
-      const client = new OpenScienceClient({
+      const client = new Client({
         baseUrl: 'http://127.0.0.1:44100',
         token: 'secret-token',
         fetch
@@ -349,7 +349,7 @@ describe('OpenScienceClient', () => {
         }
       })
     )
-    const client = new OpenScienceClient({
+    const client = new Client({
       baseUrl: 'http://127.0.0.1:44100',
       token: 'secret-token',
       fetch
@@ -370,7 +370,7 @@ describe('OpenScienceClient', () => {
 
   it('honors caller cancellation before polling without invoking run cancellation', async () => {
     const fetch = vi.fn()
-    const client = new OpenScienceClient({
+    const client = new Client({
       baseUrl: 'http://127.0.0.1:44100',
       token: 'secret-token',
       fetch
@@ -399,7 +399,7 @@ describe('OpenScienceClient', () => {
         signal?.addEventListener('abort', () => reject(signal.reason), { once: true })
       })
     })
-    const client = new OpenScienceClient({
+    const client = new Client({
       baseUrl: 'http://127.0.0.1:44100',
       token: 'secret-token',
       fetch
@@ -428,7 +428,7 @@ describe('OpenScienceClient', () => {
         error: { code: 'project_not_found', message: 'Project not found: missing' }
       })
     )
-    const client = new OpenScienceClient({
+    const client = new Client({
       baseUrl: 'http://127.0.0.1:44100',
       token: 'do-not-leak',
       fetch
@@ -452,7 +452,7 @@ describe('OpenScienceClient', () => {
           signal?.addEventListener('abort', () => reject(signal.reason), { once: true })
         })
       })
-      const client = new OpenScienceClient({
+      const client = new Client({
         baseUrl: 'http://127.0.0.1:44100',
         token: 'secret-token',
         fetch,
@@ -491,7 +491,7 @@ describe('OpenScienceClient', () => {
             })
         } as Response)
       })
-      const client = new OpenScienceClient({
+      const client = new Client({
         baseUrl: 'http://127.0.0.1:44100',
         token: 'secret-token',
         fetch,
@@ -535,7 +535,7 @@ describe('OpenScienceClient', () => {
           )
         )
       })
-      const client = new OpenScienceClient({
+      const client = new Client({
         baseUrl: 'http://127.0.0.1:44100',
         token: 'secret-token',
         fetch,
@@ -567,7 +567,7 @@ describe('OpenScienceClient', () => {
         signal?.addEventListener('abort', () => reject(signal.reason), { once: true })
       })
     })
-    const client = new OpenScienceClient({
+    const client = new Client({
       baseUrl: 'http://127.0.0.1:44100',
       token: 'secret-token',
       fetch
@@ -620,7 +620,7 @@ describe('OpenScienceClient', () => {
       if (path === '/api/v1/artifacts/artifact%2F1/content') return new Response('file bytes')
       throw new Error(`Unexpected path: ${path}`)
     })
-    const client = new OpenScienceClient({
+    const client = new Client({
       baseUrl: 'http://127.0.0.1:44100',
       token: 'token-1',
       fetch
@@ -690,7 +690,7 @@ describe('OpenScienceClient', () => {
         this.emit('close')
       }
     }
-    const client = new OpenScienceClient({
+    const client = new Client({
       baseUrl: 'http://127.0.0.1:44100',
       token: 'token-1',
       fetch: vi.fn()
@@ -772,7 +772,7 @@ describe('OpenScienceClient', () => {
   })
 
   it('yields an explicit resync state without exposing stream readiness frames', async () => {
-    const client = new OpenScienceClient({
+    const client = new Client({
       baseUrl: 'http://127.0.0.1:44100',
       token: 'token-1',
       fetch: vi.fn()
@@ -815,7 +815,7 @@ describe('OpenScienceClient', () => {
   })
 
   it('rejects event readiness when the socket reports a connection error', async () => {
-    const client = new OpenScienceClient({
+    const client = new Client({
       baseUrl: 'http://127.0.0.1:44100',
       token: 'token-1',
       fetch: vi.fn()
@@ -839,7 +839,7 @@ describe('OpenScienceClient', () => {
         ReconnectingWebSocket.instances.push(this)
       }
     }
-    const client = new OpenScienceClient({
+    const client = new Client({
       baseUrl: 'http://127.0.0.1:44100',
       token: 'token-1',
       fetch: vi.fn()
@@ -912,7 +912,7 @@ describe('OpenScienceClient', () => {
         TrackingWebSocket.instances.push(this)
       }
     }
-    const client = new OpenScienceClient({
+    const client = new Client({
       baseUrl: 'http://127.0.0.1:44100',
       token: 'token-1',
       fetch: vi.fn()
@@ -939,7 +939,7 @@ describe('OpenScienceClient', () => {
         TrackingWebSocket.instances.push(this)
       }
     }
-    const client = new OpenScienceClient({
+    const client = new Client({
       baseUrl: 'http://127.0.0.1:44100',
       token: 'token-1',
       fetch: vi.fn()
@@ -963,7 +963,7 @@ describe('OpenScienceClient', () => {
   it('fails a ready event iterator when the connection stops receiving liveness frames', async () => {
     vi.useFakeTimers()
     try {
-      const client = new OpenScienceClient({
+      const client = new Client({
         baseUrl: 'http://127.0.0.1:44100',
         token: 'token-1',
         fetch: vi.fn()
@@ -998,7 +998,7 @@ describe('OpenScienceClient', () => {
   })
 
   it('rejects event readiness when the socket closes before opening', async () => {
-    const client = new OpenScienceClient({
+    const client = new Client({
       baseUrl: 'http://127.0.0.1:44100',
       token: 'token-1',
       fetch: vi.fn()
@@ -1022,7 +1022,7 @@ describe('OpenScienceClient', () => {
   })
 
   it('rejects event readiness with the caller reason when cancelled before opening', async () => {
-    const client = new OpenScienceClient({
+    const client = new Client({
       baseUrl: 'http://127.0.0.1:44100',
       token: 'token-1',
       fetch: vi.fn()
@@ -1041,7 +1041,7 @@ describe('OpenScienceClient', () => {
   })
 
   it('reports malformed event JSON through the async iterator failure channel', async () => {
-    const client = new OpenScienceClient({
+    const client = new Client({
       baseUrl: 'http://127.0.0.1:44100',
       token: 'token-1',
       fetch: vi.fn()
@@ -1075,7 +1075,7 @@ describe('OpenScienceClient', () => {
   })
 
   it('fails closed when more than 1024 events are buffered without a consumer', async () => {
-    const client = new OpenScienceClient({
+    const client = new Client({
       baseUrl: 'http://127.0.0.1:44100',
       token: 'token-1',
       fetch: vi.fn()
@@ -1108,7 +1108,7 @@ describe('OpenScienceClient', () => {
     await writeFile(join(configRoot, 'web-token'), 'discovered-token\n')
     const fetch = vi.fn().mockImplementation(async () => response(200, { appName: 'Open-Science' }))
 
-    const client = await connectToOpenScience({ configRoot, fetch })
+    const client = await connect({ configRoot, fetch })
 
     await expect(client.health()).resolves.toEqual({ appName: 'Open-Science' })
     expect(fetch).toHaveBeenCalledWith(

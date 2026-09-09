@@ -34,8 +34,8 @@ describe.skipIf(!run)('Slurm lifecycle on real SSH + scheduler', () => {
   let service: ComputeService
   const jobs: string[] = []
   const envName = `os-cert-${randomUUID()}`
-  const envPath = `~/.openscience/environments/${envName}.sh`
-  const envRoot = `~/.openscience/environments/${envName}`
+  const envPath = `~/.open-science/environments/${envName}.sh`
+  const envRoot = `~/.open-science/environments/${envName}`
   const schedulerHeader = `#SBATCH --partition=${partition}\n#SBATCH --cpus-per-task=1\n#SBATCH --mem=128M\n`
 
   const makePoller = (): JobPoller =>
@@ -109,7 +109,7 @@ describe.skipIf(!run)('Slurm lifecycle on real SSH + scheduler', () => {
     })
     expect((await service.probe(scope.providerId)).detectedScheduler).toBe('slurm')
     const setup = await remote(
-      `mkdir -p ~/.openscience/environments && python3 -m venv --without-pip ${quoteRemotePath(envRoot)} && printf '%s\\n' ${shellSingleQuote(`. "$HOME/.openscience/environments/${envName}/bin/activate"\nexport OS_COMPUTE_WITNESS=activated`)} > ${quoteRemotePath(envPath)}`
+      `mkdir -p ~/.open-science/environments && python3 -m venv --without-pip ${quoteRemotePath(envRoot)} && printf '%s\\n' ${shellSingleQuote(`. "$HOME/.open-science/environments/${envName}/bin/activate"\nexport OS_COMPUTE_WITNESS=activated`)} > ${quoteRemotePath(envPath)}`
     )
     expect(setup.exitCode).toBe(0)
   })
@@ -190,14 +190,14 @@ describe.skipIf(!run)('Slurm lifecycle on real SSH + scheduler', () => {
 
   it('does not adopt a same-name scheduler job from another workdir', async () => {
     const jobId = randomUUID()
-    const expectedWorkdir = `~/.openscience/jobs/${jobId}`
-    const decoyWorkdir = `~/.openscience/slurm-decoy-${jobId}`
+    const expectedWorkdir = `~/.open-science/jobs/${jobId}`
+    const decoyWorkdir = `~/.open-science/slurm-decoy-${jobId}`
     const launched = await remote(
       [
         `mkdir -p ${quoteRemotePath(expectedWorkdir)} ${quoteRemotePath(decoyWorkdir)}`,
         `touch ${quoteRemotePath(`${expectedWorkdir}/job.sbatch`)}`,
         `cd ${quoteRemotePath(decoyWorkdir)}`,
-        `sbatch --parsable --hold --partition=${partition} --job-name=openscience-${jobId} --chdir="$PWD" --output=stdout --error=stderr --wrap=true`
+        `sbatch --parsable --hold --partition=${partition} --job-name=open-science-${jobId} --chdir="$PWD" --output=stdout --error=stderr --wrap=true`
       ].join('\n')
     )
     expect(launched.exitCode).toBe(0)
@@ -269,7 +269,7 @@ describe.skipIf(!run)('Slurm lifecycle on real SSH + scheduler', () => {
 
   it('reports scheduler rejection with the reason rather than silently running directly', async () => {
     const submitted = await submit(
-      '#SBATCH --partition=openscience-nonexistent-partition\necho must-not-run'
+      '#SBATCH --partition=open-science-nonexistent-partition\necho must-not-run'
     )
     const rejected = await wait(submitted.job_id)
     expect(rejected.status).toBe('error')

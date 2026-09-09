@@ -401,7 +401,7 @@ export const classifyDataRoot = async (
 
   return {
     kind: 'invalid',
-    error: 'A different folder named OpenScience already exists here. Choose another location.'
+    error: 'A different folder named Open-Science already exists here. Choose another location.'
   }
 }
 
@@ -549,6 +549,7 @@ type MigrationCopyDeps = DataRootWriterPauseDeps & {
   // new root. Returns the env names preserved; [] when nothing could be exported. Injectable and
   // optional so tests and non-notebook contexts can skip it; failures retain the old runtime.
   exportRuntimeLocks?: (fromDataRoot: string, toDataRoot: string) => Promise<string[]>
+  preserveRuntimeTree?: (fromDataRoot: string, toDataRoot: string) => Promise<void>
   // Injectable for tests; defaults to the real ./data-migration engine function.
   copyAndVerify?: (opts: {
     from: string
@@ -580,7 +581,7 @@ type MigrationCommitDeps = {
 }
 
 // PHASE 1 (copy): validate the move parent -> interrupt running writers -> copy+verify the migrated
-// dirs into `<parent>/OpenScience`. NOTHING is committed here — no setDataRoot, no delete. The old
+// dirs into `<parent>/Open-Science`. NOTHING is committed here — no setDataRoot, no delete. The old
 // root and settings.dataRoot are left fully intact, so this phase is entirely reversible: on
 // success the new root holds a verified copy the caller can either commit (commitDataRootSwitch) or
 // throw away (the caller rm's the target). On failure/cancel the partial target is rolled back by
@@ -734,7 +735,7 @@ export const runDataRootMigration = async (
   operation.phase('preserve-runtime')
   let preservedEnvs: string[] = []
   let runtimePreservationDegraded = false
-  if (deps.exportRuntimeLocks) {
+  if (deps.exportRuntimeLocks && !deps.preserveRuntimeTree) {
     try {
       preservedEnvs = await deps.exportRuntimeLocks(deps.currentDataRoot, target)
     } catch {
@@ -813,6 +814,27 @@ export const runDataRootMigration = async (
     return { ok: false, error: 'migration cancelled', cancelled: true }
   }
 
+  let runtimeCopyInventory: MigrationMarker['runtimeCopyInventory']
+  if (deps.preserveRuntimeTree) {
+    try {
+      const source = await scanInventory(deps.currentDataRoot, ['runtime'])
+      await deps.preserveRuntimeTree(deps.currentDataRoot, target)
+      if (!sameInventory(source, await scanInventory(deps.currentDataRoot, ['runtime']))) {
+        throw new Error('The original runtime changed while it was being migrated.')
+      }
+      runtimeCopyInventory = { source, target: await scanInventory(target, ['runtime']) }
+    } catch (error) {
+      await rm(target, { recursive: true, force: true }).catch(() => undefined)
+      await restoreSourceMetadata().catch(() => undefined)
+      operation.fail(error)
+      return {
+        ok: false,
+        error:
+          'Could not preserve the complete runtime. The original data and environments were left in place.'
+      }
+    }
+  }
+
   operation.phase('verify-target')
   try {
     await validateProvenanceState(target)
@@ -876,7 +898,8 @@ export const runDataRootMigration = async (
       status: 'verified',
       migratedDirs: migrateDirs,
       inventory,
-      ...(runtimeLockInventory ? { runtimeLockInventory } : {})
+      ...(runtimeLockInventory ? { runtimeLockInventory } : {}),
+      ...(runtimeCopyInventory ? { runtimeCopyInventory } : {})
     })
     runOpts.onVerified?.({ token: marker.token, target })
   } catch (err) {
@@ -1015,7 +1038,34 @@ export const commitDataRootSwitch = async (
   // Persist the exact, already-validated cleanup capability before the pointer commit. A crash after
   // setDataRoot can then retry only this source→target operation; arbitrary paths from settings or a
   // renderer request are never treated as cleanup authority.
-  const runtimePreserved = await hasVerifiedRuntimeLockBundle(target, marker.runtimeLockInventory)
+  let completeRuntimePreserved = false
+  if (marker.runtimeCopyInventory) {
+    const { source, target: copied } = marker.runtimeCopyInventory
+    const runtimeOnly = (inventory: MigrationInventory): boolean =>
+      inventory.dirs.length <= 1 && inventory.dirs.every((dir) => dir === 'runtime')
+    try {
+      if (
+        !runtimeOnly(source) ||
+        !runtimeOnly(copied) ||
+        !sameInventory(source, await scanInventory(deps.currentDataRoot, ['runtime'])) ||
+        !sameInventory(copied, await scanInventory(target, ['runtime']))
+      ) {
+        return failResult({
+          ok: false,
+          error: 'The preserved runtime changed. Run the migration again.'
+        })
+      }
+      completeRuntimePreserved = true
+    } catch {
+      return failResult({
+        ok: false,
+        error: 'The complete runtime could not be verified. Original data was preserved.'
+      })
+    }
+  }
+  const runtimePreserved =
+    completeRuntimePreserved ||
+    (await hasVerifiedRuntimeLockBundle(target, marker.runtimeLockInventory))
   const dirsToDelete = runtimePreserved ? [...MIGRATED_DIRS, 'runtime'] : migratedDirs
   let stagedDirsToDelete = dirsToDelete
   if (deps.cleanupJournal) {
@@ -1120,7 +1170,7 @@ export const commitDataRootSwitch = async (
   return { ok: true, cleanupPending: cleanupDegraded || cleanupDeferred }
 }
 
-// Throws away an uncommitted staged copy at `<parent>/OpenScience` (the user chose "Keep current
+// Throws away an uncommitted staged copy at `<parent>/Open-Science` (the user chose "Keep current
 // location" on the done stage). Refuses unless the target is genuinely a staging copy for the current
 // root — never the live data location, and only when a marker confirms this source→target pair — so a
 // misrouted parent can never rm the folder the app is actively using. A fresh process may also discard

@@ -44,8 +44,8 @@ type ValidationHttpRequest = {
   requiresBridgeToolCall?: boolean
 }
 
-const BRIDGE_PROBE_TOOL = 'open_science_bridge_probe'
-const NATIVE_RESPONSES_PROBE_NAMESPACE = 'open_science'
+const BRIDGE_PROBE_TOOL = 'app_bridge_probe'
+const NATIVE_RESPONSES_PROBE_NAMESPACE = 'app'
 const NATIVE_RESPONSES_PROBE_TOOL = 'bridge_probe'
 
 const bridgeProbeResponsesBody = (model: string): Record<string, unknown> => ({

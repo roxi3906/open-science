@@ -1,4 +1,4 @@
-export const OPEN_SCIENCE_DOMAIN_GROUP_IDS = [
+export const APP_DOMAIN_GROUP_IDS = [
   'packageRegistries',
   'nih',
   'genomics',
@@ -7,18 +7,18 @@ export const OPEN_SCIENCE_DOMAIN_GROUP_IDS = [
   'clinical'
 ] as const
 
-export type OpenScienceDomainGroupId = (typeof OPEN_SCIENCE_DOMAIN_GROUP_IDS)[number]
+export type AppDomainGroupId = (typeof APP_DOMAIN_GROUP_IDS)[number]
 
-export type OpenScienceDomainGroup = Readonly<{
-  id: OpenScienceDomainGroupId
+export type AppDomainGroup = Readonly<{
+  id: AppDomainGroupId
   domains: readonly string[]
   locked?: boolean
 }>
 
 export type NotebookNetworkSettings = Readonly<{
   allowedDomains: readonly string[]
-  disabledOpenScienceDomainGroups: readonly OpenScienceDomainGroupId[]
-  disabledOpenScienceDomains: readonly string[]
+  disabledAppDomainGroups: readonly AppDomainGroupId[]
+  disabledAppDomains: readonly string[]
 }>
 
 export type NotebookNetworkPolicy = Readonly<{
@@ -53,11 +53,11 @@ export type NotebookNetworkStatus =
 
 export const DEFAULT_NOTEBOOK_NETWORK_SETTINGS: NotebookNetworkSettings = Object.freeze({
   allowedDomains: [],
-  disabledOpenScienceDomainGroups: [],
-  disabledOpenScienceDomains: []
+  disabledAppDomainGroups: [],
+  disabledAppDomains: []
 })
 
-export const OPEN_SCIENCE_DOMAIN_GROUPS: readonly OpenScienceDomainGroup[] = Object.freeze([
+export const APP_DOMAIN_GROUPS: readonly AppDomainGroup[] = Object.freeze([
   {
     id: 'packageRegistries',
     locked: true,
@@ -163,8 +163,8 @@ export const OPEN_SCIENCE_DOMAIN_GROUPS: readonly OpenScienceDomainGroup[] = Obj
 const uniqueSorted = <Value extends string>(values: readonly Value[]): Value[] =>
   [...new Set(values)].sort()
 
-const isOpenScienceDomainGroupId = (value: unknown): value is OpenScienceDomainGroupId =>
-  typeof value === 'string' && (OPEN_SCIENCE_DOMAIN_GROUP_IDS as readonly string[]).includes(value)
+const isAppDomainGroupId = (value: unknown): value is AppDomainGroupId =>
+  typeof value === 'string' && (APP_DOMAIN_GROUP_IDS as readonly string[]).includes(value)
 
 const isIpv4Literal = (hostname: string): boolean => {
   const parts = hostname.split('.')
@@ -261,21 +261,21 @@ export const normalizeNotebookNetworkSettings = (value: unknown): NotebookNetwor
     return DEFAULT_NOTEBOOK_NETWORK_SETTINGS
   }
   const record = value as Record<string, unknown>
-  const disabledGroups = Array.isArray(record.disabledOpenScienceDomainGroups)
+  const disabledGroups = Array.isArray(record.disabledAppDomainGroups)
     ? uniqueSorted(
-        record.disabledOpenScienceDomainGroups.filter(
-          (value): value is OpenScienceDomainGroupId =>
-            isOpenScienceDomainGroupId(value) &&
-            !OPEN_SCIENCE_DOMAIN_GROUPS.find((group) => group.id === value)?.locked
+        record.disabledAppDomainGroups.filter(
+          (value): value is AppDomainGroupId =>
+            isAppDomainGroupId(value) &&
+            !APP_DOMAIN_GROUPS.find((group) => group.id === value)?.locked
         )
       )
     : []
   const builtInDomains = new Set(
-    OPEN_SCIENCE_DOMAIN_GROUPS.filter((group) => !group.locked).flatMap((group) => group.domains)
+    APP_DOMAIN_GROUPS.filter((group) => !group.locked).flatMap((group) => group.domains)
   )
-  const disabledDomains = Array.isArray(record.disabledOpenScienceDomains)
+  const disabledDomains = Array.isArray(record.disabledAppDomains)
     ? uniqueSorted(
-        record.disabledOpenScienceDomains.filter(
+        record.disabledAppDomains.filter(
           (domain): domain is string => typeof domain === 'string' && builtInDomains.has(domain)
         )
       )
@@ -283,18 +283,18 @@ export const normalizeNotebookNetworkSettings = (value: unknown): NotebookNetwor
 
   return {
     allowedDomains: normalizeAllowedDomains(record.allowedDomains),
-    disabledOpenScienceDomainGroups: disabledGroups,
-    disabledOpenScienceDomains: disabledDomains
+    disabledAppDomainGroups: disabledGroups,
+    disabledAppDomains: disabledDomains
   }
 }
 
 export const buildNotebookNetworkPolicy = (
   settings: NotebookNetworkSettings
 ): NotebookNetworkPolicy => {
-  const disabledGroups = new Set(settings.disabledOpenScienceDomainGroups)
-  const disabledDomains = new Set(settings.disabledOpenScienceDomains)
+  const disabledGroups = new Set(settings.disabledAppDomainGroups)
+  const disabledDomains = new Set(settings.disabledAppDomains)
   const askDomains = uniqueSorted(
-    OPEN_SCIENCE_DOMAIN_GROUPS.flatMap((group) =>
+    APP_DOMAIN_GROUPS.flatMap((group) =>
       group.locked
         ? []
         : group.domains.filter(
@@ -302,13 +302,11 @@ export const buildNotebookNetworkPolicy = (
           )
     )
   )
-  const builtIn = OPEN_SCIENCE_DOMAIN_GROUPS.filter(
-    (group) => group.locked || !disabledGroups.has(group.id)
-  )
+  const builtIn = APP_DOMAIN_GROUPS.filter((group) => group.locked || !disabledGroups.has(group.id))
     .flatMap((group) => group.domains)
     .filter(
       (domain) =>
-        OPEN_SCIENCE_DOMAIN_GROUPS.find((group) => group.domains.includes(domain))?.locked ||
+        APP_DOMAIN_GROUPS.find((group) => group.domains.includes(domain))?.locked ||
         !askDomains.some((pattern) => domainPatternMatches(pattern, domain))
     )
 

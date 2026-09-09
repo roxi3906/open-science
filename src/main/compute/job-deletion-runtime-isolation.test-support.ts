@@ -242,7 +242,7 @@ const createDeletionRuntimeHarness = async (
     intent: 'deleted work',
     command: 'echo deleted',
     commandHash: 'deleted-hash',
-    remoteWorkdir: '~/.openscience/jobs/deleted-job',
+    remoteWorkdir: '~/.open-science/jobs/deleted-job',
     initialStatus: 'success',
     allowUnencryptedPersistence: true
   })
@@ -255,17 +255,17 @@ const createDeletionRuntimeHarness = async (
     intent: 'surviving work',
     command: 'echo completed',
     commandHash: 'survivor-hash',
-    remoteWorkdir: '~/.openscience/jobs/survivor-job',
+    remoteWorkdir: '~/.open-science/jobs/survivor-job',
     initialStatus: 'running',
     allowUnencryptedPersistence: true
   })
   await jobRepository.update('survivor-job', {
     remoteHandle: JSON.stringify({
       pid: 456,
-      exit_code_path: '~/.openscience/jobs/survivor-job/exit_code',
-      stdout_path: '~/.openscience/jobs/survivor-job/stdout',
-      stderr_path: '~/.openscience/jobs/survivor-job/stderr',
-      workdir: '~/.openscience/jobs/survivor-job'
+      exit_code_path: '~/.open-science/jobs/survivor-job/exit_code',
+      stdout_path: '~/.open-science/jobs/survivor-job/stdout',
+      stderr_path: '~/.open-science/jobs/survivor-job/stderr',
+      workdir: '~/.open-science/jobs/survivor-job'
     })
   })
 

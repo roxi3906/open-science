@@ -2094,7 +2094,7 @@ describe('ACP permission broker', () => {
     const context = { profile: 'ask' as const, mcpServerNames: ['open-science-notebook'] }
     const sanitizedRequest = createNotebookPermissionRequest(
       'shared-conversation',
-      'mcp__open_science_notebook__notebook_execute',
+      'mcp__app_notebook__notebook_execute',
       { language: 'python', code: 'print(1)' }
     )
 

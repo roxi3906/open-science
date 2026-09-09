@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { OpenScienceThinkingIndicator } from '@/components/OpenScienceThinkingIndicator'
+import { BrandThinkingIndicator } from '@/components/BrandThinkingIndicator'
 import { MessageScrollerItem } from '@/components/ui/message-scroller'
 import { cn } from '@/lib/utils'
 import { useNotebookEnvStore } from '@/stores/notebook-env-store'
@@ -59,7 +59,7 @@ const ThinkingLoadingContent = ({
   return (
     <>
       <div className="flex items-center gap-2 text-xs text-text-000/70">
-        <OpenScienceThinkingIndicator />
+        <BrandThinkingIndicator />
         <span>{t('Thinking')}</span>
         <span className="tabular-nums" aria-hidden="true">
           {formatElapsed(elapsedMs)}
@@ -99,7 +99,7 @@ const AgentLoadingIndicator = ({
     <div className="flex min-h-5 flex-col gap-1" role="status" aria-live="polite">
       {environmentProgress && !visiblePermissionPending && phase !== 'waiting-for-response' ? (
         <div className="flex items-center gap-2 text-xs text-text-000/70">
-          <OpenScienceThinkingIndicator />
+          <BrandThinkingIndicator />
           <span>{provisionProgressText(t, environmentProgress.event)}</span>
           <span className="tabular-nums" aria-hidden="true">
             {Math.round(environmentProgress.progress * 100)}%
@@ -109,7 +109,7 @@ const AgentLoadingIndicator = ({
         <ThinkingLoadingContent sessionId={sessionId} agentStatus={agentStatus} />
       ) : (
         <div className="flex items-center gap-2 text-xs text-text-000/70">
-          <OpenScienceThinkingIndicator />
+          <BrandThinkingIndicator />
           <span>
             {phase === 'resuming'
               ? t('Resuming session')

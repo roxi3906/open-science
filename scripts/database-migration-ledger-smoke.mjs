@@ -183,11 +183,11 @@ const readDatabaseMigrationLedger = async (configRoot) => {
   const client = new PrismaClient({ datasources: { db: { url: `file:${databasePath}` } } })
   try {
     const tables = await client.$queryRawUnsafe(
-      `SELECT "name" FROM "sqlite_schema" WHERE "type" = 'table' AND "name" = '_open_science_migrations'`
+      `SELECT "name" FROM "sqlite_schema" WHERE "type" = 'table' AND "name" = '_open-science-migrations'`
     )
     if (tables.length === 0) return null
     return await client.$queryRawUnsafe(
-      'SELECT "id", "checksum" FROM "_open_science_migrations" ORDER BY "id"'
+      'SELECT "id", "checksum" FROM "_open-science-migrations" ORDER BY "id"'
     )
   } finally {
     await client.$disconnect()

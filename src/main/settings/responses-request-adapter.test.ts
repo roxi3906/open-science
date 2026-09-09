@@ -24,7 +24,7 @@ describe('Responses request protocol adapter', () => {
           {
             type: 'function_call',
             call_id: 'call-1',
-            namespace: 'mcp__open_science_notebook',
+            namespace: 'mcp__app_notebook',
             name: 'notebook_execute',
             arguments: '{"code":"print(1)"}'
           },
@@ -37,7 +37,7 @@ describe('Responses request protocol adapter', () => {
       new Map([['call-1', 'inspect the notebook first']]),
       [
         {
-          namespace: 'mcp__open_science_notebook',
+          namespace: 'mcp__app_notebook',
           name: 'notebook_execute',
           parameters: { type: 'object' }
         }
@@ -69,7 +69,7 @@ describe('Responses request protocol adapter', () => {
               id: 'call-1',
               type: 'function',
               function: {
-                name: 'mcp__open_science_notebook__notebook_execute',
+                name: 'mcp__app_notebook__notebook_execute',
                 arguments: '{"code":"print(1)"}'
               }
             }
@@ -81,7 +81,7 @@ describe('Responses request protocol adapter', () => {
         {
           type: 'function',
           function: {
-            name: 'mcp__open_science_notebook__notebook_execute',
+            name: 'mcp__app_notebook__notebook_execute',
             parameters: { type: 'object' }
           }
         }

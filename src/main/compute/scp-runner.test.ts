@@ -503,7 +503,7 @@ describe('SystemScpRunner', () => {
 
       const promise = runner.copyFromRemoteBounded(
         target,
-        '~/.openscience/jobs/job-1/growing.log',
+        '~/.open-science/jobs/job-1/growing.log',
         localPath,
         3
       )
@@ -517,7 +517,7 @@ describe('SystemScpRunner', () => {
       await expect(readFile(localPath, 'utf8')).resolves.toBe('abc')
       expect(spawnMock).toHaveBeenCalledWith(
         '/usr/bin/ssh',
-        ['cluster', "head -c 4 -- ~/'.openscience/jobs/job-1/growing.log'"],
+        ['cluster', "head -c 4 -- ~/'.open-science/jobs/job-1/growing.log'"],
         { stdio: ['ignore', 'pipe', 'pipe'] }
       )
     } finally {

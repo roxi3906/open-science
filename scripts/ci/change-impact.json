@@ -121,6 +121,8 @@
       "id": "windows_sensitive",
       "role": "overlay",
       "paths": [
+        "src/main/brand-migration/**",
+        "packages/brand-migration-native/**",
         "src/main/**/*windows*.ts",
         "src/main/**/*powershell*.ts",
         "src/main/**/*path*.ts",

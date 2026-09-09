@@ -3,6 +3,7 @@ import { access } from 'node:fs/promises'
 import { constants } from 'node:fs'
 import { createServer, type Server } from 'node:net'
 
+import { retireLegacyWindowsOwnership } from './windows-ownership-migration.js'
 import { proxyEnvironment } from './proxy-environment.js'
 import { normalizeFilesystemLayout, type FilesystemLayoutInput } from './filesystem-layout.js'
 import type { DependencyCheck } from './linux-isolation.js'
@@ -325,6 +326,10 @@ const installWindowsAppContainer = async (
   installationId: string,
   ownershipRoot: string
 ): Promise<{ cancelled: boolean }> => {
+  const retired = await retireLegacyWindowsOwnership(ownershipRoot, installationId, (legacyRoot) =>
+    removeOwnedWindowsAppContainer(hostPath, installationId, legacyRoot)
+  )
+  if (retired.cancelled) return retired
   await runHostCommand(hostPath, installationId, ownershipRoot, 'prepare-setup')
   const elevated = await runElevatedHostCommand(hostPath, installationId, ownershipRoot, 'setup')
   if (elevated.cancelled) {
@@ -335,7 +340,7 @@ const installWindowsAppContainer = async (
   return elevated
 }
 
-const removeWindowsAppContainer = async (
+const removeOwnedWindowsAppContainer = async (
   hostPath: string,
   installationId: string,
   ownershipRoot: string
@@ -345,6 +350,18 @@ const removeWindowsAppContainer = async (
   if (elevated.cancelled) return elevated
   await runHostCommand(hostPath, installationId, ownershipRoot, 'finish-remove')
   return elevated
+}
+
+const removeWindowsAppContainer = async (
+  hostPath: string,
+  installationId: string,
+  ownershipRoot: string
+): Promise<{ cancelled: boolean }> => {
+  const retired = await retireLegacyWindowsOwnership(ownershipRoot, installationId, (legacyRoot) =>
+    removeOwnedWindowsAppContainer(hostPath, installationId, legacyRoot)
+  )
+  if (retired.cancelled) return retired
+  return removeOwnedWindowsAppContainer(hostPath, installationId, ownershipRoot)
 }
 
 const setWindowsRuntimeAccess = async (

@@ -89,7 +89,7 @@ afterEach(async () => {
 describe('Notebook runtime configuration updates', () => {
   it('routes disabled overlapping domains through approval after a live policy update', async () => {
     const settings = normalizeNotebookNetworkSettings({
-      disabledOpenScienceDomains: ['rest.uniprot.org']
+      disabledAppDomains: ['rest.uniprot.org']
     })
     const next = (value: typeof settings): NetworkRuntimeConfig =>
       createRuntimeConfig({

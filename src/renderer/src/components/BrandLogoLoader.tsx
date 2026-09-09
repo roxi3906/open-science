@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 
 import {
   createLogoParticles,
-  drawOpenScienceLogoFrame,
+  drawBrandLogoFrame,
   resolveLogoFrame,
   type LogoCanvasMetrics,
   type LogoParticle
@@ -21,7 +21,7 @@ const resolveAnimationTime = (now: number): number => {
   return now - animationStartedAt
 }
 
-const OpenScienceLogoLoader = (): React.JSX.Element => {
+const BrandLogoLoader = (): React.JSX.Element => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -40,7 +40,7 @@ const OpenScienceLogoLoader = (): React.JSX.Element => {
     let lastDrawnAt: number | undefined
 
     const draw = (time: number): void => {
-      drawOpenScienceLogoFrame(
+      drawBrandLogoFrame(
         context,
         particles,
         metrics,
@@ -148,4 +148,4 @@ const OpenScienceLogoLoader = (): React.JSX.Element => {
   )
 }
 
-export { OpenScienceLogoLoader }
+export { BrandLogoLoader }

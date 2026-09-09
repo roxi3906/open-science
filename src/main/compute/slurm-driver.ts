@@ -1,3 +1,4 @@
+import { migratedSlurmJobName } from '../brand-migration/remote-jobs'
 import type { ComputeJob } from '../../shared/compute'
 import { classifyConnectionFailure, type ComputeConnectionLease } from './connection-broker'
 import { quoteRemotePath, shellSingleQuote } from './remote-path-security'
@@ -25,7 +26,7 @@ export class SlurmDriverError extends Error {
   }
 }
 
-const jobName = (jobId: string): string => `openscience-${jobId}`
+const jobName = (jobId: string): string => `open-science-${jobId}`
 
 const normalizeState = (state: string): string =>
   state
@@ -279,7 +280,7 @@ export const recoverSlurmJob = async (
 ): Promise<SlurmRemoteHandle | undefined> => {
   const workdir = job.remote_workdir
   if (!workdir) return undefined
-  const name = jobName(job.job_id)
+  const name = migratedSlurmJobName(job.job_id, workdir)
   const receiptPath = quoteRemotePath(`${workdir}/scheduler_job_id`)
   const scriptPath = quoteRemotePath(`${workdir}/job.sbatch`)
   const quotedWorkdir = quoteRemotePath(workdir)

@@ -12,6 +12,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { REVIEWER_MCP_SERVER_NAME, REVIEWER_MCP_TOOLS } from '../../shared/reviewer'
+import { canonicalizeAppToolIdentity } from '../../shared/brand-migration'
 import type { AgentFrameworkId } from '../../shared/settings'
 import type { AgentFramework } from '../agent-framework'
 import { createLogger, diagnosticErrorFields } from '../logger'
@@ -27,12 +28,9 @@ const REVIEWER_MCP_OPENCODE_TOOL_NAMES = new Set(
   Object.values(REVIEWER_MCP_TOOLS).map((toolName) => `${REVIEWER_MCP_SERVER_NAME}_${toolName}`)
 )
 const REVIEWER_MCP_LEAF_TOOL_NAMES = new Set<string>(Object.values(REVIEWER_MCP_TOOLS))
-const REVIEWER_MCP_SERVER_NAME_SANITIZED = REVIEWER_MCP_SERVER_NAME.replace(/[^a-zA-Z0-9]/g, '_')
 const REVIEWER_MCP_CLAUDE_TOOL_NAMES = new Set(
-  Object.values(REVIEWER_MCP_TOOLS).flatMap((toolName) =>
-    [REVIEWER_MCP_SERVER_NAME, REVIEWER_MCP_SERVER_NAME_SANITIZED].map(
-      (serverName) => `mcp__${serverName}__${toolName}`
-    )
+  Object.values(REVIEWER_MCP_TOOLS).map(
+    (toolName) => `mcp__${REVIEWER_MCP_SERVER_NAME}__${toolName}`
   )
 )
 const REVIEWER_MCP_PROVIDER_TOOL_NAMES = new Set([
@@ -289,8 +287,12 @@ export class ReviewerSessionOwner {
   resolvePermission(params: RequestPermissionRequest): RequestPermissionResponse | undefined {
     const context = this.contextFor(params.sessionId)
     if (!context) return undefined
-    const toolName = extractProviderToolName(params.toolCall)
-    const reportedTitle = params.toolCall.title
+    const rawToolName = extractProviderToolName(params.toolCall)
+    const toolName = rawToolName == null ? rawToolName : canonicalizeAppToolIdentity(rawToolName)
+    const reportedTitle =
+      typeof params.toolCall.title === 'string'
+        ? canonicalizeAppToolIdentity(params.toolCall.title)
+        : params.toolCall.title
     const opencodeToolName =
       toolName == null &&
       context.frameworkId === 'opencode' &&

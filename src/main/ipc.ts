@@ -1,3 +1,4 @@
+import { migrateDataRootBrand } from './brand-migration/data-root'
 import { createSpecialistApplicationOwner } from './specialist/application-commands'
 import { basename, dirname, join } from 'node:path'
 import { randomUUID } from 'node:crypto'
@@ -559,6 +560,7 @@ const createApplicationModules = async (
     settingsStore ?? resolveConfigRoot(),
     (operation) => specialistPackageSkillAdapter.runMutationExclusive(operation)
   )
+  await settingsRepository.migrateBrandIdentity()
   const networkProxyRuntime = new NetworkProxyRuntime({
     setProxy: (config) => session.defaultSession.setProxy(config)
   })
@@ -710,12 +712,30 @@ const createApplicationModules = async (
       reasoningEffort: target.reasoningEffort
     }
   }
-  const storedSettings = await settingsService.getStoredSettings()
+  let storedSettings = await settingsService.getStoredSettings()
   const storageLog = createLogger('storage')
   await networkProxyRuntime.apply(storedSettings.networkProxy)
   // Prime the data-root cache from settings before any data repository is constructed below. A change
   // to this value only takes effect after a restart, so reading it once here is sufficient.
   initDataRoot(storedSettings.dataRoot)
+  const previousDataRoot = resolveDataRoot()
+  const migratedDataRoot = await migrateDataRootBrand({
+    currentDataRoot: previousDataRoot,
+    configRoot: resolveConfigRoot(),
+    packaged: app.isPackaged,
+    setDataRoot: (target) => settingsService.setDataRoot(target, { previousDataRoot }),
+    runtimeScript: join(
+      app.getAppPath().replace(/app\.asar$/, 'app.asar.unpacked'),
+      'resources',
+      'notebook',
+      'brand_migrate_runtime.py'
+    ),
+    logger: storageLog
+  })
+  if (migratedDataRoot !== previousDataRoot) {
+    storedSettings = await settingsService.getStoredSettings()
+    initDataRoot(storedSettings.dataRoot)
+  }
   const configuredDataRootMissing =
     Boolean(storedSettings.dataRoot?.trim()) && (await isDataRootMissing(resolveDataRoot()))
   initializeDataRootWriteAvailability(configuredDataRootMissing)
@@ -1748,6 +1768,7 @@ const createApplicationModules = async (
     (operation) => specialistPackageRecovery.current?.(operation) ?? operation()
   )
   const marketplaceRepository = new MarketplaceRepository(resolveConfigRoot())
+  await marketplaceRepository.migrateBrandIdentity()
   const marketplaceOperationCoordinator = new MarketplaceOperationCoordinator()
   await specialistService.ensureBuiltinCatalogReady()
   composition.phase('builtin-specialists')

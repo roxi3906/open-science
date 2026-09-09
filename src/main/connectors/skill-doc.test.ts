@@ -47,7 +47,7 @@ describe('renderConnectorInstructions', () => {
     ])
 
     expect(md).toContain('Globally Enabled Connector Skills: `mcp-pubmed`, `mcp-literature`.')
-    expect(md).toContain('`<open_science_specialist_skill_scope>` block')
+    expect(md).toContain('`<open-science-specialist-skill-scope>` block')
     expect(md).toContain('do not load or call any `mcp-*` skill absent from that block')
     expect(md.match(/`mcp-pubmed`/g)).toHaveLength(1)
     expect(md).not.toContain('`mcp-openalex`')

@@ -27,22 +27,22 @@ describe('Notebook network settings', () => {
     await expect(
       repository.setNotebookNetwork({
         allowedDomains: ['DATA.Example.COM', 'data.example.com'],
-        disabledOpenScienceDomainGroups: ['literature'],
-        disabledOpenScienceDomains: ['rest.uniprot.org']
+        disabledAppDomainGroups: ['literature'],
+        disabledAppDomains: ['rest.uniprot.org']
       })
     ).resolves.toMatchObject({
       notebookNetwork: {
         allowedDomains: ['data.example.com'],
-        disabledOpenScienceDomainGroups: ['literature'],
-        disabledOpenScienceDomains: ['rest.uniprot.org']
+        disabledAppDomainGroups: ['literature'],
+        disabledAppDomains: ['rest.uniprot.org']
       }
     })
 
     await expect(repository.getSettings()).resolves.toMatchObject({
       notebookNetwork: {
         allowedDomains: ['data.example.com'],
-        disabledOpenScienceDomainGroups: ['literature'],
-        disabledOpenScienceDomains: ['rest.uniprot.org']
+        disabledAppDomainGroups: ['literature'],
+        disabledAppDomains: ['rest.uniprot.org']
       }
     })
   })

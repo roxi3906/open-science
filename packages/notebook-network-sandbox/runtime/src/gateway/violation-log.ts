@@ -55,13 +55,13 @@ class ViolationLog {
       )
     ) {
       lines.unshift(
-        'OPEN_SCIENCE_NETWORK_DOMAIN_BLOCKED: This domain is not in Settings > Network > Allowed domains.'
+        'Open-Science:NETWORK_DOMAIN_BLOCKED: This domain is not in Settings > Network > Allowed domains.'
       )
     }
     if (permissionDenied || hiddenMissingPath) {
       const path = permissionDenied ? deniedPath(stderr) : hiddenMissingPath
       lines.push(
-        `OPEN_SCIENCE_FILESYSTEM_ACCESS_BLOCKED${path ? `: ${path}` : ''} ` +
+        `Open-Science:FILESYSTEM_ACCESS_BLOCKED${path ? `: ${path}` : ''} ` +
           '(grant the folder in the Files view and retry)'
       )
     }

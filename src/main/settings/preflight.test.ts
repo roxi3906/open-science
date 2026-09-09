@@ -12,7 +12,7 @@ const customProvider: StoredProvider = {
 }
 
 const baseSettings = (overrides: Partial<StoredSettings> = {}): StoredSettings => ({
-  version: 2,
+  version: 3,
   claude: { resolvedPath: '/bin/claude' },
   providers: [customProvider],
   activeProviderId: 'p1',

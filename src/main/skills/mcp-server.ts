@@ -38,7 +38,7 @@ const requestSkillImportToolDefinition = {
   inputSchema: requestSkillImportToolSchema
 }
 const SKILL_IMPORT_SYSTEM_PROMPT_APPEND = [
-  '<open_science_skill_import_instructions>',
+  '<open-science-skill-import-instructions>',
   'When the user explicitly asks to install or import an attachment wrapped in <attached_skill_package> and marked skillImportEligible, call request_skill_import with its exact URI as attachment_uri and skillImportTurnToken as turn_token.',
   'When the user supplies an exact public github.com Skill directory or SKILL.md URL, call request_skill_import with that URL as github_url.',
   'When the user supplies only a Skill name or keywords, first use available web search to find its public github.com Skill directory or SKILL.md URL. Call request_skill_import only when one candidate is unambiguous; otherwise show the candidates and ask the user to choose.',
@@ -47,7 +47,7 @@ const SKILL_IMPORT_SYSTEM_PROMPT_APPEND = [
   'The tool opens an application-owned preview and confirmation dialog. Never unpack or copy a Skill into a Skill directory yourself.',
   'An <attached_local_archive> is an ordinary ZIP reference, not an eligible Skill package. Do not call request_skill_import for it.',
   'A newly imported Skill becomes available on the next user turn after the agent runtime reloads.',
-  '</open_science_skill_import_instructions>'
+  '</open-science-skill-import-instructions>'
 ].join('\n')
 
 type SkillImportRpcConnection = LocalRpcTransport & {

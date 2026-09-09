@@ -20,7 +20,7 @@ describe('disabled automatic domain access', () => {
     ['*.ncbi.nlm.nih.gov', 'eutils.ncbi.nlm.nih.gov', 'www.nih.gov'],
     ['*.uniprot.org', 'rest.uniprot.org', 'www.rcsb.org']
   ])('asks for %s despite overlapping built-in rules', async (disabled, host, sibling) => {
-    const settings = normalizeNotebookNetworkSettings({ disabledOpenScienceDomains: [disabled] })
+    const settings = normalizeNotebookNetworkSettings({ disabledAppDomains: [disabled] })
     const inspect = (value: typeof settings): DestinationPolicy =>
       new DestinationPolicy(
         createRuntimeConfig({
@@ -52,8 +52,8 @@ describe('notebook network policy', () => {
   it('removes disabled groups and individual built-in domains', () => {
     const policy = buildNotebookNetworkPolicy({
       allowedDomains: ['research.example'],
-      disabledOpenScienceDomainGroups: ['literature'],
-      disabledOpenScienceDomains: ['rest.uniprot.org']
+      disabledAppDomainGroups: ['literature'],
+      disabledAppDomains: ['rest.uniprot.org']
     })
 
     expect(policy.allowedDomains).toContain('research.example')
@@ -63,12 +63,12 @@ describe('notebook network policy', () => {
 
   it('keeps the required package-registry group enabled', () => {
     const settings = normalizeNotebookNetworkSettings({
-      disabledOpenScienceDomainGroups: ['packageRegistries'],
-      disabledOpenScienceDomains: ['pypi.org']
+      disabledAppDomainGroups: ['packageRegistries'],
+      disabledAppDomains: ['pypi.org']
     })
 
-    expect(settings.disabledOpenScienceDomainGroups).toEqual([])
-    expect(settings.disabledOpenScienceDomains).toEqual([])
+    expect(settings.disabledAppDomainGroups).toEqual([])
+    expect(settings.disabledAppDomains).toEqual([])
     expect(buildNotebookNetworkPolicy(settings).allowedDomains).toContain('pypi.org')
   })
 
@@ -109,13 +109,13 @@ describe('notebook network policy', () => {
     expect(
       normalizeNotebookNetworkSettings({
         allowedDomains: ['DATA.Example.COM', 'localhost', 'data.example.com'],
-        disabledOpenScienceDomainGroups: ['literature', 'unknown'],
-        disabledOpenScienceDomains: ['rest.uniprot.org', 'unknown.example']
+        disabledAppDomainGroups: ['literature', 'unknown'],
+        disabledAppDomains: ['rest.uniprot.org', 'unknown.example']
       })
     ).toEqual({
       allowedDomains: ['data.example.com'],
-      disabledOpenScienceDomainGroups: ['literature'],
-      disabledOpenScienceDomains: ['rest.uniprot.org']
+      disabledAppDomainGroups: ['literature'],
+      disabledAppDomains: ['rest.uniprot.org']
     })
   })
 

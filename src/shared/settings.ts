@@ -17,7 +17,7 @@ import type { CloseActionPreference } from './window-controls'
 
 // Settings file schema version; bumped when the on-disk shape changes. v2 adds official-vendor
 // providers (vendorId/region) and a per-selection activeModel alongside activeProviderId.
-export const SETTINGS_FILE_VERSION = 2
+export const SETTINGS_FILE_VERSION = 3
 
 // A provider targets a custom gateway, a built-in official vendor, an app-owned Claude
 // subscription, or a Codex subscription. `codex-shared` remains a legacy Provider/import

@@ -314,7 +314,7 @@ describe('AcpTurnSkillOwner', () => {
     })
 
     expect(prepared.text).toBe('Use the following skill(s) for this task: Research.\n\nfind papers')
-    expect(prepared.skillScopeGuidance).toContain('<open_science_specialist_skill_scope>')
+    expect(prepared.skillScopeGuidance).toContain('<open-science-specialist-skill-scope>')
     expect(prepared.skillScopeGuidance).toContain(
       'supersedes and revokes every earlier Specialist Skill or Connector scope'
     )
@@ -374,9 +374,9 @@ describe('AcpTurnSkillOwner', () => {
       specialistId: 'specialist-1'
     })
 
-    expect(presented.skillScopeGuidance).toContain('<open_science_specialist_skill_scope>')
+    expect(presented.skillScopeGuidance).toContain('<open-science-specialist-skill-scope>')
     expect(presented.skillScopeGuidance).toContain('mcp-pubmed')
-    expect(followUpPromptText(presented)).toContain('<open_science_specialist_skill_scope>')
+    expect(followUpPromptText(presented)).toContain('<open-science-specialist-skill-scope>')
     expect(followUpPromptText(presented)).toContain(
       'Use the following skill(s) for this task: Research.\n\nfind papers'
     )
@@ -826,7 +826,7 @@ describe('AcpTurnSkillOwner', () => {
 
     expect(selectSkills).toHaveBeenCalledTimes(2)
     expect((selectSkills.mock.calls[1] as unknown as [string])[0]).toContain(
-      '<open_science_skill_route_verification>'
+      '<open-science-skill-route-verification>'
     )
     expect(prepared.skillActivityInputs).toEqual([])
     expect(prepared.skillScopeGuidance).toContain('No Skill is routed for this turn.')
@@ -864,7 +864,7 @@ describe('AcpTurnSkillOwner', () => {
     })
 
     expect(selectSkills).toHaveBeenCalledTimes(2)
-    expect(selectSkills.mock.calls[1]?.[0]).toContain('<open_science_skill_route_verification>')
+    expect(selectSkills.mock.calls[1]?.[0]).toContain('<open-science-skill-route-verification>')
     expect(prepared.skillActivityInputs).toEqual([{ name: 'mcp-pubmed', path: pubmedPath }])
     expect(prepared.skillScopeGuidance).toContain('PUBMED_ROUTE_SENTINEL')
   })

@@ -22,7 +22,7 @@ const roots: string[] = []
 const makeRuntime = (): string => {
   const root = mkdtempSync(join(tmpdir(), 'open-science-workload-cache-'))
   roots.push(root)
-  return join(root, '数据', 'OpenScience', 'runtime')
+  return join(root, '数据', 'Open-Science', 'runtime')
 }
 
 afterEach(() => {

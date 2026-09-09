@@ -214,12 +214,14 @@ mod windows_host {
         plan_writable_acl_grants, strip_utf8_bom, valid_lease_id, wfp,
     };
 
-    const PROFILE_PREFIX: &str = "Aipoch.OpenScience.Notebook";
+    const PROFILE_PREFIX: &str = "Aipoch.Open-Science.Notebook";
+    const LEGACY_PROFILE_PREFIX: &str = "Aipoch.OpenScience.Notebook";
     const PROCESS_SYNCHRONIZE: PROCESS_ACCESS_RIGHTS = PROCESS_ACCESS_RIGHTS(0x0010_0000);
     const RECEIPT_SCHEMA: u32 = 5;
     const ACL_LEASE_SCHEMA: u32 = 2;
     const ACL_STATE_SCHEMA: u32 = 1;
-    const OPERATION_MUTEX: &str = "Local\\Aipoch.OpenScience.Notebook.Resources";
+    const OPERATION_MUTEX: &str = "Local\\Aipoch.Open-Science.Notebook.Resources";
+    const LEGACY_OPERATION_MUTEX: &str = "Local\\Aipoch.OpenScience.Notebook.Resources";
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
@@ -324,27 +326,35 @@ mod windows_host {
         gateway_port: Option<u16>,
     }
 
-    struct OperationLock(HANDLE);
+    struct OperationLock(Vec<HANDLE>);
 
     impl OperationLock {
         fn acquire(installation_id: &str) -> Result<Self> {
-            let name = wide(&format!("{OPERATION_MUTEX}.{installation_id}"));
-            let handle = unsafe { CreateMutexW(None, false, PCWSTR(name.as_ptr())) }
-                .context("create AppContainer operation lock")?;
-            let wait = unsafe { WaitForSingleObject(handle, INFINITE) };
-            if wait != WAIT_OBJECT_0 && wait != WAIT_ABANDONED {
-                unsafe { CloseHandle(handle) }.ok();
-                bail!("wait for AppContainer operation lock");
+            // Take the released lock first so old/new binaries cannot race during retirement.
+            // Keep each acquired handle under RAII even if acquiring the second mutex fails.
+            let mut locks = Self(Vec::new());
+            for prefix in [LEGACY_OPERATION_MUTEX, OPERATION_MUTEX] {
+                let name = wide(&format!("{prefix}.{installation_id}"));
+                let handle = unsafe { CreateMutexW(None, false, PCWSTR(name.as_ptr())) }
+                    .context("create AppContainer operation lock")?;
+                let wait = unsafe { WaitForSingleObject(handle, INFINITE) };
+                if wait != WAIT_OBJECT_0 && wait != WAIT_ABANDONED {
+                    unsafe { CloseHandle(handle) }.ok();
+                    bail!("wait for AppContainer operation lock");
+                }
+                locks.0.push(handle);
             }
-            Ok(Self(handle))
+            Ok(locks)
         }
     }
 
     impl Drop for OperationLock {
         fn drop(&mut self) {
-            unsafe {
-                let _ = ReleaseMutex(self.0);
-                let _ = CloseHandle(self.0);
+            for handle in self.0.drain(..).rev() {
+                unsafe {
+                    let _ = ReleaseMutex(handle);
+                    let _ = CloseHandle(handle);
+                }
             }
         }
     }
@@ -396,11 +406,12 @@ mod windows_host {
 
     fn validate_record(record: &OwnershipRecord, installation_id: &str) -> Result<()> {
         let expected_name = format!("{PROFILE_PREFIX}.{}", record.ownership_token);
+        let legacy_name = format!("{LEGACY_PROFILE_PREFIX}.{}", record.ownership_token);
         let expected_sid = sid_text(profile_sid(&record.profile_name)?.0)?;
         let descriptor = wfp_descriptor(record);
         if ![4, RECEIPT_SCHEMA].contains(&record.schema_version)
             || record.installation_id != installation_id
-            || record.profile_name != expected_name
+            || (record.profile_name != expected_name && record.profile_name != legacy_name)
             || record.profile_sid != expected_sid
             || record.ownership_token.is_empty()
             || record.gateway_port == 0
@@ -417,6 +428,9 @@ mod windows_host {
 
     fn wfp_descriptor(record: &OwnershipRecord) -> wfp::FenceDescriptor<'_> {
         wfp::FenceDescriptor {
+            legacy_identity: record
+                .profile_name
+                .starts_with(&format!("{LEGACY_PROFILE_PREFIX}.")),
             installation_id: &record.installation_id,
             ownership_token: &record.ownership_token,
             sublayer_key: &record.wfp_sublayer_key,

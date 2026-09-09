@@ -197,7 +197,7 @@ whether to submit again; Open-Science does not automatically submit a duplicate.
 ### Environment activation
 
 The optional `environment` value is a logical name, not a shell command. Open-Science sources
-`~/.openscience/environments/<name>.sh` before the workload for direct and Slurm jobs. Names are
+`~/.open-science/environments/<name>.sh` before the workload for direct and Slurm jobs. Names are
 1–64 letters, numbers, periods, underscores, or hyphens and must start with a letter or number.
 The file and every software/cache path it references must be visible on the execution node.
 
@@ -276,7 +276,7 @@ const r = await c.attachJob(job_id).result()
 //   hidden_files:   ['hpc/<job_id>/hidden/run.log', ...],
 //   output_files:   [...featured_files, ...hidden_files],         // featured first
 //   left_on_remote: [{ uri: 'ssh:<alias>/<abs_path>', size_mb: 420, reason: 'residency:remote' }],
-//   remote_workdir: '.openscience/jobs/<job_id>',
+//   remote_workdir: '.open-science/jobs/<job_id>',
 //   stdout_tail: '...last 64 KB...',
 //   stderr_tail: '...last 64 KB...'
 // }

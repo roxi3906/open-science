@@ -793,6 +793,8 @@ export class MarketplaceService {
   }
 
   private async findSource(sourceId: string): Promise<ResolvedSource> {
+    if (this.options.officialSource?.id === CURRENT_OFFICIAL_SOURCE_ID)
+      sourceId = currentMarketplaceSourceId(sourceId)
     const source = (await this.sources()).find((item) => item.id === sourceId)
     if (!source) throw new Error('Marketplace source is not configured.')
     return source
@@ -1139,3 +1141,7 @@ export class MarketplaceService {
     throw new Error('Marketplace host is not allowed.')
   }
 }
+import {
+  CURRENT_OFFICIAL_SOURCE_ID,
+  currentMarketplaceSourceId
+} from '../../brand-migration/marketplace'

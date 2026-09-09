@@ -75,7 +75,7 @@ it('bounds visible error previews and marks truncation', () => {
 })
 it.each([
   'mcp__open-science-notebook__notebook_restart',
-  'mcp__open_science_notebook__notebook_restart',
+  'mcp__app_notebook__notebook_restart',
   'open-science-notebook_notebook_restart',
   'open_science_notebook_notebook_restart',
   'mcp.open-science-notebook.notebook_restart',
@@ -256,7 +256,7 @@ it.each([false, true])('renders runtime switch receipts (partial failure: %s)', 
         }
       }
   const item = activity({
-    title: 'mcp__open_science_notebook__notebook_switch_runtime',
+    title: 'mcp__app_notebook__notebook_switch_runtime',
     status: failed ? 'failed' : 'completed',
     rawInput: { language: 'r', runtimeId: '/envs/analysis-r/bin/R' },
     rawOutput: {

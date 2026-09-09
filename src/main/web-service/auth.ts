@@ -1,3 +1,4 @@
+import { LEGACY_WEB_COOKIE, readMigratingCookie } from '../brand-migration/cookies'
 import { randomBytes, timingSafeEqual } from 'node:crypto'
 import { constants } from 'node:fs'
 import { mkdir, open, type FileHandle } from 'node:fs/promises'
@@ -5,7 +6,7 @@ import { dirname, join } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
 const TOKEN_FILE = 'web-token'
-const COOKIE_NAME = 'open_science_web_token'
+const COOKIE_NAME = 'open-science-web-token'
 
 const hasErrorCode = (error: unknown, code: string): boolean =>
   error instanceof Error && 'code' in error && error.code === code
@@ -76,20 +77,8 @@ const safeEqual = (left: string | undefined, right: string): boolean => {
   return a.length === b.length && timingSafeEqual(a, b)
 }
 
-const cookieToken = (request: IncomingMessage): string | undefined => {
-  const cookies = request.headers.cookie?.split(';') ?? []
-  for (const cookie of cookies) {
-    const [name, ...value] = cookie.trim().split('=')
-    if (name === COOKIE_NAME) {
-      try {
-        return decodeURIComponent(value.join('='))
-      } catch {
-        return undefined
-      }
-    }
-  }
-  return undefined
-}
+const cookieToken = (request: IncomingMessage): string | undefined =>
+  readMigratingCookie(request.headers.cookie, COOKIE_NAME, LEGACY_WEB_COOKIE).value
 
 const requestToken = (request: IncomingMessage, url: URL): string | undefined => {
   const auth = request.headers.authorization
@@ -122,19 +111,22 @@ const authenticateRequest = (
   request: IncomingMessage,
   url: URL,
   token: string
-): { ok: boolean; queryToken: boolean } => ({
+): { ok: boolean; queryToken: boolean; migrateCookie: boolean } => ({
   ok:
     isLoopbackHost(request.headers.host) &&
     isAllowedOrigin(request) &&
     safeEqual(requestToken(request, url), token),
-  queryToken: safeEqual(url.searchParams.get('token') ?? undefined, token)
+  queryToken: safeEqual(url.searchParams.get('token') ?? undefined, token),
+  migrateCookie:
+    readMigratingCookie(request.headers.cookie, COOKIE_NAME, LEGACY_WEB_COOKIE).legacy &&
+    safeEqual(cookieToken(request), token)
 })
 
 const persistAuthCookie = (response: ServerResponse, token: string): void => {
-  response.setHeader(
-    'set-cookie',
-    `${COOKIE_NAME}=${encodeURIComponent(token)}; HttpOnly; SameSite=Strict; Path=/`
-  )
+  response.setHeader('set-cookie', [
+    `${COOKIE_NAME}=${encodeURIComponent(token)}; HttpOnly; SameSite=Strict; Path=/`,
+    `${LEGACY_WEB_COOKIE}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0`
+  ])
 }
 
 export { authenticateRequest, loadOrCreateWebToken, persistAuthCookie, TOKEN_FILE }

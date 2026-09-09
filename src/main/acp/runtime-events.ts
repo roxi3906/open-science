@@ -1,3 +1,7 @@
+import {
+  readLiteraturePresentation,
+  canonicalizeAppToolIdentity
+} from '../../shared/brand-migration'
 import type { ContentBlock, SessionNotification, ToolCallContent } from '@agentclientprotocol/sdk'
 
 import {
@@ -331,9 +335,8 @@ const literaturePresentationText = (value: unknown): string | undefined => {
   } catch {
     return undefined
   }
-  if (!isRecord(parsed) || !isRecord(parsed.openScienceLiteraturePresentation)) return undefined
-
-  const source = parsed.openScienceLiteraturePresentation
+  const source = readLiteraturePresentation(parsed)
+  if (!source) return undefined
   const documentNames = Array.isArray(source.documentNames)
     ? source.documentNames
         .filter(
@@ -415,14 +418,14 @@ const literaturePresentationText = (value: unknown): string | undefined => {
   }
 
   return Object.keys(presentation).length > 0
-    ? JSON.stringify({ openScienceLiteraturePresentation: presentation })
+    ? JSON.stringify({ 'open-science-literature-presentation': presentation })
     : undefined
 }
 
 const isLiteratureReadDocumentUpdate = (update: ToolCallUpdate): boolean =>
   [extractProviderToolName(update), trimProviderValue(update.title)].some((identity) => {
     if (!identity) return false
-    const normalized = identity
+    const normalized = canonicalizeAppToolIdentity(identity)
       .toLowerCase()
       .split(/[^a-z0-9]+/u)
       .filter(Boolean)
@@ -433,7 +436,7 @@ const isLiteratureReadDocumentUpdate = (update: ToolCallUpdate): boolean =>
 const isLiteratureLibraryUpdate = (update: ToolCallUpdate): boolean =>
   [extractProviderToolName(update), trimProviderValue(update.title)].some((identity) => {
     if (!identity) return false
-    const normalized = identity
+    const normalized = canonicalizeAppToolIdentity(identity)
       .toLowerCase()
       .split(/[^a-z0-9]+/u)
       .filter(Boolean)
@@ -494,7 +497,7 @@ const literatureResultPresentationText = (value: unknown): string | undefined =>
   }
 
   return literaturePresentationText(
-    JSON.stringify({ openScienceLiteraturePresentation: presentation })
+    JSON.stringify({ 'open-science-literature-presentation': presentation })
   )
 }
 
@@ -534,10 +537,11 @@ const extractRawLiteraturePresentation = (
     }
   }
   if (!Array.isArray(rawOutput) && !isRecord(rawOutput)) return undefined
-  if (isRecord(rawOutput) && isRecord(rawOutput.openScienceLiteraturePresentation)) {
+  const presentation = readLiteraturePresentation(rawOutput)
+  if (presentation) {
     const text = literaturePresentationText(
       JSON.stringify({
-        openScienceLiteraturePresentation: rawOutput.openScienceLiteraturePresentation
+        'open-science-literature-presentation': presentation
       })
     )
     if (text) return { type: 'content', content: { type: 'text', text } }
@@ -586,7 +590,8 @@ const projectToolDetailPayload = (update: ToolCallUpdate): ToolDetailProjection 
           (item) =>
             item.type !== 'content' ||
             item.content.type !== 'text' ||
-            item.content.text !== literaturePresentationContentText
+            (item.content.text !== literaturePresentationContentText &&
+              literaturePresentationText(item.content.text) !== literaturePresentationContentText)
         ) ?? [])
       ]
     : projectedContent

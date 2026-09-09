@@ -89,7 +89,7 @@ describe('Remote.It adapter', () => {
     const permissionError = {
       stdout: '{"code":7003,"message":"cmd - you must run this command with elevated privileges"}'
     }
-    const marker = '__OPEN_SCIENCE_REMOTEIT_BATCH_COMMAND_END__'
+    const marker = '__open-science-remoteit-batch-command-end__'
     const run = vi.fn<RemoteItCommandRunner>(async (command) => {
       if (command === '/usr/local/bin/remoteit') throw permissionError
       return {
@@ -455,7 +455,7 @@ describe('Remote.It adapter', () => {
 
   it('creates the App and Browser services together with one administrator approval', async () => {
     let added = false
-    const marker = '__OPEN_SCIENCE_REMOTEIT_BATCH_COMMAND_END__'
+    const marker = '__open-science-remoteit-batch-command-end__'
     const permissionError = {
       stdout: '{"code":7003,"message":"cmd - you must run this command with elevated privileges"}'
     }
@@ -697,14 +697,15 @@ describe('Remote.It adapter', () => {
     expect(run.mock.calls.some(([, args]) => args[0] === 'service')).toBe(false)
   })
 
-  it('reuses the legacy branded App service when stored IDs are missing', async () => {
+  it('renames and reuses the legacy branded App service when stored IDs are missing', async () => {
+    let renamed = false
     const run = vi.fn<RemoteItCommandRunner>(async (_command, args) => {
       if (args.join(' ') === 'status --json') {
         return {
           stdout: status([
             {
               id: 'legacy-app',
-              name: 'Open Science Remote',
+              name: renamed ? 'Open-Science Remote' : 'Open Science Remote',
               type: 7,
               addressHost: '127.0.0.1',
               addressPort: 44100,
@@ -724,6 +725,34 @@ describe('Remote.It adapter', () => {
           stderr: ''
         }
       }
+      if (args[0] === 'exec-gql') {
+        const query = args[args.indexOf('--query') + 1]
+        if (query.includes('renameService')) {
+          expect(query).toContain('serviceId: "legacy-app"')
+          expect(query).toContain('name: "Open-Science Remote"')
+          renamed = true
+          return { stdout: JSON.stringify({ data: { data: { renameService: true } } }), stderr: '' }
+        }
+        return {
+          stdout: JSON.stringify({
+            data: {
+              data: {
+                login: {
+                  devices: {
+                    items: [
+                      {
+                        id: 'device-1',
+                        services: [{ id: 'legacy-app', name: 'Open-Science Remote' }]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }),
+          stderr: ''
+        }
+      }
       if (args[0] === 'version') return { stdout: '4.1.0\n', stderr: '' }
       throw new Error(`Unexpected command: ${args.join(' ')}`)
     })
@@ -733,6 +762,7 @@ describe('Remote.It adapter', () => {
       appServiceId: 'legacy-app',
       browserServiceId: 'browser-service'
     })
+    expect(renamed).toBe(true)
     expect(run.mock.calls.some(([, args]) => args[0] === 'service')).toBe(false)
   })
 

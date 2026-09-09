@@ -1,4 +1,5 @@
 import type { ChatMessage, ChatSession, ToolActivity } from '@/stores/session-store'
+import { canonicalizeAppToolIdentity } from '../../../../shared/brand-migration'
 import { ACP_CONTEXT_COMPACTION_ACTIVITY_TOOL_NAME } from '../../../../shared/acp'
 import type { HandoffLifecycleEvent } from '../../../../shared/handoff-lifecycle'
 import {
@@ -93,7 +94,7 @@ const getPlanToolKind = (
 ): 'generate_plan' | 'update_step_status' | undefined => {
   const names = [activity.providerToolName, activity.title]
   for (const name of names) {
-    const match = PLAN_PROVIDER_TOOL_PATTERN.exec(name?.trim() ?? '')
+    const match = PLAN_PROVIDER_TOOL_PATTERN.exec(canonicalizeAppToolIdentity(name?.trim() ?? ''))
     if (match?.[1] === 'generate_plan' || match?.[1] === 'update_step_status') return match[1]
   }
   return undefined
@@ -102,7 +103,7 @@ const getPlanToolKind = (
 // Returns the notebook tool suffix (e.g. "notebook_execute") for a notebook MCP tool identity, or
 // undefined when the name is not a notebook tool. Framework-agnostic across the two server-name forms.
 const getNotebookToolSuffix = (toolName: string | undefined): string | undefined =>
-  NOTEBOOK_PROVIDER_TOOL_PATTERN.exec(toolName?.trim() ?? '')?.[1]
+  NOTEBOOK_PROVIDER_TOOL_PATTERN.exec(canonicalizeAppToolIdentity(toolName?.trim() ?? ''))?.[1]
 
 // Maps a notebook MCP tool to a clean human label so rows read as notebook actions, not raw
 // mcp__…__* names. Returns undefined for non-notebook tools.

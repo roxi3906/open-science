@@ -408,7 +408,14 @@ const resolveConfiguredDataRoot = async (configRoot) => {
   const hasLegacyData = await Promise.all(
     DATA_DIRECTORIES.map((directory) => exists(join(configRoot, directory)))
   ).then((values) => values.some(Boolean))
-  return hasLegacyData ? configRoot : join(homedir(), 'OpenScience')
+  if (hasLegacyData) return configRoot
+  const current = join(homedir(), 'Open-Science')
+  const previous = join(homedir(), 'OpenScience')
+  const [hasCurrent, hasPrevious] = await Promise.all([exists(current), exists(previous)])
+  if (hasCurrent && hasPrevious) {
+    throw new Error('Both current and legacy Data Roots exist. Select --data-root explicitly.')
+  }
+  return hasPrevious ? previous : current
 }
 
 const readActivatedRollback = async (configRoot, requestedOutput) => {

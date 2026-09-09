@@ -66,7 +66,7 @@ describe('Responses result protocol adapter', () => {
                     id: 'call-mcp-json',
                     type: 'function',
                     function: {
-                      name: 'mcp__open_science_notebook__notebook_execute',
+                      name: 'mcp__app_notebook__notebook_execute',
                       arguments: '{"code":"print(1)"}'
                     }
                   }
@@ -77,7 +77,7 @@ describe('Responses result protocol adapter', () => {
         },
         [
           {
-            namespace: 'mcp__open_science_notebook',
+            namespace: 'mcp__app_notebook',
             name: 'notebook_execute',
             parameters: { type: 'object' }
           }
@@ -88,7 +88,7 @@ describe('Responses result protocol adapter', () => {
         {
           type: 'function_call',
           call_id: 'call-mcp-json',
-          namespace: 'mcp__open_science_notebook',
+          namespace: 'mcp__app_notebook',
           name: 'notebook_execute'
         }
       ]
@@ -197,7 +197,7 @@ describe('Responses result protocol adapter', () => {
                   {
                     index: 0,
                     id: 'call-',
-                    function: { name: 'mcp__open_science_', arguments: '' }
+                    function: { name: 'mcp__app_', arguments: '' }
                   }
                 ]
               }
@@ -232,7 +232,7 @@ describe('Responses result protocol adapter', () => {
     await expect(
       streamChatToResponses(upstream, writer, 'catalog-model', [
         {
-          namespace: 'mcp__open_science_notebook',
+          namespace: 'mcp__app_notebook',
           name: 'notebook_execute',
           parameters: { type: 'object' }
         }
@@ -245,7 +245,7 @@ describe('Responses result protocol adapter', () => {
       connection: 'keep-alive'
     })
     expect(output).toContain('event: response.function_call_arguments.delta')
-    expect(output).toContain('"namespace":"mcp__open_science_notebook"')
+    expect(output).toContain('"namespace":"mcp__app_notebook"')
     expect(output.indexOf('event: response.created')).toBeLessThan(
       output.indexOf('event: response.completed')
     )

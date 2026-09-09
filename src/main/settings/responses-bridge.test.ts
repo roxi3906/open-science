@@ -134,7 +134,7 @@ describe('Responses-compatible bridge conversion', () => {
     }
   })
 
-  const legacyReviewerMarker = '<open_science_reviewer_session>'
+  const legacyReviewerMarker = '<open-science-reviewer-session>'
   it('maps instructions, messages, function calls, and tool results to Chat Completions', () => {
     const request = responsesToChatRequest({
       model: 'model-a',
@@ -288,7 +288,7 @@ describe('Responses-compatible bridge conversion', () => {
             {
               type: 'function_call',
               call_id: 'notebook-1',
-              namespace: 'mcp__open_science_notebook',
+              namespace: 'mcp__app_notebook',
               name: 'notebook_execute',
               arguments: '{"code":"print(1)"}'
             },
@@ -298,7 +298,7 @@ describe('Responses-compatible bridge conversion', () => {
         undefined,
         [
           {
-            namespace: 'mcp__open_science_notebook',
+            namespace: 'mcp__app_notebook',
             name: 'notebook_execute',
             parameters: { type: 'object' }
           }
@@ -312,7 +312,7 @@ describe('Responses-compatible bridge conversion', () => {
             id: 'notebook-1',
             type: 'function',
             function: {
-              name: 'mcp__open_science_notebook__notebook_execute',
+              name: 'mcp__app_notebook__notebook_execute',
               arguments: '{"code":"print(1)"}'
             }
           }
@@ -939,7 +939,7 @@ describe('Responses-compatible bridge conversion', () => {
                           id: 'call-note',
                           type: 'function',
                           function: {
-                            name: 'mcp__open_science_',
+                            name: 'mcp__app_',
                             arguments: ''
                           }
                         }
@@ -1009,7 +1009,7 @@ describe('Responses-compatible bridge conversion', () => {
         key: 'upstream-key',
         namespacedTools: [
           {
-            namespace: 'mcp__open_science_notebook',
+            namespace: 'mcp__app_notebook',
             name: 'notebook_execute',
             description: 'Execute notebook code.',
             parameters: {
@@ -1054,7 +1054,7 @@ describe('Responses-compatible bridge conversion', () => {
           expect.objectContaining({
             type: 'function',
             function: expect.objectContaining({
-              name: 'mcp__open_science_notebook__notebook_execute',
+              name: 'mcp__app_notebook__notebook_execute',
               parameters: expect.objectContaining({ required: ['code'] })
             })
           })
@@ -1065,13 +1065,13 @@ describe('Responses-compatible bridge conversion', () => {
       }>
       expect(chatTools.map((tool) => tool.function?.name)).toEqual([
         'exec_command',
-        'mcp__open_science_notebook__notebook_execute'
+        'mcp__app_notebook__notebook_execute'
       ])
       expect(output).toContain('"type":"function_call"')
-      expect(output).toContain('"namespace":"mcp__open_science_notebook"')
+      expect(output).toContain('"namespace":"mcp__app_notebook"')
       expect(output).toContain('"name":"notebook_execute"')
       expect(output).toContain('"call_id":"call-notebook-1"')
-      expect(output).not.toContain('"name":"mcp__open_science_notebook__notebook_execute"')
+      expect(output).not.toContain('"name":"mcp__app_notebook__notebook_execute"')
     } finally {
       await bridge.close()
     }
@@ -1102,7 +1102,7 @@ describe('Responses-compatible bridge conversion', () => {
                             id: 'call-deepseek-reviewer',
                             type: 'function',
                             function: {
-                              name: 'mcp__open_science_reviewer__submit_findings',
+                              name: 'mcp__app_reviewer__submit_findings',
                               arguments: '{"checks":[]}'
                             }
                           }
@@ -1126,7 +1126,7 @@ describe('Responses-compatible bridge conversion', () => {
         baseUrl: 'https://api.deepseek.com/v1',
         namespacedTools: [
           {
-            namespace: 'mcp__open_science_notebook',
+            namespace: 'mcp__app_notebook',
             name: 'notebook_execute',
             parameters: { type: 'object' }
           }
@@ -1134,12 +1134,12 @@ describe('Responses-compatible bridge conversion', () => {
         reviewerScope: {
           namespacedTools: [
             {
-              namespace: 'mcp__open_science_reviewer',
+              namespace: 'mcp__app_reviewer',
               name: 'read_turn',
               parameters: { type: 'object' }
             },
             {
-              namespace: 'mcp__open_science_reviewer',
+              namespace: 'mcp__app_reviewer',
               name: 'submit_findings',
               parameters: { type: 'object' }
             }
@@ -1189,10 +1189,10 @@ describe('Responses-compatible bridge conversion', () => {
           (tool) => tool.function?.name
         )
       )
-      expect(toolNames[0]).toEqual(['exec_command', 'mcp__open_science_notebook__notebook_execute'])
+      expect(toolNames[0]).toEqual(['exec_command', 'mcp__app_notebook__notebook_execute'])
       expect(toolNames[1]).toEqual([
-        'mcp__open_science_reviewer__read_turn',
-        'mcp__open_science_reviewer__submit_findings'
+        'mcp__app_reviewer__read_turn',
+        'mcp__app_reviewer__submit_findings'
       ])
       expect(upstreamRequests[0]?.tool_choice).toEqual({
         type: 'function',
@@ -1204,7 +1204,7 @@ describe('Responses-compatible bridge conversion', () => {
         'https://api.deepseek.com/v1/chat/completions'
       ])
       expect(reviewerOutput).toContain('"type":"function_call"')
-      expect(reviewerOutput).toContain('"namespace":"mcp__open_science_reviewer"')
+      expect(reviewerOutput).toContain('"namespace":"mcp__app_reviewer"')
       expect(reviewerOutput).toContain('"name":"submit_findings"')
       expect(reviewerOutput).toContain('"call_id":"call-deepseek-reviewer"')
     } finally {
@@ -1230,7 +1230,7 @@ describe('Responses-compatible bridge conversion', () => {
         model: 'model-a',
         namespacedTools: [
           {
-            namespace: 'mcp__open_science_notebook',
+            namespace: 'mcp__app_notebook',
             name: 'notebook_execute',
             parameters: { type: 'object' }
           }
@@ -1287,7 +1287,7 @@ describe('Responses-compatible bridge conversion', () => {
     const connection = await bridge.start()
     const scope = [
       {
-        namespace: 'mcp__open_science_host_message',
+        namespace: 'mcp__app_host_message',
         name: 'send_message',
         parameters: { type: 'object' }
       }
@@ -1316,7 +1316,7 @@ describe('Responses-compatible bridge conversion', () => {
         tools: [
           {
             type: 'function',
-            function: { name: 'mcp__open_science_host_message__send_message' }
+            function: { name: 'mcp__app_host_message__send_message' }
           }
         ]
       })
@@ -1363,7 +1363,7 @@ describe('Responses-compatible bridge conversion', () => {
         'expected-side-session',
         [
           {
-            namespace: 'mcp__open_science_host_message',
+            namespace: 'mcp__app_host_message',
             name: 'send_message',
             parameters: { type: 'object' }
           }

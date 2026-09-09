@@ -51,8 +51,8 @@ beforeEach(() => {
     platform: 'darwin',
     storage: {
       getInfo: vi.fn().mockResolvedValue({
-        dataRoot: '/home/u/OpenScience',
-        defaultDataRoot: '/home/u/OpenScience',
+        dataRoot: '/home/u/Open-Science',
+        defaultDataRoot: '/home/u/Open-Science',
         defaultParent: '/home/u',
         isDefault: true,
         usage: USAGE,
@@ -62,7 +62,7 @@ beforeEach(() => {
       pickDirectory: vi.fn().mockResolvedValue(null),
       inspectDataRoot: vi
         .fn()
-        .mockResolvedValue({ kind: 'move', dataRoot: '/mnt/data/OpenScience' }),
+        .mockResolvedValue({ kind: 'move', dataRoot: '/mnt/data/Open-Science' }),
       setDataRootAndRelaunch: vi.fn().mockResolvedValue({ ok: true }),
       detectActive: vi.fn().mockResolvedValue([]),
       migrate: vi.fn(() => new Promise(() => {})),

@@ -221,7 +221,7 @@ describe('notebook MCP server config', () => {
 
   it('keeps notebook instructions scoped to the notebook tools', () => {
     expect(NOTEBOOK_SYSTEM_PROMPT_APPEND).toContain(
-      'only applies when using open-science-notebook tools'
+      'Guidance applies only to open-science-notebook tools.'
     )
     expect(NOTEBOOK_SYSTEM_PROMPT_APPEND).toContain('OPEN_SCIENCE_RUNTIME_DIR')
     expect(NOTEBOOK_SYSTEM_PROMPT_APPEND).not.toContain('~/.open-science/runtime/')
@@ -350,10 +350,10 @@ describe('notebook MCP server config', () => {
   it('ties network access requests to a real sandbox denial and an approved retry', () => {
     const tool = NOTEBOOK_RPC_TOOLS.find((candidate) => candidate.name === 'request_network_access')
 
-    expect(NOTEBOOK_SYSTEM_PROMPT_APPEND).toContain('OPEN_SCIENCE_NETWORK_DOMAIN_BLOCKED')
+    expect(NOTEBOOK_SYSTEM_PROMPT_APPEND).toContain('Open-Science:NETWORK_DOMAIN_BLOCKED')
     expect(NOTEBOOK_SYSTEM_PROMPT_APPEND).toContain('call `request_network_access`')
     expect(tool?.description).toContain(
-      'Call only after Notebook execution reports OPEN_SCIENCE_NETWORK_DOMAIN_BLOCKED'
+      'Call only after Notebook execution reports Open-Science:NETWORK_DOMAIN_BLOCKED'
     )
     expect(tool?.description).toContain(
       'Retry the failed execution only when the result is allowed'

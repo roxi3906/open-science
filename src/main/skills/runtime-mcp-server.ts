@@ -14,7 +14,7 @@ import { parseFrontmatter } from './frontmatter'
 // projection implementation names out of the Agent-visible tool contract.
 const SKILL_RUNTIME_MCP_SERVER_NAME = 'skills'
 const LOAD_SKILL_TOOL_NAME = 'load_skill'
-const OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION = 'openScienceSkillRuntime'
+const APP_SKILL_RUNTIME_SESSION_OPTION = 'appSkillRuntime'
 const LOAD_SKILL_TOOL_CALLABLE_NAME =
   `mcp__${SKILL_RUNTIME_MCP_SERVER_NAME}__${LOAD_SKILL_TOOL_NAME}` as const
 
@@ -393,7 +393,7 @@ const runSkillRuntimeMcpServer = async (): Promise<void> => {
 export {
   LOAD_SKILL_TOOL_CALLABLE_NAME,
   LOAD_SKILL_TOOL_NAME,
-  OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION,
+  APP_SKILL_RUNTIME_SESSION_OPTION,
   SKILL_RUNTIME_ALLOWED_NAMES_ENV,
   SKILL_RUNTIME_MCP_SERVER_ARG,
   SKILL_RUNTIME_MCP_SERVER_NAME,

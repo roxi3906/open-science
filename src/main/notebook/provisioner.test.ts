@@ -1416,7 +1416,7 @@ describe('DefaultRuntimeProvisioner.createNamedEnvironment', () => {
                 `if (process.env.R_LIBS_USER !== ${JSON.stringify(expectedLibrary)}) process.exit(43)`,
                 'if (process.env.R_LIBS || process.env.R_LIBS_SITE) process.exit(44)',
                 `const prefix = ${JSON.stringify(prefix)}`,
-                "process.stdout.write(['OPEN_SCIENCE_R_HOME=' + prefix + '/lib/R', 'OPEN_SCIENCE_R_BASE_LIBRARY=' + prefix + '/lib/R/library', 'OPEN_SCIENCE_R_LIBRARY=' + process.env.R_LIBS_USER].join('\\n') + '\\n')"
+                "process.stdout.write(['open-science-r-home=' + prefix + '/lib/R', 'open-science-r-base-library=' + prefix + '/lib/R/library', 'open-science-r-library=' + process.env.R_LIBS_USER].join('\\n') + '\\n')"
               ].join('\n') + '\n'
             )
             chmodSync(bin, 0o755)

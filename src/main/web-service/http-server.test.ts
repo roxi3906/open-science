@@ -1,5 +1,5 @@
 // @ts-expect-error The published ESM entry uses a sibling index.d.ts.
-import { OpenScienceClient } from '../../../packages/open-science/index.mjs'
+import { Client } from '../../../packages/open-science/index.mjs'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { request as httpRequest, IncomingMessage, ServerResponse } from 'node:http'
 import { connect } from 'node:net'
@@ -458,7 +458,7 @@ describe('startWebHttpServer', () => {
 
     const statuses = await Promise.all([
       fetch(`${base}/api/bootstrap`, {
-        headers: { cookie: 'open_science_web_token=%' }
+        headers: { cookie: 'open-science-web-token=%' }
       }).then((response) => response.status),
       fetch(`${base}/rpc/%`, {
         method: 'POST',
@@ -4610,7 +4610,7 @@ describe('Connector Task HTTP routes', () => {
     servers.push(server)
     const baseUrl = `http://127.0.0.1:${server.port}`
     expect((await fetch(`${baseUrl}/api/v1/connectors`)).status).toBe(401)
-    const client = new OpenScienceClient({ baseUrl, token: 'test-token' })
+    const client = new Client({ baseUrl, token: 'test-token' })
     expect((await client.listConnectors()).customServers[0].enabled).toBe(false)
     await client.setConnectorEnabled('sample', true)
     expect((await client.getConnector('sample')).enabled).toBe(true)

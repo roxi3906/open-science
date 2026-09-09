@@ -5,7 +5,7 @@ import type { ComputeJob } from '../../shared/compute'
 import type { RemoteHandle } from './job-dispatcher'
 import { remoteJobPidOwnershipFunctionLines } from './remote-job-process'
 
-const RECOVERY_PROTOCOL = 'OPEN_SCIENCE_DISPATCH_RECOVERY_V1'
+const RECOVERY_PROTOCOL = 'open-science-dispatch-recovery-v1'
 const RECOVERY_TIMEOUT_MS = 30_000
 const RECOVERY_MAX_OUTPUT_BYTES = 1024
 

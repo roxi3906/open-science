@@ -1,3 +1,4 @@
+import { canonicalizeAppToolIdentity } from './brand-migration'
 export const ACTIVITY_GROUP_MCP_SERVER_NAME = 'open-science-activity'
 export const BEGIN_ACTIVITY_GROUP_TOOL_NAME = 'begin_activity_group'
 export const MAX_ACTIVITY_GROUP_TITLE_LENGTH = 80
@@ -40,7 +41,8 @@ export const isActivityGroupToolEvent = (event: ActivityGroupToolEvent): boolean
     .map((value) => value?.trim().toLowerCase())
     .filter((value): value is string => Boolean(value))
 
-  if (names.some((name) => ACTIVITY_GROUP_TOOL_NAMES.has(name))) return true
+  if (names.some((name) => ACTIVITY_GROUP_TOOL_NAMES.has(canonicalizeAppToolIdentity(name))))
+    return true
   if (!isRecord(event.rawInput)) return false
 
   return (

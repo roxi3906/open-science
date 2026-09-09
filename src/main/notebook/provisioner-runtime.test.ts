@@ -34,9 +34,9 @@ describe('verifyExecutable', () => {
       bin,
       `#!${process.execPath}\n` +
         `process.stdout.write([` +
-        `'OPEN_SCIENCE_R_HOME=${join(oldPrefix, 'lib', 'R')}',` +
-        `'OPEN_SCIENCE_R_BASE_LIBRARY=${join(oldPrefix, 'lib', 'R', 'library')}',` +
-        `'OPEN_SCIENCE_R_LIBRARY=${join(oldPrefix, 'lib', 'R', 'library')}'` +
+        `'open-science-r-home=${join(oldPrefix, 'lib', 'R')}',` +
+        `'open-science-r-base-library=${join(oldPrefix, 'lib', 'R', 'library')}',` +
+        `'open-science-r-library=${join(oldPrefix, 'lib', 'R', 'library')}'` +
         `].join('\\n') + '\\n')\n`
     )
     chmodSync(bin, 0o755)
@@ -57,10 +57,10 @@ describe('verifyExecutable', () => {
       bin,
       `#!${process.execPath}\n` +
         `process.stdout.write([` +
-        `'OPEN_SCIENCE_R_HOME=${join(prefix, 'lib', 'R')}',` +
-        `'OPEN_SCIENCE_R_BASE_LIBRARY=${library}',` +
-        `'OPEN_SCIENCE_R_LIBRARY=${library}',` +
-        `'OPEN_SCIENCE_R_LIBRARY=${hostLibrary}'` +
+        `'open-science-r-home=${join(prefix, 'lib', 'R')}',` +
+        `'open-science-r-base-library=${library}',` +
+        `'open-science-r-library=${library}',` +
+        `'open-science-r-library=${hostLibrary}'` +
         `].join('\\n') + '\\n')\n`
     )
     chmodSync(bin, 0o755)
@@ -80,9 +80,9 @@ describe('verifyExecutable', () => {
         `#!${process.execPath}\n` +
           `if (process.env.PATH !== process.env.EXPECTED_PATH) process.exit(19)\n` +
           `process.stdout.write([` +
-          `'OPEN_SCIENCE_R_HOME=C:\\\\runtime\\\\envs\\\\default-r\\\\lib\\\\R',` +
-          `'OPEN_SCIENCE_R_BASE_LIBRARY=C:\\\\runtime\\\\envs\\\\default-r\\\\lib\\\\R\\\\library',` +
-          `'OPEN_SCIENCE_R_LIBRARY=C:\\\\runtime\\\\envs\\\\default-r\\\\lib\\\\R\\\\library'` +
+          `'open-science-r-home=C:\\\\runtime\\\\envs\\\\default-r\\\\lib\\\\R',` +
+          `'open-science-r-base-library=C:\\\\runtime\\\\envs\\\\default-r\\\\lib\\\\R\\\\library',` +
+          `'open-science-r-library=C:\\\\runtime\\\\envs\\\\default-r\\\\lib\\\\R\\\\library'` +
           `].join('\\n') + '\\n')\n`
       )
       chmodSync(bin, 0o755)

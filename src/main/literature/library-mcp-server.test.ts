@@ -140,7 +140,7 @@ describe('Literature Library MCP server', () => {
     expect(searchedContent[0]).toEqual({
       type: 'text',
       text: JSON.stringify({
-        openScienceLiteraturePresentation: {
+        'open-science-literature-presentation': {
           libraryAction: 'search',
           libraryScope: 'collection',
           resultCount: 0,
@@ -171,7 +171,7 @@ describe('Literature Library MCP server', () => {
     expect(savedContent[0]).toEqual({
       type: 'text',
       text: JSON.stringify({
-        openScienceLiteraturePresentation: {
+        'open-science-literature-presentation': {
           libraryAction: 'save',
           itemTitles: ['Corrective Retrieval Augmented Generation'],
           candidateCount: 1,
@@ -402,7 +402,7 @@ describe('Literature Library MCP server', () => {
         {
           type: 'text',
           text: JSON.stringify({
-            openScienceLiteraturePresentation: {
+            'open-science-literature-presentation': {
               libraryAction: 'search',
               libraryScope: 'project',
               resultCount: 0,
@@ -581,7 +581,7 @@ describe('Literature Library MCP server', () => {
         {
           type: 'text',
           text: JSON.stringify({
-            openScienceLiteraturePresentation: {
+            'open-science-literature-presentation': {
               libraryAction: 'read',
               libraryScope: 'project',
               itemTitles: ['Long abstract'],
@@ -649,7 +649,7 @@ describe('Literature Library MCP server', () => {
         {
           type: 'text',
           text: JSON.stringify({
-            openScienceLiteraturePresentation: {
+            'open-science-literature-presentation': {
               retrievalMode: 'bm25',
               documentNames: ['evidence.pdf'],
               passageCount: 1,

@@ -1,10 +1,10 @@
 import { randomBytes } from 'node:crypto'
 
-import openScienceLogoSvg from './open-science-logo.svg?raw'
+import brandLogoSvg from './open-science-logo.svg?raw'
 
-export const REMOTE_PAIR_STATUS_PATH = '/__open_science_remote/pair/status'
+export const REMOTE_PAIR_STATUS_PATH = '/__open-science-remote/pair/status'
 
-const openScienceLogo = openScienceLogoSvg.replace(
+const brandLogo = brandLogoSvg.replace(
   '<svg ',
   '<svg class="brand-logo" aria-hidden="true" focusable="false" '
 )
@@ -68,7 +68,7 @@ export const renderPairingPage = (params: {
   <body>
     <main class="card">
       <div class="brand">
-        ${openScienceLogo}
+        ${brandLogo}
         <div class="brand-name">Open-Science</div>
       </div>
       <h1>Approve this browser</h1>

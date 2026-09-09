@@ -584,7 +584,7 @@ describe('environment lifecycle command projection', () => {
       provisionPython: vi.fn().mockRejectedValue(failure)
     })
     const lifecycle = createLifecycle(provisioner, {
-      root: 'F:\\openScience\\data\\OpenScience\\runtime'
+      root: 'F:\\open-science\\data\\Open-Science\\runtime'
     })
 
     await expect(lifecycle.provision('python')).rejects.toBe(failure)
@@ -595,7 +595,7 @@ describe('environment lifecycle command projection', () => {
     expect(fields).toMatchObject({
       operation: 'provision',
       language: 'python',
-      root: 'F:\\openScience\\data\\OpenScience\\runtime',
+      root: 'F:\\open-science\\data\\Open-Science\\runtime',
       error: 'micromamba timed out after 600000ms',
       code: 'MICROMAMBA_TIMEOUT',
       data: { timeoutMs: 600_000, offline: true }

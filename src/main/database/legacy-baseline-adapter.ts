@@ -173,7 +173,7 @@ const normalizeSqlFragment = (value: string | null): string | null => {
   if (value === null) return null
   const literals: string[] = []
   const protectedValue = value.replaceAll(/'(?:''|[^'])*'/g, (literal) => {
-    const token = `__open_science_sql_literal_${literals.length}__`
+    const token = `__app_sql_literal_${literals.length}__`
     literals.push(literal)
     return token
   })
@@ -184,7 +184,7 @@ const normalizeSqlFragment = (value: string | null): string | null => {
     .toLowerCase()
   normalized = stripRedundantOuterParentheses(normalized)
   literals.forEach((literal, index) => {
-    normalized = normalized.replace(`__open_science_sql_literal_${index}__`, literal)
+    normalized = normalized.replace(`__app_sql_literal_${index}__`, literal)
   })
   return normalized
 }
@@ -584,7 +584,7 @@ const classifyLegacySchema = async (
     `SELECT "name" FROM "sqlite_schema"
      WHERE "type" = 'table'
        AND "name" NOT LIKE 'sqlite_%'
-       AND "name" <> '_open_science_migrations'
+       AND "name" NOT IN ('_open_science_migrations', '_open-science-migrations')
      ORDER BY "name"`
   )
   const unknownTables = tables
@@ -686,7 +686,7 @@ const verifyRuntimeSchemaTarget = async (
     client,
     `SELECT "name" FROM "sqlite_schema"
      WHERE "type" = 'table' AND "name" NOT LIKE 'sqlite_%'
-       AND "name" <> '_open_science_migrations'
+       AND "name" NOT IN ('_open_science_migrations', '_open-science-migrations')
      ORDER BY "name"`
   )
   const actualTables = new Set(tables.map((table) => table.name))

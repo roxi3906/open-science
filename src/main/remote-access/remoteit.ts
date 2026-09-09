@@ -9,7 +9,7 @@ const execFileAsync = promisify(execFile)
 const COMMAND_TIMEOUT_MS = 15_000
 const MAX_OUTPUT_BYTES = 400_000
 const REMOTE_IT_HTTP_TYPE = 7
-const REMOTE_IT_BATCH_MARKER = '__OPEN_SCIENCE_REMOTEIT_BATCH_COMMAND_END__'
+const REMOTE_IT_BATCH_MARKER = '__open-science-remoteit-batch-command-end__'
 const REMOTE_IT_STATUS_RETRY_DELAYS_MS = [250, 750, 1_500, 3_000, 5_000] as const
 const REMOTE_IT_DEVICE_SETUP_AUTHORIZATION_MESSAGE =
   'This computer must be added as a Remote.It Device before Open-Science can configure remote access. In Remote.It, choose +, select This system, and complete Add Device once. Then return to Open-Science and click Detect again; both Open-Science services will be created automatically.'
@@ -529,7 +529,7 @@ const readCloudServiceNames = async (
   deviceId: string,
   run: RemoteItCommandRunner
 ): Promise<Map<string, string>> => {
-  const query = `query OpenScienceDeviceServices {
+  const query = `query AppDeviceServices {
   login {
     devices(size: 1, id: ${JSON.stringify(deviceId)}) {
       items {
@@ -599,6 +599,32 @@ const enrichWindowsServiceNames = async (
       'Remote.It could not identify existing Windows services, so Open-Science stopped before creating duplicates.'
     )
   }
+}
+
+const migrateManagedRemoteServiceName = async (
+  binaryPath: string,
+  status: Record<string, unknown>,
+  service: RemoteItStatusEntry | undefined,
+  run: RemoteItCommandRunner
+): Promise<void> => {
+  if (stringValue(service?.name) !== 'Open Science Remote') return
+  const serviceId = stringValue(service?.id)
+  const deviceId = stringValue(statusData(status).device?.id)
+  if (!serviceId || !deviceId) throw new Error('Cannot identify the managed Remote.It service.')
+  const query = `mutation AppRenameService {
+    renameService(serviceId: ${JSON.stringify(serviceId)}, name: ${JSON.stringify(REMOTE_IT_APP_SERVICE_NAME)})
+  }`
+  const { stdout } = await run(binaryPath, ['exec-gql', '--noAdmin', '--json', '--query', query], {
+    timeoutMs: 30_000
+  })
+  if (
+    parseRemoteItGraphQlData(stdout).renameService !== true ||
+    (await readCloudServiceNames(binaryPath, deviceId, run)).get(serviceId) !==
+      REMOTE_IT_APP_SERVICE_NAME
+  )
+    throw new Error('Could not verify the migrated Remote.It service name.')
+  // Keep the existing ID and link. Local status may lag behind the verified cloud name.
+  if (service) service.name = REMOTE_IT_APP_SERVICE_NAME
 }
 
 const assertDeviceRegistered = (status: Record<string, unknown>): void => {
@@ -789,6 +815,8 @@ export const enableRemoteItServices = async (
   }
   const planned: PlannedRemoteItMutation[] = []
 
+  await migrateManagedRemoteServiceName(binaryPath, status, existing.app, run)
+
   for (const target of ['app', 'browser'] as const) {
     const service = existing[target]
     const serviceId = stringValue(service?.id)
@@ -971,6 +999,8 @@ export const enableRemoteItService = async (
   )
 
   if (service) {
+    if (managedService.name === REMOTE_IT_APP_SERVICE_NAME)
+      await migrateManagedRemoteServiceName(binaryPath, status, service, run)
     const serviceId = stringValue(service.id)
     if (!serviceId) throw new Error('Remote.It returned an invalid service identifier.')
     const needsRepair = !hasExpectedServiceConfiguration(service, localPort, true)
@@ -1059,7 +1089,7 @@ export const ensureRemoteItConnectLink = async (
   // setConnectLink(enabled: true) is idempotent while the link remains enabled: Remote.It returns
   // the existing Persistent Public URL instead of rotating it. This makes Detect safe to run
   // repeatedly and also repairs a link that the user disabled in Remote.It.
-  const query = `mutation OpenScienceEnableConnectLink {
+  const query = `mutation AppEnableConnectLink {
   setConnectLink(serviceId: ${JSON.stringify(serviceId)}, enabled: true) {
     enabled
     url
@@ -1094,7 +1124,7 @@ export const disableRemoteItConnectLink = async (
   serviceId: string,
   run: RemoteItCommandRunner = defaultCommandRunner
 ): Promise<void> => {
-  const query = `mutation OpenScienceDisableConnectLink {
+  const query = `mutation AppDisableConnectLink {
   setConnectLink(serviceId: ${JSON.stringify(serviceId)}, enabled: false) {
     enabled
     service { id }

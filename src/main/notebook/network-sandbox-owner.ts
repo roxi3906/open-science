@@ -399,8 +399,8 @@ class NotebookNetworkSandboxOwner implements NotebookProcessSandbox {
       this.log.info('network policy applied', {
         active: this.initialized,
         customDomainCount: this.settings.allowedDomains.length,
-        disabledGroupCount: this.settings.disabledOpenScienceDomainGroups.length,
-        disabledDomainCount: this.settings.disabledOpenScienceDomains.length
+        disabledGroupCount: this.settings.disabledAppDomainGroups.length,
+        disabledDomainCount: this.settings.disabledAppDomains.length
       })
     } catch (error) {
       this.log.error('network policy application failed', {
@@ -504,7 +504,7 @@ class NotebookNetworkSandboxOwner implements NotebookProcessSandbox {
         args: [
           '--vanilla',
           '-e',
-          'stopifnot(requireNamespace("jsonlite", quietly=TRUE)); normalizePath(.libPaths(), mustWork=TRUE); cat("OPEN_SCIENCE_R_ACCESS_OK")'
+          'stopifnot(requireNamespace("jsonlite", quietly=TRUE)); normalizePath(.libPaths(), mustWork=TRUE); cat("open-science-r-access-ok")'
         ],
         cwd,
         env,
@@ -527,7 +527,7 @@ class NotebookNetworkSandboxOwner implements NotebookProcessSandbox {
         windowsHide: true,
         maxBuffer: 1024 * 1024
       })
-      if (!stdout.includes('OPEN_SCIENCE_R_ACCESS_OK'))
+      if (!stdout.includes('open-science-r-access-ok'))
         throw new Error('R runtime verification did not complete.')
       return result
     } finally {

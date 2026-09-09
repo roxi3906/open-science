@@ -4,7 +4,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import { join, relative } from 'node:path'
 
 // Sentinel file dropped INTO a staging data root while a migration copy is in flight. Its presence
-// means "this OpenScience folder is a half-baked/uncommitted staging copy, not the live data root",
+// means "this Open-Science folder is a half-baked/uncommitted staging copy, not the live data root",
 // which both computeDefaultDataRoot (ignore it when picking the default) and the commit/discard gates
 // key off. Kept in a standalone module that imports ONLY node builtins so storage-root's pure getter
 // can call hasPendingMigrationMarker without pulling in electron or migration-service (import cycle).
@@ -29,6 +29,8 @@ export type MigrationMarker = {
   // Target-only receipt for the offline runtime reconstruction bundle. Optional so markers created
   // by older versions remain readable; their old runtime is retained during commit.
   runtimeLockInventory?: MigrationInventory
+  // Strict brand relocation preserves installed environments, including untracked pip/CRAN files.
+  runtimeCopyInventory?: { source: MigrationInventory; target: MigrationInventory }
 }
 
 const isInventory = (value: unknown): value is NonNullable<MigrationMarker['inventory']> => {
@@ -77,7 +79,10 @@ export const readMigrationMarker = async (root: string): Promise<MigrationMarker
           parsed.migratedDirs.some((dir) => !isSafeMigrationPath(dir)) ||
           new Set(parsed.migratedDirs).size !== parsed.migratedDirs.length)) ||
       (parsed.inventory !== undefined && !isInventory(parsed.inventory)) ||
-      (parsed.runtimeLockInventory !== undefined && !isInventory(parsed.runtimeLockInventory))
+      (parsed.runtimeLockInventory !== undefined && !isInventory(parsed.runtimeLockInventory)) ||
+      (parsed.runtimeCopyInventory !== undefined &&
+        (!isInventory(parsed.runtimeCopyInventory.source) ||
+          !isInventory(parsed.runtimeCopyInventory.target)))
     ) {
       return null
     }

@@ -1165,7 +1165,7 @@ describe('pride_find_projects_for_protein', () => {
 describe.skipIf(!process.env.LIVE_API)('omics-archives (LIVE)', () => {
   const live = new ParserEngine()
   const call = (id: string, args: Record<string, unknown>): Promise<unknown> =>
-    live.call(tool(id), args, { ncbiEmail: 'openscience-tests@example.org' })
+    live.call(tool(id), args, { ncbiEmail: 'open-science-tests@example.org' })
 
   it('arrayexpress_get_experiment E-MTAB-5061', async () => {
     const out = (await call('arrayexpress_get_experiment', { accession: 'E-MTAB-5061' })) as Record<

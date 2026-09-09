@@ -72,6 +72,70 @@ const response = (): CapturedResponse => {
 const cookiePair = (header: string): string => header.split(';', 1)[0]
 
 describe('RemoteSessionPairingManager', () => {
+  it('renames a validated released session cookie without extending or changing its grant', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'open-science-pairing-migration-'))
+    roots.push(root)
+    const now = Date.now()
+    const repository = new RemoteAccessRepository(root)
+    await repository.save({
+      version: 5,
+      mode: 'remoteit-public',
+      trustedBrowsers: [
+        {
+          id: 'legacy-browser',
+          browser: 'Safari',
+          platform: 'macOS',
+          tokenHash: createHash('sha256').update('legacy-secret').digest('hex'),
+          createdAt: now - 1000,
+          lastSeenAt: now,
+          expiresAt: now + 7200_000
+        }
+      ]
+    })
+    const manager = await RemoteSessionPairingManager.create({
+      repository,
+      now: () => now,
+      isEnabled: () => true,
+      isAllowedRemoteHost: () => true,
+      onChanged: vi.fn()
+    })
+    try {
+      const captured = response()
+      const cookie = 'open_science_remote_session=legacy-browser.legacy-secret'
+      const result = await manager.webAccess.authorizeHttp(
+        request('/api/bootstrap', { cookie }),
+        captured.response,
+        new URL('https://home.example.ts.net/api/bootstrap')
+      )
+      expect(result).toMatchObject({ principalId: 'legacy-browser' })
+      expect(captured.headers.get('set-cookie')).toEqual([
+        'open-science-remote-session=legacy-browser.legacy-secret; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=7200',
+        'open_science_remote_session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0'
+      ])
+      for (const invalid of ['wrong', '%ZZ', '']) {
+        expect(
+          await manager.webAccess.authorizeHttp(
+            request('/api/bootstrap', {
+              cookie: `open-science-remote-session=${invalid}; ${cookie}`
+            }),
+            response().response,
+            new URL('https://home.example.ts.net/api/bootstrap')
+          )
+        ).toBe('denied')
+      }
+      await manager.revoke('legacy-browser')
+      expect(
+        await manager.webAccess.authorizeHttp(
+          request('/api/bootstrap', { cookie }),
+          response().response,
+          new URL('https://home.example.ts.net/api/bootstrap')
+        )
+      ).toBe('denied')
+    } finally {
+      manager.dispose()
+    }
+  })
+
   it.each(['http', 'websocket'] as const)(
     'keeps valid trusted %s access available when only the activity timestamp cannot be saved',
     async (transport) => {
@@ -100,7 +164,7 @@ describe('RemoteSessionPairingManager', () => {
       const authorize = (): Promise<unknown> => {
         const path = transport === 'http' ? '/api/bootstrap' : '/api/v1/events'
         const req = request(path, {
-          cookie: 'open_science_remote_session=trusted-browser.trusted-secret',
+          cookie: 'open-science-remote-session=trusted-browser.trusted-secret',
           origin: 'https://home.example.ts.net'
         })
         const url = new URL(path, 'https://home.example.ts.net')
@@ -166,7 +230,7 @@ describe('RemoteSessionPairingManager', () => {
       now += 61_000
       const authorization = manager.webAccess.authorizeHttp(
         request('/api/bootstrap', {
-          cookie: 'open_science_remote_session=trusted-browser.trusted-secret'
+          cookie: 'open-science-remote-session=trusted-browser.trusted-secret'
         }),
         response().response,
         new URL('https://home.example.ts.net/api/bootstrap')
@@ -226,9 +290,9 @@ describe('RemoteSessionPairingManager', () => {
     await manager.approve(pending.id, 'once')
     const statusResponse = response()
     await manager.webAccess.authorizeHttp(
-      request('/__open_science_remote/pair/status', { cookie: pendingCookie }),
+      request('/__open-science-remote/pair/status', { cookie: pendingCookie }),
       statusResponse.response,
-      new URL('https://home.example.ts.net/__open_science_remote/pair/status')
+      new URL('https://home.example.ts.net/__open-science-remote/pair/status')
     )
     expect(JSON.parse(statusResponse.body())).toEqual({ status: 'approved' })
     const setCookies = statusResponse.headers.get('set-cookie') as string[]
@@ -315,9 +379,9 @@ describe('RemoteSessionPairingManager', () => {
 
     const statusResponse = response()
     await manager.webAccess.authorizeHttp(
-      request('/__open_science_remote/pair/status', { cookie: firstCookie }),
+      request('/__open-science-remote/pair/status', { cookie: firstCookie }),
       statusResponse.response,
-      new URL('https://home.example.ts.net/__open_science_remote/pair/status')
+      new URL('https://home.example.ts.net/__open-science-remote/pair/status')
     )
     expect(JSON.parse(statusResponse.body())).toMatchObject({ status: 'pending' })
   })
@@ -373,7 +437,7 @@ describe('RemoteSessionPairingManager', () => {
       limited = response()
       await manager.webAccess.authorizeHttp(
         request('/', {
-          cookie: `open_science_remote_pairing=rotated-${index}`,
+          cookie: `open-science-remote-pairing=rotated-${index}`,
           'x-forwarded-for': '203.0.113.20'
         }),
         limited.response,
@@ -464,9 +528,9 @@ describe('RemoteSessionPairingManager', () => {
 
     const statusResponse = response()
     await manager.webAccess.authorizeHttp(
-      request('/__open_science_remote/pair/status', { cookie: pendingCookie }),
+      request('/__open-science-remote/pair/status', { cookie: pendingCookie }),
       statusResponse.response,
-      new URL('https://home.example.ts.net/__open_science_remote/pair/status')
+      new URL('https://home.example.ts.net/__open-science-remote/pair/status')
     )
     const setCookies = statusResponse.headers.get('set-cookie') as string[]
     expect(setCookies[0]).toContain('SameSite=Lax')
@@ -557,9 +621,9 @@ describe('RemoteSessionPairingManager', () => {
     await manager.approve(manager.pendingViews()[0].id, 'always')
     const statusResponse = response()
     await manager.webAccess.authorizeHttp(
-      request('/__open_science_remote/pair/status', { cookie: pendingCookie }),
+      request('/__open-science-remote/pair/status', { cookie: pendingCookie }),
       statusResponse.response,
-      new URL('https://home.example.ts.net/__open_science_remote/pair/status')
+      new URL('https://home.example.ts.net/__open-science-remote/pair/status')
     )
     const sessionCookie = cookiePair((statusResponse.headers.get('set-cookie') as string[])[0])
 
@@ -599,9 +663,9 @@ describe('RemoteSessionPairingManager', () => {
     await manager.approve(manager.pendingViews()[0].id, 'always')
     const statusResponse = response()
     await manager.webAccess.authorizeHttp(
-      request('/__open_science_remote/pair/status', { cookie: pendingCookie }),
+      request('/__open-science-remote/pair/status', { cookie: pendingCookie }),
       statusResponse.response,
-      new URL('https://home.example.ts.net/__open_science_remote/pair/status')
+      new URL('https://home.example.ts.net/__open-science-remote/pair/status')
     )
     const sessionCookie = cookiePair((statusResponse.headers.get('set-cookie') as string[])[0])
 
@@ -653,9 +717,9 @@ describe('RemoteSessionPairingManager', () => {
     await manager.approve(manager.pendingViews()[0].id, 'always')
     const statusResponse = response()
     await manager.webAccess.authorizeHttp(
-      request('/__open_science_remote/pair/status', { cookie: pendingCookie }),
+      request('/__open-science-remote/pair/status', { cookie: pendingCookie }),
       statusResponse.response,
-      new URL('https://home.example.ts.net/__open_science_remote/pair/status')
+      new URL('https://home.example.ts.net/__open-science-remote/pair/status')
     )
     const sessionCookie = cookiePair((statusResponse.headers.get('set-cookie') as string[])[0])
 
@@ -704,9 +768,9 @@ describe('RemoteSessionPairingManager', () => {
     await manager.approve(manager.pendingViews()[0].id, 'always')
     const statusResponse = response()
     await manager.webAccess.authorizeHttp(
-      request('/__open_science_remote/pair/status', { cookie: pendingCookie }),
+      request('/__open-science-remote/pair/status', { cookie: pendingCookie }),
       statusResponse.response,
-      new URL('https://home.example.ts.net/__open_science_remote/pair/status')
+      new URL('https://home.example.ts.net/__open-science-remote/pair/status')
     )
     const sessionCookie = cookiePair((statusResponse.headers.get('set-cookie') as string[])[0])
     const [trustedBrowser] = manager.trustedViews()
@@ -1056,9 +1120,9 @@ describe('RemoteSessionPairingManager', () => {
       const pendingCookie = cookiePair(pairingResponse.headers.get('set-cookie') as string)
       await manager.approve(manager.pendingViews()[0].id, 'always')
       await manager.webAccess.authorizeHttp(
-        request('/__open_science_remote/pair/status', { cookie: pendingCookie }),
+        request('/__open-science-remote/pair/status', { cookie: pendingCookie }),
         response().response,
-        new URL('https://home.example.ts.net/__open_science_remote/pair/status')
+        new URL('https://home.example.ts.net/__open-science-remote/pair/status')
       )
       onChanged.mockClear()
 
@@ -1105,9 +1169,9 @@ describe('RemoteSessionPairingManager', () => {
         await manager!.approve(manager!.pendingViews()[0].id, decision)
         const statusResponse = response()
         await manager!.webAccess.authorizeHttp(
-          request('/__open_science_remote/pair/status', { cookie: pendingCookie }),
+          request('/__open-science-remote/pair/status', { cookie: pendingCookie }),
           statusResponse.response,
-          new URL('https://home.example.ts.net/__open_science_remote/pair/status')
+          new URL('https://home.example.ts.net/__open-science-remote/pair/status')
         )
         const sessionCookie = cookiePair((statusResponse.headers.get('set-cookie') as string[])[0])
         const authorization = await manager!.webAccess.authorizeWebSocket(
@@ -1197,9 +1261,9 @@ describe('RemoteSessionPairingManager', () => {
     await manager.approve(manager.pendingViews()[0].id, 'always')
     const statusResponse = response()
     await manager.webAccess.authorizeHttp(
-      request('/__open_science_remote/pair/status', { cookie: pendingCookie }),
+      request('/__open-science-remote/pair/status', { cookie: pendingCookie }),
       statusResponse.response,
-      new URL('https://home.example.ts.net/__open_science_remote/pair/status')
+      new URL('https://home.example.ts.net/__open-science-remote/pair/status')
     )
     const sessionCookie = cookiePair((statusResponse.headers.get('set-cookie') as string[])[0])
     const httpAuthorization = await manager.webAccess.authorizeHttp(

@@ -1,3 +1,4 @@
+import { canonicalizeAppToolIdentity } from '../../../../shared/brand-migration'
 import type { ContentBlock, ToolCallContent, ToolKind } from '@agentclientprotocol/sdk'
 
 import { formatByteSize } from '@/lib/utils'
@@ -433,10 +434,9 @@ const ARTIFACT_WRITE_ACTIVITY_IDENTITIES = new Set([
   'write artifact file',
   'save_artifacts',
   'mcp__open-science-artifacts__write_artifact_file',
-  'mcp__open_science_artifacts__write_artifact_file',
+  'mcp__app_artifacts__write_artifact_file',
   'mcp.open-science-artifacts.write_artifact_file',
-  'open-science-artifacts_write_artifact_file',
-  'open_science_artifacts_write_artifact_file'
+  'open-science-artifacts_write_artifact_file'
 ])
 
 // Detects the managed artifact-writing MCP tool (open-science-artifacts / write_artifact_file).
@@ -445,8 +445,8 @@ const isArtifactWriteActivity = (activity: ToolActivity): boolean => {
   const title = trimDetail(activity.title)?.toLowerCase() ?? ''
 
   return (
-    ARTIFACT_WRITE_ACTIVITY_IDENTITIES.has(providerName) ||
-    ARTIFACT_WRITE_ACTIVITY_IDENTITIES.has(title)
+    ARTIFACT_WRITE_ACTIVITY_IDENTITIES.has(canonicalizeAppToolIdentity(providerName)) ||
+    ARTIFACT_WRITE_ACTIVITY_IDENTITIES.has(canonicalizeAppToolIdentity(title))
   )
 }
 
@@ -601,7 +601,7 @@ const toNotebookKernelKind = (value: unknown): NotebookKernelKindLike | undefine
 // Detects any notebook kernel run (python/r cell, repl control-plane, or bash) so all three render
 // as code plus output rather than the raw run-summary JSON envelope.
 // Matches both server-name forms (Claude Code's hyphenated open-science-notebook and the
-// responses bridge's underscore-sanitized open_science_notebook) via the shared matcher, which
+// responses bridge's underscore-sanitized app_notebook) via the shared matcher, which
 // also requires the server segment to match exactly so lookalike server names are excluded.
 const getNotebookRunToolName = (activity: ToolActivity): string | undefined =>
   resolveNotebookRunToolName(trimDetail(activity.providerToolName), trimDetail(activity.title))

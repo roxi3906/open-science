@@ -14,8 +14,8 @@ import { PreviewStateRepository, type PreviewStateClient } from './preview-repos
 import { createProjectDbClient, migrateApplicationDatabase } from './prisma-client'
 
 // Matches the mocked app.getPath('home') + isPackaged resolution in storage-root.ts: with no
-// legacy config-root data present, computeDefaultDataRoot() is `<home>/OpenScience`.
-const DATA_ROOT = '/home/user/OpenScience'
+// legacy config-root data present, computeDefaultDataRoot() is `<home>/Open-Science`.
+const DATA_ROOT = '/home/user/Open-Science'
 
 // Proves the runtime ProjectPreviewState DDL is byte-compatible with the generated client against a
 // real (temp) SQLite database, and that the durable projection round-trips + sanitizes on read.

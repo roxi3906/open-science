@@ -70,7 +70,7 @@ describe('NotebookRuntimeService exportIpynb', () => {
 
     expect(repository.readSessionRuns).toHaveBeenCalledWith('default-project', '12345678-abcd')
     const exported = JSON.parse(saveIpynb.mock.calls[0]![1] as string) as {
-      cells: Array<{ source: string[]; metadata: { open_science: { agentFrameId?: string } } }>
+      cells: Array<{ source: string[]; metadata: { 'open-science': { agentFrameId?: string } } }>
     }
     expect(exported.cells.map((cell) => cell.source.join(''))).toEqual([
       'print("hello")',
@@ -128,13 +128,13 @@ describe('NotebookRuntimeService exportIpynb', () => {
     const serialized = saveIpynb.mock.calls[0][1] as string
     const exported = JSON.parse(serialized) as {
       nbformat: number
-      metadata: { open_science: { appVersion: string } }
+      metadata: { 'open-science': { appVersion: string } }
       cells: Array<{ source: string[] }>
     }
     expect(serialized).toBe(`${JSON.stringify(exported, null, 2)}\n`)
     expect(exported).toMatchObject({
       nbformat: 4,
-      metadata: { open_science: { appVersion: '1.2.3' } }
+      metadata: { 'open-science': { appVersion: '1.2.3' } }
     })
     expect(exported.cells[0].source).toEqual(['print("hello")'])
     expect(result).toEqual({ saved: true, filePath: '/downloads/session-12345678-python.ipynb' })

@@ -650,7 +650,7 @@ it.runIf(runLiveContract)(
                       id: 'call-reviewer-read',
                       type: 'function',
                       function: {
-                        name: 'mcp__open_science_reviewer__read_turn',
+                        name: 'mcp__app_reviewer__read_turn',
                         arguments: '{}'
                       }
                     }
@@ -684,7 +684,7 @@ it.runIf(runLiveContract)(
                       id: 'call-reviewer-submit',
                       type: 'function',
                       function: {
-                        name: 'mcp__open_science_reviewer__submit_findings',
+                        name: 'mcp__app_reviewer__submit_findings',
                         arguments: '{"checks":[]}'
                       }
                     }
@@ -728,7 +728,7 @@ it.runIf(runLiveContract)(
         model: 'probe-model',
         namespacedTools: [
           {
-            namespace: 'mcp__open_science_notebook',
+            namespace: 'mcp__app_notebook',
             name: 'notebook_execute',
             parameters: { type: 'object' }
           }

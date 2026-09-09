@@ -34,7 +34,7 @@ describe('driveReviewerToStop — log capture via onUpdate', () => {
         update: {
           sessionUpdate: 'tool_call',
           toolCallId: 'tc-media',
-          toolName: 'mcp__open_science_reviewer__read_artifact',
+          toolName: 'mcp__app_reviewer__read_artifact',
           rawInput: { id: 'plot-version', view: 'content' }
         }
       },
@@ -90,7 +90,7 @@ describe('driveReviewerToStop — log capture via onUpdate', () => {
         update: {
           sessionUpdate: 'tool_call',
           toolCallId: 'tc-cyclic-media',
-          toolName: 'mcp__open_science_reviewer__read_artifact'
+          toolName: 'mcp__app_reviewer__read_artifact'
         }
       },
       {

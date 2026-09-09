@@ -1,3 +1,4 @@
+import { remoteJobMarker } from '../brand-migration/remote-jobs'
 import type { ComputeRemoteHandle, RemoteHandle } from './remote-job-contract'
 
 export const parseRemoteJobWorkdir = (
@@ -6,13 +7,15 @@ export const parseRemoteJobWorkdir = (
   fallback?: string
 ): string | null => {
   const workdir = raw ?? fallback
+  const marker = workdir ? remoteJobMarker(workdir) : undefined
   const hasTraversal = workdir?.split('/').some((part) => part === '.' || part === '..')
   if (
     !workdir ||
     !/^[A-Za-z0-9_-]+$/.test(jobId) ||
     /[\0\r\n]/.test(workdir) ||
     hasTraversal ||
-    !workdir.endsWith(`/.openscience/jobs/${jobId}`)
+    !marker ||
+    !workdir.endsWith(`${marker}${jobId}`)
   ) {
     return null
   }

@@ -110,7 +110,7 @@ describe.runIf(platformSupported)('Notebook filesystem enforcement', () => {
       const readResult = await run(deniedRead, workspace)
       expect(readResult.code).not.toBe(0)
       expect(deniedRead.annotateStderr(readResult.stderr)).toContain(
-        'OPEN_SCIENCE_FILESYSTEM_ACCESS_BLOCKED'
+        'Open-Science:FILESYSTEM_ACCESS_BLOCKED'
       )
       deniedRead.cleanup()
 
@@ -158,7 +158,7 @@ describe.runIf(platformSupported)('Notebook filesystem enforcement', () => {
       const writeResult = await run(deniedWrite, workspace)
       expect(writeResult.code).not.toBe(0)
       expect(deniedWrite.annotateStderr(writeResult.stderr)).toContain(
-        'OPEN_SCIENCE_FILESYSTEM_ACCESS_BLOCKED'
+        'Open-Science:FILESYSTEM_ACCESS_BLOCKED'
       )
       deniedWrite.cleanup()
       await expect(readFile(outsideWrite, 'utf8')).rejects.toThrow()

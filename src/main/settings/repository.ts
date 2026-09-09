@@ -82,6 +82,12 @@ class SettingsRepository {
   }
 
   // Reads and sanitizes the settings document, returning empty settings when nothing is stored yet.
+  // Bootstrap commits the current format before older application versions can reuse renamed
+  // permission fields. The document store's mutation queue owns the read/write transaction.
+  async migrateBrandIdentity(): Promise<StoredSettings> {
+    return this.store.mutate((settings) => settings)
+  }
+
   async getSettings(): Promise<StoredSettings> {
     return this.store.read()
   }

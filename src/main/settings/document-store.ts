@@ -10,6 +10,7 @@ import { sanitizeSettings } from './document-codec'
 import { createEmptySettings, type StoredSettings } from './types'
 import { isRecord } from '../value-guards'
 import { SETTINGS_RESOURCE_LIMITS } from './settings-resource-limits'
+import { migrateSettingsV2 } from '../brand-migration/settings-v3'
 
 const SETTINGS_FILE = 'settings.json'
 
@@ -28,6 +29,9 @@ const migrateSettingsDocument = (value: unknown): StoredSettings | undefined => 
     switch (migrated.version) {
       case 1:
         migrated = { ...migrated, version: 2 }
+        break
+      case 2:
+        migrated = migrateSettingsV2(migrated)
         break
       default:
         return undefined

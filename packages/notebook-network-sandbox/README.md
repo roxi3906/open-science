@@ -68,7 +68,7 @@ Policy is evaluated in this order:
 1. malformed destinations and local, private, metadata, or otherwise non-public addresses are
    denied without a prompt;
 2. enabled Open-Science domains and saved Allowed domains are forwarded;
-3. any other public hostname is denied with `OPEN_SCIENCE_NETWORK_DOMAIN_BLOCKED`;
+3. any other public hostname is denied with `Open-Science:NETWORK_DOMAIN_BLOCKED`;
 4. after that result, the Agent may call `request_network_access`; an approved one-time grant is
    consumed by the next command, while an always grant is persisted and hot-applied.
 
@@ -137,7 +137,7 @@ Call `dispose()` during lifecycle shutdown.
   access, protected files and directories remain read-only, and their ancestor boundaries omit
   delete-child access. A creation journal
   and ownership receipt under the original desktop user's
-  `%LOCALAPPDATA%\Aipoch\OpenScience\notebook-sandbox\<installationId>\` make setup recoverable.
+  `%LOCALAPPDATA%\Aipoch\Open-Science\notebook-sandbox\<installationId>\` make setup recoverable.
   The desktop process passes that root explicitly across UAC, so elevation with another
   administrator account cannot redirect ownership state into the administrator profile.
   The stable installation identity is independent of the selected install directory, so a moved
@@ -154,7 +154,9 @@ Call `dispose()` during lifecycle shutdown.
 `status()` never elevates privileges or changes durable setup resources. When a receipt appears
 active, it launches short-lived positive and negative connection probes before reporting protected
 mode. Missing Windows setup leaves the runtime in standard mode; first Notebook use never prompts.
-Only an explicit call to `installWindows()` may display a UAC prompt. A cancelled or failed setup
+Only an explicit call to `installWindows()` may display a UAC prompt. When legacy ownership exists,
+setup first verifies and retires its owned resources; cancelled or failed retirement prevents new
+setup. The native host accepts historical receipts for cleanup while creating only canonical profiles. A cancelled or failed setup
 leaves standard mode available. Successful setup affects new Notebook and package-manager processes;
 already-running sessions retain their original mode. `removeWindows()` uses the same explicit
 elevation behavior, stops protected AppContainer processes, removes only ownership-proven resources,

@@ -951,7 +951,7 @@ describe('ACP permission broker with durable grants', () => {
     }
   )
 
-  it.each(['agent_create', 'Skill', 'mcp__open_science_notebook__notebook_execute'])(
+  it.each(['agent_create', 'Skill', 'mcp__app_notebook__notebook_execute'])(
     'never creates durable authority from the display-only title %s',
     async (title) => {
       storageRoot = await mkdtemp(join(tmpdir(), 'open-science-broker-title-only-'))
@@ -1063,7 +1063,7 @@ describe('ACP permission broker with durable grants', () => {
     ).resolves.toEqual({ outcome: { outcome: 'selected', optionId: 'provider-allow-once' } })
     await expect(
       broker.requestPermission(
-        mcpRequest('session-literature', 'mcp__open_science_literature__read_document'),
+        mcpRequest('session-literature', 'mcp__app_literature__read_document'),
         {
           profile: 'ask',
           projectId: 'project-1',
@@ -1080,7 +1080,7 @@ describe('ACP permission broker with durable grants', () => {
     ]) {
       await expect(
         broker.requestPermission(
-          mcpRequest(`session-library-${toolName}`, `mcp__open_science_library__${toolName}`),
+          mcpRequest(`session-library-${toolName}`, `mcp__app_library__${toolName}`),
           {
             profile: 'ask',
             projectId: 'project-1',
@@ -1181,12 +1181,12 @@ describe('ACP permission broker with durable grants', () => {
       titleOnlyRequest('mcp__open-science-plan__update_step_status'),
       mcpRequest('other-package-server', 'mcp__other_notebook__inspect_packages'),
       mcpRequest('other-plan-server', 'mcp__other_plan__update_step_status'),
-      mcpRequest('plan-decision', 'mcp__open_science_plan__generate_plan'),
-      mcpRequest('environment-mutation', 'mcp__open_science_notebook__manage_environments'),
+      mcpRequest('plan-decision', 'mcp__app_plan__generate_plan'),
+      mcpRequest('environment-mutation', 'mcp__app_notebook__manage_environments'),
       mcpRequest('other-server', 'mcp__other_notebook__notebook_state'),
-      mcpRequest('execution', 'mcp__open_science_notebook__notebook_execute'),
-      mcpRequest('packages', 'mcp__open_science_notebook__manage_packages'),
-      mcpRequest('memory-write', 'mcp__open_science_notebook__remember_memory'),
+      mcpRequest('execution', 'mcp__app_notebook__notebook_execute'),
+      mcpRequest('packages', 'mcp__app_notebook__manage_packages'),
+      mcpRequest('memory-write', 'mcp__app_notebook__remember_memory'),
       mcpRequest('other-memory-server', 'mcp__other_notebook__search_memories')
     ]) {
       const pending = broker.requestPermission(request, {
@@ -1218,7 +1218,7 @@ describe('ACP permission broker with durable grants', () => {
     }
 
     const first = broker.requestPermission(
-      mcpRequest('session-claude', 'mcp__open_science_notebook__manage_packages'),
+      mcpRequest('session-claude', 'mcp__app_notebook__manage_packages'),
       context
     )
     await new Promise<void>((resolve) => setImmediate(resolve))
@@ -1276,7 +1276,7 @@ describe('ACP permission broker with durable grants', () => {
     }
 
     const generate = broker.requestPermission(
-      mcpRequest('session-plan', 'mcp__open_science_plan__generate_plan'),
+      mcpRequest('session-plan', 'mcp__app_plan__generate_plan'),
       context
     )
     await new Promise<void>((resolve) => setImmediate(resolve))
@@ -1296,7 +1296,7 @@ describe('ACP permission broker with durable grants', () => {
     })
 
     const update = broker.requestPermission(
-      mcpRequest('session-plan', 'mcp__open_science_plan__update_step_status'),
+      mcpRequest('session-plan', 'mcp__app_plan__update_step_status'),
       context
     )
     await new Promise<void>((resolve) => setImmediate(resolve))
@@ -1314,10 +1314,7 @@ describe('ACP permission broker with durable grants', () => {
     })
 
     await expect(
-      broker.requestPermission(
-        mcpRequest('session-plan', 'mcp__open_science_plan__generate_plan'),
-        context
-      )
+      broker.requestPermission(mcpRequest('session-plan', 'mcp__app_plan__generate_plan'), context)
     ).resolves.toEqual({ outcome: { outcome: 'selected', optionId: 'provider-allow-once' } })
     expect(emitted).toHaveLength(2)
     await expect(registry.list()).resolves.toEqual([

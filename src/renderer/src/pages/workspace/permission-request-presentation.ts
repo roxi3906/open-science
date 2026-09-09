@@ -1,3 +1,4 @@
+import { canonicalizeAppToolIdentity } from '../../../../shared/brand-migration'
 import type { AcpPermissionRequest } from '../../../../shared/acp'
 
 import {
@@ -281,7 +282,7 @@ const PLAN_GENERATE_IDENTITY = 'open-science-plan/generate_plan'
 const PLAN_UPDATE_STEP_STATUS_IDENTITY = 'open-science-plan/update_step_status'
 
 const isArtifactWriteToolName = (toolName: string | undefined): boolean => {
-  const name = toolName?.trim().toLowerCase() ?? ''
+  const name = canonicalizeAppToolIdentity(toolName?.trim().toLowerCase() ?? '')
   if (!name) return false
 
   const segments = name.split(/__|\.|\//u)
@@ -291,10 +292,7 @@ const isArtifactWriteToolName = (toolName: string | undefined): boolean => {
     if (server === ARTIFACT_SERVER_SEGMENT && tool === ARTIFACT_WRITE_TOOL) return true
   }
 
-  return (
-    name === `${ARTIFACT_SERVER_SEGMENT}_${ARTIFACT_WRITE_TOOL}` ||
-    name === `open_science_artifacts_${ARTIFACT_WRITE_TOOL}`
-  )
+  return name === `${ARTIFACT_SERVER_SEGMENT}_${ARTIFACT_WRITE_TOOL}`
 }
 
 const isArtifactWriteRequest = (request: AcpPermissionRequest): boolean =>

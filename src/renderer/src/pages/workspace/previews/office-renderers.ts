@@ -134,7 +134,7 @@ const applyDocxFit = (container: HTMLElement, wrapper: HTMLElement): void => {
 const installDocxFit = (container: HTMLElement, wrapper: HTMLElement): OfficeRenderCleanup => {
   const view = container.ownerDocument.defaultView
   const style = container.ownerDocument.createElement('style')
-  style.dataset.openScienceDocxFit = 'true'
+  style.setAttribute('data-open-science-docx-fit', 'true')
   style.textContent = DOCX_FIT_STYLE
   container.appendChild(style)
   wrapper.style.alignItems = 'center'
@@ -454,7 +454,7 @@ ${SPREADSHEET_STATUS_SCOPE} .excel-wrapper .sheet-loading-summary {
 // Hides the vendor's blocking loader before it is inserted while retaining background progress.
 const installSpreadsheetStatusStyle = (container: HTMLElement): OfficeRenderCleanup => {
   const style = container.ownerDocument.createElement('style')
-  style.dataset.openScienceSpreadsheetStatus = 'true'
+  style.setAttribute('data-open-science-spreadsheet-status', 'true')
   style.textContent = SPREADSHEET_STATUS_STYLE
   container.setAttribute(SPREADSHEET_STATUS_SCOPE_ATTRIBUTE, 'true')
   container.ownerDocument.head.appendChild(style)

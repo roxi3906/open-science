@@ -50,7 +50,7 @@ import {
   type AgentModelChangeTarget,
   type ResolvedAgentBackend
 } from '../agent-framework'
-import { OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION } from '../skills/runtime-mcp-server'
+import { APP_SKILL_RUNTIME_SESSION_OPTION } from '../skills/runtime-mcp-server'
 import { CODEX_BRIDGE_MODEL } from '../agent-framework/codex'
 import { ArtifactRepository } from '../artifacts/repository'
 import { ArtifactProvenanceRepository } from '../artifacts/provenance-repository'
@@ -1995,7 +1995,7 @@ describe('ACP Notebook permission presentation contract', () => {
       createModes(['build', 'plan'], 'build'),
       {
         announceToolCall: true,
-        announcedProviderToolName: 'open_science_notebook_notebook_execute'
+        announcedProviderToolName: 'app_notebook_notebook_execute'
       }
     ],
     [
@@ -2022,7 +2022,7 @@ describe('ACP Notebook permission presentation contract', () => {
         toolTitle:
           framework.id === 'codex'
             ? 'mcp.open-science-notebook.notebook_execute'
-            : 'open_science_notebook_notebook_execute',
+            : 'app_notebook_notebook_execute',
         toolKind: 'execute',
         toolRawInput: { language: 'python', code: 'print(1)' },
         modes,
@@ -2076,7 +2076,7 @@ describe('ACP Notebook permission presentation contract', () => {
         toolTitle:
           framework.id === 'claude-code'
             ? 'mcp__open-science-notebook__notebook_execute'
-            : 'open_science_notebook_notebook_execute',
+            : 'app_notebook_notebook_execute',
         toolKind: 'execute',
         toolRawInput: { language: 'python', code: 'print(1)' },
         ...(isCodex
@@ -2093,7 +2093,7 @@ describe('ACP Notebook permission presentation contract', () => {
               announcedProviderToolName:
                 framework.id === 'claude-code'
                   ? 'mcp__open-science-notebook__notebook_execute'
-                  : 'open_science_notebook_notebook_execute'
+                  : 'app_notebook_notebook_execute'
             }),
         modes: isCodex
           ? createModes(['read-only', 'agent', 'agent-full-access'], 'read-only')
@@ -2162,7 +2162,7 @@ describe('ACP Notebook permission presentation contract', () => {
 
   it.each([
     ['Claude Code', claudeCodeFramework, 'mcp__open-science-notebook__notebook_execute'],
-    ['OpenCode', opencodeFramework, 'open_science_notebook_notebook_execute']
+    ['OpenCode', opencodeFramework, 'app_notebook_notebook_execute']
   ] as const)(
     'issues a fresh execution identity for each %s call released by a remembered grant',
     async (_name, framework, toolTitle) => {
@@ -3741,8 +3741,7 @@ describe('ACP runtime session management', () => {
       expect(fakeAgent.resumedSessions[0].mcpServers).toEqual([
         expect.objectContaining({
           type: 'http',
-          name:
-            framework.id === 'opencode' ? 'open_science_host_message' : 'open-science-host-message'
+          name: framework.id === 'opencode' ? 'app_host_message' : 'open-science-host-message'
         })
       ])
       expect(registerHostMessage).toHaveBeenCalledWith(
@@ -3808,8 +3807,7 @@ describe('ACP runtime session management', () => {
       expect(fakeAgent.newSessions[0].mcpServers).toEqual([
         expect.objectContaining({
           type: 'http',
-          name:
-            framework.id === 'opencode' ? 'open_science_host_message' : 'open-science-host-message'
+          name: framework.id === 'opencode' ? 'app_host_message' : 'open-science-host-message'
         })
       ])
       expect(registerHostMessage).toHaveBeenLastCalledWith(
@@ -4882,7 +4880,7 @@ describe('ACP runtime session management', () => {
 
     expect(getProjection).toHaveBeenCalledWith('project-1', 's1')
     expect(respond).not.toHaveBeenCalled()
-    expect(fakeAgent.prompts[0]?.text).not.toContain('<open_science_protected_plan_context>')
+    expect(fakeAgent.prompts[0]?.text).not.toContain('<open-science-protected-plan-context>')
   })
 
   it('does not inject a rejected Plan into an ordinary Attempt', async () => {
@@ -4912,7 +4910,7 @@ describe('ACP runtime session management', () => {
     })
 
     expect(respond).not.toHaveBeenCalled()
-    expect(fakeAgent.prompts[0]?.text).not.toContain('<open_science_protected_plan_context>')
+    expect(fakeAgent.prompts[0]?.text).not.toContain('<open-science-protected-plan-context>')
   })
 
   it('gives OpenCode stable underscore names for app-owned action MCPs on create and resume', async () => {
@@ -4949,11 +4947,7 @@ describe('ACP runtime session management', () => {
     await runtime.resumeSession({ sessionId: 'resumed-opencode-session', cwd: '/workspace' })
     await runtime.sendPrompt({ sessionId: 'resumed-opencode-session', text: 'Continue with tools' })
 
-    const expectedServerNames = [
-      'open_science_artifacts',
-      'open_science_notebook',
-      'open_science_skills'
-    ]
+    const expectedServerNames = ['app_artifacts', 'app_notebook', 'app_skills']
     expect(
       fakeAgent.newSessions[0].mcpServers.map((server) => (server as { name: string }).name)
     ).toEqual(expectedServerNames)
@@ -4963,10 +4957,10 @@ describe('ACP runtime session management', () => {
 
     for (const prompt of fakeAgent.prompts) {
       expect(prompt.text).not.toContain('`open_science_activity_begin_activity_group`')
-      expect(prompt.text).toContain('`open_science_artifacts_write_artifact_file`')
-      expect(prompt.text).toContain('`open_science_notebook_ask_user_question`')
-      expect(prompt.text).toContain('`open_science_notebook_notebook_execute`')
-      expect(prompt.text).toContain('open_science_skills_request_skill_import')
+      expect(prompt.text).toContain('`app_artifacts_write_artifact_file`')
+      expect(prompt.text).toContain('`app_notebook_ask_user_question`')
+      expect(prompt.text).toContain('`app_notebook_notebook_execute`')
+      expect(prompt.text).toContain('app_skills_request_skill_import')
       expect(prompt.text).not.toContain('`open-science-')
     }
   })
@@ -9062,7 +9056,7 @@ describe('ACP runtime session management', () => {
             update: {
               sessionUpdate: 'tool_call',
               toolCallId,
-              title: 'open_science_notebook_notebook_execute',
+              title: 'app_notebook_notebook_execute',
               kind: 'other',
               status: 'pending',
               rawInput: { language: 'python', code: 'print(1)' }
@@ -9083,7 +9077,7 @@ describe('ACP runtime session management', () => {
           sessionId: ctx.params.sessionId,
           toolCall: {
             toolCallId,
-            title: 'open_science_notebook_notebook_execute',
+            title: 'app_notebook_notebook_execute',
             kind: 'other',
             status: 'pending',
             rawInput: {}
@@ -9098,7 +9092,7 @@ describe('ACP runtime session management', () => {
           update: {
             sessionUpdate: 'tool_call',
             toolCallId,
-            title: 'open_science_notebook_notebook_execute',
+            title: 'app_notebook_notebook_execute',
             kind: 'other',
             status: 'in_progress',
             rawInput: { language: 'r', code: 'print(2)' }
@@ -10370,7 +10364,7 @@ describe('ACP runtime session management', () => {
     expect(fakeAgent.prompts[0].text).toContain('producerRunId')
     expect(fakeAgent.prompts[0].text).toContain('Only claim a generated file is available after')
     expect(fakeAgent.prompts[0].text).not.toContain('Pass only the filename')
-    expect(fakeAgent.prompts[0].text).not.toContain('<open_science_skill_privacy_instructions>')
+    expect(fakeAgent.prompts[0].text).not.toContain('<open-science-skill-privacy-instructions>')
   })
 
   it('gives bridge-backed Codex the artifact server through its explicit function alias', async () => {
@@ -10451,11 +10445,11 @@ describe('ACP runtime session management', () => {
     const servers = fakeAgent.newSessions[0].mcpServers as Array<{ name?: string }>
     expect(servers.map((server) => server.name)).toEqual(['open-science-notebook'])
     expect(fakeAgent.prompts[0].text).toContain(
-      '<open_science_notebook_instructions>\nGuidance only applies when using open-science-notebook tools.'
+      '<open-science-notebook-instructions>\nGuidance applies only to open-science-notebook tools.'
     )
     expect(fakeAgent.prompts[0].text).toContain('`ask_user_question`')
     expect(fakeAgent.prompts[0].text).toContain('app-owned `ask_user_question`')
-    expect(fakeAgent.prompts[0].text).not.toContain('<open_science_artifact_instructions>')
+    expect(fakeAgent.prompts[0].text).not.toContain('<open-science-artifact-instructions>')
   })
 
   it('gives native Codex the blocking choice tool without relying on Plan mode', async () => {
@@ -10501,7 +10495,7 @@ describe('ACP runtime session management', () => {
     await runtime.sendPrompt({ sessionId: session.sessionId, text: 'Search PubMed' })
 
     expect(fakeAgent.prompts[0].text).toContain('Search PubMed')
-    expect(fakeAgent.prompts[0].text).not.toContain('<open_science_skill_privacy_instructions>')
+    expect(fakeAgent.prompts[0].text).not.toContain('<open-science-skill-privacy-instructions>')
   })
 
   it('delivers the large-data-file guidance to Claude session metadata on create and resume', async () => {
@@ -10524,12 +10518,12 @@ describe('ACP runtime session management', () => {
     expect(fakeAgent.newSessions[0]._meta).toMatchObject({
       systemPrompt: {
         preset: 'claude_code',
-        append: expect.stringContaining('open_science_large_file_instructions')
+        append: expect.stringContaining('open-science-large-file-instructions')
       }
     })
     expect(fakeAgent.resumedSessions[0]._meta).toMatchObject({
       systemPrompt: {
-        append: expect.stringContaining('open_science_large_file_instructions')
+        append: expect.stringContaining('open-science-large-file-instructions')
       }
     })
   })
@@ -10598,7 +10592,7 @@ describe('ACP runtime session management', () => {
           release: async () => undefined
         },
         sessionOptions: {
-          [OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION]: {
+          [APP_SKILL_RUNTIME_SESSION_OPTION]: {
             command: '/Applications/Open-Science.app/Contents/MacOS/Open-Science',
             entryPath: '/app/out/main/index.js',
             root: runtimeRoot
@@ -10631,13 +10625,11 @@ describe('ACP runtime session management', () => {
       fakeAgent.newSessions[0].mcpServers,
       fakeAgent.resumedSessions[1].mcpServers
     ]) {
-      expect(servers.map((server) => (server as { name: string }).name)).toEqual([
-        'open-science-notebook'
-      ])
+      expect(servers.map((server) => (server as { name: string }).name)).toEqual(['app_notebook'])
     }
     const routedServers = fakeAgent.resumedSessions[0].mcpServers
     expect(routedServers.map((server) => (server as { name: string }).name)).toEqual([
-      'open-science-notebook'
+      'app_notebook'
     ])
     expect(selectSkills).toHaveBeenCalledOnce()
     expect(fakeAgent.prompts[0].text).toContain('already loaded by Open-Science')
@@ -10817,7 +10809,7 @@ describe('ACP runtime session management', () => {
     await runtime.sendPrompt({ sessionId: session.sessionId, text: 'summarize the results' })
 
     expect(resolvedContext?.systemPromptAppends).toEqual(
-      expect.arrayContaining([expect.stringContaining('open_science_large_file_instructions')])
+      expect.arrayContaining([expect.stringContaining('open-science-large-file-instructions')])
     )
     expect(fakeAgent.prompts.map(({ text }) => text)).toEqual([
       expect.stringMatching(/Current agent: Main Agent\.[\s\S]+search PubMed$/),
@@ -10897,7 +10889,7 @@ describe('ACP runtime session management', () => {
 
     expect(fakeAgent.newSessions[0]._meta).toBeUndefined()
     expect(resolvedContext?.systemPromptAppends).toEqual(
-      expect.arrayContaining([expect.stringContaining('open_science_large_file_instructions')])
+      expect.arrayContaining([expect.stringContaining('open-science-large-file-instructions')])
     )
     expect(fakeAgent.prompts.map(({ text }) => text)).toEqual([
       expect.stringMatching(/Current agent: Main Agent\.[\s\S]+hello opencode$/),
@@ -10957,7 +10949,7 @@ describe('ACP runtime session management', () => {
       expect(fakeAgent.newSessions[0].mcpServers).toEqual([
         expect.objectContaining({
           type: 'http',
-          name: 'open_science_notebook',
+          name: 'app_notebook',
           url: expect.stringMatching(/^http:\/\/127\.0\.0\.1:\d+\/mcp\/notebook\//)
         })
       ])
@@ -11016,16 +11008,12 @@ describe('ACP runtime session management', () => {
       // opencode gets http MCP configs (not stdio) pointing at the local host, with bearer auth.
       expect(servers.map((server) => server.type)).toEqual(['http', 'http', 'http'])
       expect(servers.map((server) => server.name)).toEqual(
-        expect.arrayContaining([
-          'open_science_artifacts',
-          'open_science_notebook',
-          'open_science_skills'
-        ])
+        expect.arrayContaining(['app_artifacts', 'app_notebook', 'app_skills'])
       )
-      const artifactServer = servers.find((server) => server.name === 'open_science_artifacts')
+      const artifactServer = servers.find((server) => server.name === 'app_artifacts')
       expect(artifactServer?.url).toMatch(/^http:\/\/127\.0\.0\.1:\d+\/mcp\/artifact\//)
       expect(artifactServer?.headers?.[0]).toMatchObject({ name: 'authorization' })
-      const skillImportServer = servers.find((server) => server.name === 'open_science_skills')
+      const skillImportServer = servers.find((server) => server.name === 'app_skills')
       expect(skillImportServer?.url).toMatch(/^http:\/\/127\.0\.0\.1:\d+\/mcp\/skill-import\//)
       expect(fakeAgent.prompts[0].text).toContain('request_skill_import')
 
@@ -12202,7 +12190,7 @@ describe('ACP runtime session management', () => {
           update: {
             sessionUpdate: 'tool_call',
             toolCallId: 'tool-mcp',
-            title: 'open_science_artifacts_write_artifact_file',
+            title: 'app_artifacts_write_artifact_file',
             kind: 'other',
             status: 'pending',
             rawInput: { filename: 'result.md', content: '# Result' }
@@ -12212,7 +12200,7 @@ describe('ACP runtime session management', () => {
           sessionId: 'remote-session-1',
           toolCall: {
             toolCallId: 'tool-mcp',
-            title: 'open_science_artifacts_write_artifact_file',
+            title: 'app_artifacts_write_artifact_file',
             kind: 'other',
             status: 'pending'
           },
@@ -12234,20 +12222,20 @@ describe('ACP runtime session management', () => {
           update: {
             sessionUpdate: 'tool_call',
             toolCallId: 'tool-failed',
-            title: 'open_science_artifacts_write_artifact_file',
+            title: 'app_artifacts_write_artifact_file',
             kind: 'other',
             status: 'failed',
-            _meta: { toolName: 'open_science_artifacts_write_artifact_file' }
+            _meta: { toolName: 'app_artifacts_write_artifact_file' }
           }
         })
         await ctx.client.request(acp.methods.client.session.requestPermission, {
           sessionId: 'remote-session-1',
           toolCall: {
             toolCallId: 'tool-error',
-            title: 'open_science_artifacts_delete_artifact',
+            title: 'app_artifacts_delete_artifact',
             kind: 'other',
             status: 'pending',
-            _meta: { toolName: 'open_science_artifacts_delete_artifact' }
+            _meta: { toolName: 'app_artifacts_delete_artifact' }
           },
           options: [{ optionId: 'allow-once', name: 'Allow once', kind: 'allow_once' }]
         })
@@ -12278,7 +12266,7 @@ describe('ACP runtime session management', () => {
       },
       callbacks: {
         onPermissionRequest: (request) => {
-          if (request.title === 'open_science_artifacts_delete_artifact') {
+          if (request.title === 'app_artifacts_delete_artifact') {
             throw new Error('permission callback failed')
           }
           runtime.respondToPermission({ requestId: request.requestId, optionId: 'allow-once' })
@@ -12328,7 +12316,7 @@ describe('ACP runtime session management', () => {
     ]) {
       const serialized = JSON.stringify(data)
       expect(serialized).not.toContain('example.com')
-      expect(serialized).not.toContain('open_science_artifacts_write_artifact_file')
+      expect(serialized).not.toContain('app_artifacts_write_artifact_file')
     }
   })
 
@@ -12630,7 +12618,7 @@ describe('ACP runtime session management', () => {
           update: {
             sessionUpdate: 'tool_call',
             toolCallId,
-            title: 'open_science_notebook_notebook_execute',
+            title: 'app_notebook_notebook_execute',
             kind: 'other',
             status: 'pending',
             rawInput: {}
@@ -12642,7 +12630,7 @@ describe('ACP runtime session management', () => {
             sessionId: ctx.params.sessionId,
             toolCall: {
               toolCallId,
-              title: 'open_science_notebook_notebook_execute',
+              title: 'app_notebook_notebook_execute',
               kind: 'other',
               status: 'pending',
               locations: [],
@@ -12769,7 +12757,7 @@ describe('ACP runtime session management', () => {
     startPermissionProbeAgent(process, {
       newSessionId: 'opencode-underscore-notebook-session',
       toolCallId: 'opencode-underscore-notebook-call',
-      toolTitle: 'open_science_notebook_notebook_execute',
+      toolTitle: 'app_notebook_notebook_execute',
       toolRawInput: { code: 'print(1)', language: 'python' },
       permissionOptions: [
         { optionId: 'once', kind: 'allow_once', name: 'Allow once' },
@@ -12807,7 +12795,7 @@ describe('ACP runtime session management', () => {
 
     expect(permissionRequests).toHaveLength(1)
     expect(permissionRequests[0]).toMatchObject({
-      title: 'open_science_notebook_notebook_execute',
+      title: 'app_notebook_notebook_execute',
       isMcp: true,
       rawInput: { code: 'print(1)', language: 'python' }
     })
@@ -12844,7 +12832,7 @@ describe('ACP runtime session management', () => {
           update: {
             sessionUpdate: 'tool_call',
             toolCallId,
-            title: 'open_science_artifacts_write_artifact_file',
+            title: 'app_artifacts_write_artifact_file',
             kind: 'other',
             status: 'pending',
             rawInput: {}
@@ -12855,7 +12843,7 @@ describe('ACP runtime session management', () => {
           sessionId: ctx.params.sessionId,
           toolCall: {
             toolCallId,
-            title: 'open_science_artifacts_write_artifact_file',
+            title: 'app_artifacts_write_artifact_file',
             kind: 'other',
             status: 'pending',
             rawInput: {}
@@ -14098,44 +14086,52 @@ describe('ACP runtime session management', () => {
   // Regression: claude-code (and OpenAI-compatible providers routed through it) emit reviewer MCP calls
   // with the sanitized mcp__<server>__<tool> identity in the title and no provider _meta tool name. The
   // gate must recognize that title form or every reviewer tool call is rejected (issue #329).
-  it('auto-approves a claude-code reviewer MCP tool identified by its sanitized title', async () => {
-    const process = new FakeAgentProcess()
-    let permissionResponse: unknown
-    startPermissionProbeAgent(process, {
-      newSessionId: 'reviewer-session-1',
-      toolCallId: 'mcp__open_science_reviewer__read_turn_0',
-      toolTitle: 'mcp__open_science_reviewer__read_turn',
-      permissionOptions: [
-        { optionId: 'allow-once', name: 'Allow once', kind: 'allow_once' },
-        { optionId: 'reject-once', name: 'Reject', kind: 'reject_once' }
-      ],
-      onPermissionResponse: (response) => {
-        permissionResponse = response
-      }
-    })
-    const runtime = new AcpRuntime({
-      appVersion: '0.1.0',
-      defaultCwd: '/workspace',
-      spawnAgent: () => asAgentProcess(process),
-      framework: claudeCodeFramework
-    })
+  it.each(['mcp__app_reviewer__read_turn', 'mcp__open_science_reviewer__read_turn'])(
+    'auto-approves a claude-code reviewer MCP tool identified by %s',
+    async (toolTitle) => {
+      const process = new FakeAgentProcess()
+      let permissionResponse: unknown
+      startPermissionProbeAgent(process, {
+        newSessionId: 'reviewer-session-1',
+        toolCallId: 'mcp__app_reviewer__read_turn_0',
+        toolTitle,
+        permissionOptions: [
+          { optionId: 'allow-once', name: 'Allow once', kind: 'allow_once' },
+          { optionId: 'reject-once', name: 'Reject', kind: 'reject_once' }
+        ],
+        onPermissionResponse: (response) => {
+          permissionResponse = response
+        }
+      })
+      const runtime = new AcpRuntime({
+        appVersion: '0.1.0',
+        defaultCwd: '/workspace',
+        spawnAgent: () => asAgentProcess(process),
+        framework: claudeCodeFramework
+      })
 
-    const { session } = await runtime.buildReviewerSession({
-      cwd: '/workspace',
-      mcpServers: [
-        { type: 'http', name: 'open-science-reviewer', url: 'http://127.0.0.1:1/mcp', headers: [] }
-      ]
-    })
-    await session.prompt([{ type: 'text', text: 'read the audited turn' }])
+      const { session } = await runtime.buildReviewerSession({
+        cwd: '/workspace',
+        mcpServers: [
+          {
+            type: 'http',
+            name: 'open-science-reviewer',
+            url: 'http://127.0.0.1:1/mcp',
+            headers: []
+          }
+        ]
+      })
+      await session.prompt([{ type: 'text', text: 'read the audited turn' }])
 
-    expect(permissionResponse).toEqual({
-      outcome: { outcome: 'selected', optionId: 'allow-once' }
-    })
-    expect(runtime.disposeReviewerSession(session)).toEqual({
-      rejectedToolCalls: 0,
-      reviewerBridgeScoped: undefined
-    })
-  })
+      expect(permissionResponse).toEqual({
+        outcome: { outcome: 'selected', optionId: 'allow-once' }
+      })
+      expect(runtime.disposeReviewerSession(session)).toEqual({
+        rejectedToolCalls: 0,
+        reviewerBridgeScoped: undefined
+      })
+    }
+  )
 
   // Claude Code preserves hyphens in MCP server names in real tool traces, so the permission title
   // can use mcp__<hyphenated-server>__<tool> instead of the sanitized underscore form.
@@ -14190,7 +14186,7 @@ describe('ACP runtime session management', () => {
     let permissionResponse: unknown
     startPermissionProbeAgent(process, {
       newSessionId: 'reviewer-session-1',
-      toolCallId: 'mcp__open_science_reviewer__read_turn_0',
+      toolCallId: 'mcp__app_reviewer__read_turn_0',
       toolTitle: 'Bash',
       toolKind: 'execute',
       permissionOptions: [
@@ -16885,7 +16881,7 @@ describe('ACP runtime session management', () => {
           systemPrompt: {
             type: 'preset',
             preset: 'claude_code',
-            append: expect.not.stringContaining('open_science_skill_privacy_instructions')
+            append: expect.not.stringContaining('open-science-skill-privacy-instructions')
           }
         }
       }
@@ -17411,7 +17407,7 @@ describe('ACP runtime session management', () => {
 
     // The agent sees the replayed context ahead of the user's text...
     expect(fakeAgent.prompts[0]?.text).toContain('PRIOR CONTEXT: the user asked to plot data.')
-    expect(fakeAgent.prompts[0]?.text).toContain('<open_science_notebook_continuity>')
+    expect(fakeAgent.prompts[0]?.text).toContain('<open-science-notebook-continuity>')
     expect(fakeAgent.prompts[0]?.text).toContain('"executionCount":2')
     expect(fakeAgent.prompts[0]?.text).toContain('keep going')
     // ...but the conversation bubble records only what the user actually typed.
@@ -17431,7 +17427,7 @@ describe('ACP runtime session management', () => {
 
     await runtime.sendPrompt({ sessionId: 'switched-session', text: 'ordinary continuation' })
     expect(peekHandoffContext).toHaveBeenCalledOnce()
-    expect(fakeAgent.prompts[1]?.text).not.toContain('<open_science_notebook_continuity>')
+    expect(fakeAgent.prompts[1]?.text).not.toContain('<open-science-notebook-continuity>')
   })
 
   it('hands off live Notebook state after a context reset with no replayable transcript', async () => {
@@ -17466,7 +17462,7 @@ describe('ACP runtime session management', () => {
     })
 
     expect(peekHandoffContext).toHaveBeenCalledOnce()
-    expect(fakeAgent.prompts[0]?.text).toContain('<open_science_notebook_continuity>')
+    expect(fakeAgent.prompts[0]?.text).toContain('<open-science-notebook-continuity>')
     expect(fakeAgent.prompts[0]?.text).toContain('"executionCount":1')
     expect(fakeAgent.prompts[0]?.text).not.toContain('Previous conversation')
   })
@@ -18419,7 +18415,7 @@ describe('ACP runtime session management', () => {
     })
     const counter: TokenCounter = {
       count: (text) => {
-        if (text.includes('mcp__open_science_activity__begin_activity_group')) return 101
+        if (text.includes('mcp__app_activity__begin_activity_group')) return 101
         if (text.includes('mcp.open-science-activity.begin_activity_group')) return 17
         return 0
       }
@@ -18906,7 +18902,7 @@ describe('ACP runtime session management', () => {
         }
       })
 
-      expect(fakeAgent.prompts[0]?.text).toContain('<open_science_protected_plan_context>')
+      expect(fakeAgent.prompts[0]?.text).toContain('<open-science-protected-plan-context>')
       expect(fakeAgent.prompts[0]?.text).toContain('approval=approved lifecycle=approved')
       expect(fakeAgent.prompts[0]?.text).not.toContain('artifact_version_id=')
       expect(fakeAgent.prompts[0]?.text).toContain('Analyze data: not_started')
@@ -18940,7 +18936,7 @@ describe('ACP runtime session management', () => {
       }
     })
     expect(fakeAgent.prompts).toHaveLength(1)
-    expect(fakeAgent.prompts[0]?.text).not.toContain('<open_science_protected_plan_context>')
+    expect(fakeAgent.prompts[0]?.text).not.toContain('<open-science-protected-plan-context>')
   })
 
   it.each([
@@ -19030,7 +19026,7 @@ describe('ACP runtime session management', () => {
       runtime.sendPrompt({ sessionId: 's1', text: 'What is the weather?' })
     ).resolves.toMatchObject({ stopReason: 'end_turn' })
 
-    expect(fakeAgent.prompts[0]?.text).not.toContain('<open_science_protected_plan_context>')
+    expect(fakeAgent.prompts[0]?.text).not.toContain('<open-science-protected-plan-context>')
   })
 
   it('does not interrupt an active Plan after an abnormal provider terminal stop', async () => {
@@ -20889,12 +20885,12 @@ describe('ACP runtime session management', () => {
     // Skill contents are hidden by the UI projection; the agent prompt must not block native loading.
     expect(fakeAgent.newSessions[0]._meta).toMatchObject({
       systemPrompt: {
-        append: expect.not.stringContaining('open_science_skill_privacy_instructions')
+        append: expect.not.stringContaining('open-science-skill-privacy-instructions')
       }
     })
     expect(fakeAgent.resumedSessions[0]._meta).toMatchObject({
       systemPrompt: {
-        append: expect.not.stringContaining('open_science_skill_privacy_instructions')
+        append: expect.not.stringContaining('open-science-skill-privacy-instructions')
       }
     })
   })
@@ -21025,7 +21021,7 @@ describe('ACP runtime session management', () => {
         type: 'preset',
         preset: 'claude_code',
         append: expect.stringContaining(
-          '<open_science_notebook_instructions>\nGuidance only applies when using open-science-notebook tools.'
+          '<open-science-notebook-instructions>\nGuidance applies only to open-science-notebook tools.'
         )
       }
     })
@@ -26441,9 +26437,9 @@ describe('Specialist Skill scoping', () => {
       const session = await runtime.createSession({ cwd: '/workspace', specialistId: 'sp-1' })
       await runtime.sendPrompt({ sessionId: session.sessionId, text: 'work' })
       await runtime.sendPrompt({ sessionId: session.sessionId, text: 'continue' })
-      expect(agent.prompts[0]?.text).toContain('<open_science_specialist_skill_scope>')
+      expect(agent.prompts[0]?.text).toContain('<open-science-specialist-skill-scope>')
       expect(agent.prompts[0]?.text).toContain('Allowed Skill')
-      expect(agent.prompts[1]?.text).toContain('<open_science_specialist_skill_scope>')
+      expect(agent.prompts[1]?.text).toContain('<open-science-specialist-skill-scope>')
     }
   )
 
@@ -26477,7 +26473,7 @@ describe('Specialist Skill scoping', () => {
       expect(agent.prompts[1]?.text).toContain('Current agent: Main Agent.')
       expect(agent.prompts[1]?.text).toContain('earlier Specialist identity')
       expect(agent.prompts[1]?.text).not.toContain('Previous Specialist identity')
-      expect(agent.prompts[1]?.text).not.toContain('<open_science_specialist_skill_scope>')
+      expect(agent.prompts[1]?.text).not.toContain('<open-science-specialist-skill-scope>')
     }
   )
 

@@ -188,6 +188,8 @@ $userIdentity = $identityParts -join '\'
 $roots = [System.Collections.Generic.HashSet[string]]::new(
   [System.StringComparer]::OrdinalIgnoreCase
 )
+[void]$roots.Add((Join-Path $env:USERPROFILE 'Open-Science\runtime'))
+# Released data roots remain cleanup inputs with the same marker and ACL checks.
 [void]$roots.Add((Join-Path $env:USERPROFILE 'OpenScience\runtime'))
 [void]$roots.Add((Join-Path $env:USERPROFILE '.open-science\runtime'))
 $settingsPath = Join-Path $env:USERPROFILE '.open-science\settings.json'
@@ -218,10 +220,14 @@ foreach ($root in $roots) {
       [pscustomobject]@{ Path = (Join-Path $env:USERPROFILE $leaf); ManagedParent = $false }
       [pscustomobject]@{ Path = (Join-Path $env:USERPROFILE $compactLeaf); ManagedParent = $false }
       $managedParents = @(
-        (Join-Path ([System.IO.Path]::GetPathRoot($canonicalRoot)) 'OpenScienceTmp')
+        foreach ($parentName in @('Open-Science-Tmp', 'OpenScienceTmp')) {
+          (Join-Path ([System.IO.Path]::GetPathRoot($canonicalRoot)) $parentName)
+        }
         foreach ($configuredTemp in @($env:TEMP, $env:TMP)) {
           if ($configuredTemp) {
-            (Join-Path $configuredTemp 'OpenScienceTmp')
+            foreach ($parentName in @('Open-Science-Tmp', 'OpenScienceTmp')) {
+              (Join-Path $configuredTemp $parentName)
+            }
           }
         }
         (Join-Path $env:USERPROFILE 'os-tmp')

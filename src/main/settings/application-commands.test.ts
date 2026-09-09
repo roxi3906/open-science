@@ -212,8 +212,8 @@ describe('Settings core application commands', () => {
       providers: [],
       notebookNetwork: {
         allowedDomains: ['pypi.org'],
-        disabledOpenScienceDomainGroups: [],
-        disabledOpenScienceDomains: []
+        disabledAppDomainGroups: [],
+        disabledAppDomains: []
       }
     }
     const savedNetwork = currentSnapshot.notebookNetwork

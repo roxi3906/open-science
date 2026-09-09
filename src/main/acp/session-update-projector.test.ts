@@ -574,7 +574,7 @@ describe('AcpSessionUpdateProjector', () => {
             update: {
               sessionUpdate: 'tool_call',
               toolCallId,
-              title: 'mcp__open_science_notebook__notebook_execute',
+              title: 'mcp__app_notebook__notebook_execute',
               kind: 'other',
               status: 'pending'
             }

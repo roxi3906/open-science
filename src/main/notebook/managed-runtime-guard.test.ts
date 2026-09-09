@@ -11,8 +11,8 @@ import { detectManagedRuntimeMutation, protectManagedRuntimeWrites } from './man
 describe('detectManagedRuntimeMutation', () => {
   it('uses the injected platform for managed-runtime path comparisons', () => {
     const platform: NodeJS.Platform = process.platform === 'win32' ? 'linux' : 'win32'
-    const runtimeRoot = join(tmpdir(), 'OpenScience', 'runtime')
-    const target = join(tmpdir(), 'openscience', 'runtime', 'pwn.txt')
+    const runtimeRoot = join(tmpdir(), 'Open-Science', 'runtime')
+    const target = join(tmpdir(), 'open-science', 'runtime', 'pwn.txt')
     const mutation = detectManagedRuntimeMutation({
       source: `touch "${target}"`,
       surface: 'bash',
@@ -214,16 +214,16 @@ describe('detectManagedRuntimeMutation', () => {
   })
 
   it.each([
-    'cmd.exe /d /c copy report.txt C:\\OpenScience\\runtime\\conda-meta\\history',
-    'cmd /c mkdir C:\\OpenScience\\runtime\\pwn',
-    'cmd.exe /c rmdir C:\\OpenScience\\runtime\\envs\\default-r /s /q',
-    'cmd /c mklink /d report-link C:\\OpenScience\\runtime\\envs\\default-r'
+    'cmd.exe /d /c copy report.txt C:\\Open-Science\\runtime\\conda-meta\\history',
+    'cmd /c mkdir C:\\Open-Science\\runtime\\pwn',
+    'cmd.exe /c rmdir C:\\Open-Science\\runtime\\envs\\default-r /s /q',
+    'cmd /c mklink /d report-link C:\\Open-Science\\runtime\\envs\\default-r'
   ])('rejects a cmd.exe payload that writes into the Windows runtime', (source) => {
     expect(
       detectManagedRuntimeMutation({
         source,
         surface: 'powershell',
-        runtimeRoot: 'C:\\OpenScience\\runtime'
+        runtimeRoot: 'C:\\Open-Science\\runtime'
       })?.message
     ).toMatch(/manage_packages/)
   })
@@ -232,14 +232,14 @@ describe('detectManagedRuntimeMutation', () => {
     'rejects a PowerShell %s payload that writes into the Windows runtime',
     (flag) => {
       const payload =
-        '[IO.File]::WriteAllText("C:\\OpenScience\\runtime\\conda-meta\\encoded.txt", "x")'
+        '[IO.File]::WriteAllText("C:\\Open-Science\\runtime\\conda-meta\\encoded.txt", "x")'
       const encoded = Buffer.from(payload, 'utf16le').toString('base64')
 
       expect(
         detectManagedRuntimeMutation({
           source: `powershell.exe -NoProfile ${flag} ${encoded}`,
           surface: 'powershell',
-          runtimeRoot: 'C:\\OpenScience\\runtime'
+          runtimeRoot: 'C:\\Open-Science\\runtime'
         })?.message
       ).toMatch(/manage_packages/)
     }

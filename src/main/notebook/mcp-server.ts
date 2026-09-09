@@ -38,8 +38,8 @@ const LOCAL_BACKGROUND_RUN_RECEIPT_GUIDANCE =
 // Scoped prompt addendum that only applies when the agent is given notebook tools. Keep equivalent
 // guidance concise because this prompt and the complete Notebook MCP schema share a 3,500-token cap.
 const NOTEBOOK_SYSTEM_PROMPT_APPEND = [
-  '<open_science_notebook_instructions>',
-  'Guidance only applies when using open-science-notebook tools.',
+  '<open-science-notebook-instructions>',
+  'Guidance applies only to open-science-notebook tools.',
   'For materially different interpretations, app-owned `ask_user_question` must be the first tool call; do not inspect or use other tools first. Put all 1-3 known questions in one call with 2-4 options. Infer reversible details; omit Other (UI adds custom, agent-decide, Skip). Finish continues; pending ends the turn.',
   'Notebook preview is for code/results; keep explanations and diagnosis in chat.',
   'Use one `notebook_execute` per persistent Python/R cell; reuse `cellId`. For skill functions, repeat kernelSkillIds per dependent cell; call directly in code, never import. Data kernels cannot call connectors; use `repl_execute` only for Host SDK operations reported by `host.capabilities()` and `host.help()`. Move large cross-kernel data through `process.env.OPEN_SCIENCE_HANDOFF_DIR`.',
@@ -49,10 +49,10 @@ const NOTEBOOK_SYSTEM_PROMPT_APPEND = [
   'Use `inspect_packages` for versions and `manage_packages` for installs. Never install in cells/shells or outside `$OPEN_SCIENCE_RUNTIME_DIR`.',
   'MCP replies are bounded; full output stays in preview. Check errors and workingFiles. The notebook runtime does not classify files for you.',
   'Retry once at most; repeated kernel-process failures mean stop Notebook tools and report the failure.',
-  'After OPEN_SCIENCE_NETWORK_DOMAIN_BLOCKED, call `request_network_access` with the exact hostname, runtime, reason, and failed bash command when applicable. Never call speculatively; retry only after an allowed result.',
+  'After Open-Science:NETWORK_DOMAIN_BLOCKED, call `request_network_access` with the exact hostname, runtime, reason, and failed bash command when applicable. Never call speculatively; retry only after an allowed result.',
   'Dependency status is not an execution verdict: `clear` means unchanged; `stale` means a tracked dependency changed after that run; `unknown` means incomplete tracking. `stale` does not mean the run failed or its captured output is incorrect; rerun only for current state.',
   'Call `write_artifact_file({ "filename": "plot.png", "source": { "kind": "localPath", "path": "plot.png" }, "producerRunId": "<runId>" })` from `open-science-artifacts`. Reuse saved relative filename and runId; inline small text. On validation errors, correct once; never repeat identical failed arguments.',
-  '</open_science_notebook_instructions>'
+  '</open-science-notebook-instructions>'
 ].join('\n')
 
 type NotebookRpcConnection = LocalRpcTransport & {
@@ -1476,7 +1476,7 @@ const NOTEBOOK_RPC_TOOLS: NotebookRpcToolDefinition[] = [
     name: 'request_network_access',
     title: 'Request Notebook network access',
     description:
-      'Call only after Notebook execution reports OPEN_SCIENCE_NETWORK_DOMAIN_BLOCKED. Provide the exact hostname, blocked runtime, reason, and exact command for bash. Retry the failed execution only when the result is allowed.',
+      'Call only after Notebook execution reports Open-Science:NETWORK_DOMAIN_BLOCKED. Provide the exact hostname, blocked runtime, reason, and exact command for bash. Retry the failed execution only when the result is allowed.',
     method: 'requestNetworkAccess',
     inputSchema: requestNetworkAccessToolSchema,
     mapResult: (raw) => raw,

@@ -13,10 +13,10 @@ const TASK_EVENT_STREAM_PROTOCOL_VERSION = 1
 const NORMAL_EVENT_STREAM_CLOSE_CODES = new Set([1000])
 const FAILED_EVENT_STREAM_CLOSE_CODES = new Set([1002, 1003, 1007, 1008, 1009])
 
-export class OpenScienceApiError extends Error {
+export class ApiError extends Error {
   constructor(message, { code = 'request_failed', status } = {}) {
     super(message)
-    this.name = 'OpenScienceApiError'
+    this.name = 'ApiError'
     this.code = code
     this.status = status
   }
@@ -34,7 +34,7 @@ const createRequestLifecycle = ({ defaultTimeoutMs, signal, timeoutMs }) => {
   signal?.throwIfAborted()
   const resolvedTimeoutMs = resolveRequestTimeout(defaultTimeoutMs, timeoutMs)
   const timeoutController = new AbortController()
-  const timeoutError = new OpenScienceApiError(
+  const timeoutError = new ApiError(
     `Open-Science request timed out after ${resolvedTimeoutMs} milliseconds.`,
     { code: 'timeout' }
   )
@@ -137,7 +137,7 @@ const sleepWithSignal = async (sleep, milliseconds, signal) => {
   })
 }
 
-export class OpenScienceClient {
+export class Client {
   constructor({
     baseUrl,
     token,
@@ -169,7 +169,7 @@ export class OpenScienceClient {
           signal
         })
         if (!response.ok) {
-          throw new OpenScienceApiError('Open-Science is not running.', {
+          throw new ApiError('Open-Science is not running.', {
             code: 'daemon_unavailable',
             status: response.status
           })
@@ -350,7 +350,7 @@ export class OpenScienceClient {
     for (;;) {
       signal?.throwIfAborted()
       if (deadline !== undefined && Date.now() >= deadline) {
-        throw new OpenScienceApiError(`Timed out waiting for run ${runId}.`, { code: 'timeout' })
+        throw new ApiError(`Timed out waiting for run ${runId}.`, { code: 'timeout' })
       }
       const remainingMs = deadline === undefined ? undefined : Math.max(1, deadline - Date.now())
       let run
@@ -360,10 +360,9 @@ export class OpenScienceClient {
         signal?.throwIfAborted()
         if (
           deadline !== undefined &&
-          (Date.now() >= deadline ||
-            (error instanceof OpenScienceApiError && error.code === 'timeout'))
+          (Date.now() >= deadline || (error instanceof ApiError && error.code === 'timeout'))
         ) {
-          throw new OpenScienceApiError(`Timed out waiting for run ${runId}.`, { code: 'timeout' })
+          throw new ApiError(`Timed out waiting for run ${runId}.`, { code: 'timeout' })
         }
         throw error
       }
@@ -456,7 +455,7 @@ export class OpenScienceClient {
       if (!readySettled) {
         settleReady(
           error ??
-            new OpenScienceApiError('Open-Science event stream closed before it was ready.', {
+            new ApiError('Open-Science event stream closed before it was ready.', {
               code: 'event_stream_failed'
             })
         )
@@ -467,7 +466,7 @@ export class OpenScienceClient {
     }
     const fail = (message, code) => {
       finish({
-        error: new OpenScienceApiError(message, { code }),
+        error: new ApiError(message, { code }),
         closeSocket: true,
         discardQueue: true
       })
@@ -589,10 +588,9 @@ export class OpenScienceClient {
         if (finished || socket !== current) return
         if (!connectionOpened && !readySettled) {
           finish({
-            error: new OpenScienceApiError(
-              'Open-Science event stream closed before it was ready.',
-              { code: 'event_stream_failed' }
-            ),
+            error: new ApiError('Open-Science event stream closed before it was ready.', {
+              code: 'event_stream_failed'
+            }),
             discardQueue: true
           })
           return
@@ -603,7 +601,7 @@ export class OpenScienceClient {
         }
         if (FAILED_EVENT_STREAM_CLOSE_CODES.has(event.code)) {
           finish({
-            error: new OpenScienceApiError(
+            error: new ApiError(
               event.code === 1008
                 ? 'Open-Science event stream access was revoked.'
                 : 'Open-Science event stream closed permanently.',
@@ -678,23 +676,14 @@ export class OpenScienceClient {
     } catch {
       error = undefined
     }
-    throw new OpenScienceApiError(
-      error?.message ?? `Open-Science request failed (${response.status}).`,
-      {
-        code: error?.code,
-        status: response.status
-      }
-    )
+    throw new ApiError(error?.message ?? `Open-Science request failed (${response.status}).`, {
+      code: error?.code,
+      status: response.status
+    })
   }
 }
 
-export const connectToOpenScience = async ({
-  configRoot,
-  env,
-  fetch,
-  requestTimeoutMs,
-  signal
-} = {}) => {
+export const connect = async ({ configRoot, env, fetch, requestTimeoutMs, signal } = {}) => {
   let client
   let lastError
   await findServiceState({
@@ -703,7 +692,7 @@ export const connectToOpenScience = async ({
     accept: async (state) => {
       signal?.throwIfAborted()
       try {
-        const candidate = new OpenScienceClient({
+        const candidate = new Client({
           baseUrl: `http://127.0.0.1:${state.port}`,
           token: await readWebToken(state.configRoot),
           fetch,
@@ -721,12 +710,9 @@ export const connectToOpenScience = async ({
   })
   if (!client) {
     if (lastError) throw lastError
-    throw new OpenScienceApiError(
-      'Open-Science is not running. Start it with "open-science start".',
-      {
-        code: 'daemon_unavailable'
-      }
-    )
+    throw new ApiError('Open-Science is not running. Start it with "open-science start".', {
+      code: 'daemon_unavailable'
+    })
   }
   return client
 }

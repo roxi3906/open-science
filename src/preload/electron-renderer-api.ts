@@ -1,7 +1,7 @@
 import {
   RENDERER_API_CONTRACT,
   RENDERER_CONTRACT_CATALOG,
-  type OpenScienceAPI,
+  type AppApi,
   type RendererApiContractPath,
   type RendererApiContractValue
 } from '../shared/renderer-contract-catalog'
@@ -70,7 +70,7 @@ const projectedCallable = (
 export const createElectronRendererApi = (
   adapter: ElectronRendererContractAdapter,
   overrides: ElectronRendererApiOverrides
-): OpenScienceAPI => {
+): AppApi => {
   const api: Record<string, unknown> = {}
   for (const publicPath of Object.keys(RENDERER_API_CONTRACT) as RendererApiContractPath[]) {
     const value = Object.hasOwn(overrides, publicPath)
@@ -78,7 +78,7 @@ export const createElectronRendererApi = (
       : projectedCallable(publicPath, adapter)
     assignPath(api, publicPath, value)
   }
-  return api as OpenScienceAPI
+  return api as AppApi
 }
 
 export type { ElectronRendererApiOverrides }

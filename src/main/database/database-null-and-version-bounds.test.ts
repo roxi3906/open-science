@@ -381,7 +381,7 @@ describe('D02/D04 persisted database boundaries', () => {
       })
       // Literature adds contentBlobId to version rows while preserving their original fields.
       expect(await Promise.all(tables.map(readRows))).toMatchObject(before)
-      expect((await readRows('_open_science_migrations')).slice(0, ledger.length)).toEqual(ledger)
+      expect((await readRows('_open-science-migrations')).slice(0, ledger.length)).toEqual(ledger)
       await expect(client.$queryRawUnsafe('PRAGMA foreign_key_check')).resolves.toEqual([])
       await expect(
         client.$executeRawUnsafe(

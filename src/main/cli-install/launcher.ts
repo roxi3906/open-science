@@ -6,18 +6,16 @@ import { basename, join, posix } from 'node:path'
 
 import type { CliLauncherStatus } from '../../shared/cli'
 import { defaultFileDurability } from '../storage/file-durability'
+import {
+  LEGACY_LAUNCHER_HEADER,
+  LEGACY_POSIX_HEADER,
+  LEGACY_POSIX_BODIES,
+  LEGACY_WINDOWS_HEADER,
+  LEGACY_WINDOWS_PATH_OWNER
+} from '../brand-migration/legacy-cli'
 
-// Ownership markers are versioned on-disk contracts; retain their pre-rename spelling.
-const MANAGED_LAUNCHER_HEADER_V1 =
-  'Open Science command-line launcher. Managed by the app. Format version: 1.'
-const LEGACY_POSIX_HEADER =
-  '# Open Science command-line launcher. Managed by the app (Settings -> General -> Command line'
-const LEGACY_POSIX_BODIES = new Set([
-  "# tool); edits will be overwritten on reinstall. Runs the app's Electron in Node mode.",
-  '# tool); edits will be overwritten on reinstall. Mounts the AppImage for this CLI process.'
-])
-const LEGACY_WINDOWS_HEADER =
-  'rem Open Science command-line launcher. Managed by the app; edits are overwritten on reinstall.'
+const MANAGED_LAUNCHER_HEADER =
+  'Open-Science command-line launcher. Managed by the app. Format version: 2.'
 
 // Everything the launcher planner needs, injected so the pure path/shim logic is testable without
 // Electron or the real filesystem. The IPC wrapper fills these from `app`/`process` at call time.
@@ -93,7 +91,7 @@ const posixShim = (env: CliLauncherEnv): string => {
     const { executable, cliEntry } = appImagePayloadPaths(env)
     return [
       '#!/bin/sh',
-      `# ${MANAGED_LAUNCHER_HEADER_V1}`,
+      `# ${MANAGED_LAUNCHER_HEADER}`,
       '# Edits are overwritten on reinstall. Mounts the AppImage for this CLI process.',
       `app_image=${quote(env.appImagePath!)}`,
       'mount_output=$(mktemp "${TMPDIR:-/tmp}/open-science-cli.XXXXXX") || {',
@@ -141,7 +139,7 @@ const posixShim = (env: CliLauncherEnv): string => {
   const appPathLine = env.packaged ? `OPEN_SCIENCE_APP_PATH=${quote(env.appExecPath)} ` : ''
   return [
     '#!/bin/sh',
-    `# ${MANAGED_LAUNCHER_HEADER_V1}`,
+    `# ${MANAGED_LAUNCHER_HEADER}`,
     "# Edits are overwritten on reinstall. Runs the app's Electron in Node mode.",
     `${appPathLine}ELECTRON_RUN_AS_NODE=1 exec ${quote(env.appExecPath)} ${quote(env.cliEntryPath)} "$@"`,
     ''
@@ -152,7 +150,7 @@ const windowsShim = (env: CliLauncherEnv): string => {
   const appPathLine = env.packaged ? `set "OPEN_SCIENCE_APP_PATH=${env.appExecPath}"\r\n` : ''
   return [
     '@echo off',
-    `rem ${MANAGED_LAUNCHER_HEADER_V1}`,
+    `rem ${MANAGED_LAUNCHER_HEADER}`,
     'rem Edits are overwritten on reinstall.',
     'setlocal EnableExtensions DisableDelayedExpansion',
     'set ELECTRON_RUN_AS_NODE=1',
@@ -194,7 +192,7 @@ const defaultRunCommand: CommandRunner = (command, args) => {
 
 const WINDOWS_PATH_PENDING_NAME = '.open-science-path-pending'
 const WINDOWS_PATH_RECEIPT_NAME = '.open-science-path-receipt'
-const WINDOWS_PATH_RECEIPT_OWNER = 'Open Science Windows PATH entry. Managed by the app.'
+export const WINDOWS_PATH_RECEIPT_OWNER = 'Open-Science Windows PATH entry. Managed by the app.'
 // The file name is the journal state: pending is flushed before the registry mutation, then renamed
 // to the owned receipt as the commit step. The snapshots let a later run reconcile a crash safely.
 const windowsPathPendingPath = (binDir: string): string => join(binDir, WINDOWS_PATH_PENDING_NAME)
@@ -203,13 +201,13 @@ const powershellLiteral = (value: string): string => `'${value.replace(/'/g, "''
 
 type WindowsPathJournal = {
   version: 1
-  owner: typeof WINDOWS_PATH_RECEIPT_OWNER
+  owner: string
   binDir: string
   beforePath: string | null
   afterPath: string
 }
 
-const parseWindowsPathJournal = (
+export const parseWindowsPathJournal = (
   content: string | undefined,
   binDir: string
 ): WindowsPathJournal | undefined => {
@@ -219,7 +217,7 @@ const parseWindowsPathJournal = (
     const beforePath = value.beforePath
     if (
       value.version !== 1 ||
-      value.owner !== WINDOWS_PATH_RECEIPT_OWNER ||
+      (value.owner !== WINDOWS_PATH_RECEIPT_OWNER && value.owner !== LEGACY_WINDOWS_PATH_OWNER) ||
       typeof value.binDir !== 'string' ||
       normalizeWindowsPathEntry(value.binDir) !== normalizeWindowsPathEntry(binDir) ||
       (beforePath !== null && typeof beforePath !== 'string') ||
@@ -248,6 +246,7 @@ export const buildWindowsPathCommand = (binDir: string): { command: string; args
     `$pendingPath = ${powershellLiteral(pendingPath)}`,
     `$receiptPath = ${powershellLiteral(receiptPath)}`,
     `$receiptOwner = ${powershellLiteral(WINDOWS_PATH_RECEIPT_OWNER)}`,
+    `$legacyReceiptOwner = ${powershellLiteral(LEGACY_WINDOWS_PATH_OWNER)}`,
     "$pendingTempPath = [IO.Path]::Combine([IO.Path]::GetDirectoryName($pendingPath), '.open-science-path-pending.' + [Guid]::NewGuid().ToString('N') + '.tmp')",
     'function Get-PathParts($value) {',
     "  return @($value -split ';' | Where-Object { $_ -ne '' })",
@@ -263,7 +262,7 @@ export const buildWindowsPathCommand = (binDir: string): { command: string; args
     "  catch { throw 'The PATH ownership journal is not managed by Open-Science.' }",
     '  $beforeIsValid = $null -eq $journal.beforePath -or $journal.beforePath -is [string]',
     "  $expectedAfter = (@(Get-PathParts $journal.beforePath) + $binDir) -join ';'",
-    '  if ($journal.version -ne 1 -or $journal.owner -cne $receiptOwner -or',
+    '  if ($journal.version -ne 1 -or ($journal.owner -cne $receiptOwner -and $journal.owner -cne $legacyReceiptOwner) -or',
     "      $journal.binDir.TrimEnd([char[]]'\\/') -ine $binDir.TrimEnd([char[]]'\\/') -or",
     '      -not $beforeIsValid -or (Get-MatchCount $journal.beforePath) -ne 0 -or',
     '      $journal.afterPath -isnot [string] -or',
@@ -341,6 +340,7 @@ const buildWindowsPathRemovalCommand = (
     `$binDir = ${powershellLiteral(binDir)}`,
     `$journalPath = ${powershellLiteral(journalPath)}`,
     `$receiptOwner = ${powershellLiteral(WINDOWS_PATH_RECEIPT_OWNER)}`,
+    `$legacyReceiptOwner = ${powershellLiteral(LEGACY_WINDOWS_PATH_OWNER)}`,
     `$state = ${powershellLiteral(state)}`,
     'try { $journal = [IO.File]::ReadAllText($journalPath) | ConvertFrom-Json }',
     "catch { throw 'The PATH ownership journal is not managed by Open-Science.' }",
@@ -351,7 +351,7 @@ const buildWindowsPathRemovalCommand = (
     "    $_.TrimEnd([char[]]'\\/') -ieq $normalizedBinDir",
     '  }).Count',
     "  $expectedAfter = (@($beforeParts) + $binDir) -join ';'",
-    'if ($journal.version -ne 1 -or $journal.owner -cne $receiptOwner -or',
+    'if ($journal.version -ne 1 -or ($journal.owner -cne $receiptOwner -and $journal.owner -cne $legacyReceiptOwner) -or',
     "    $journal.binDir.TrimEnd([char[]]'\\/') -ine $binDir.TrimEnd([char[]]'\\/') -or",
     '    -not $beforeIsValid -or $beforeMatchCount -ne 0 -or',
     '    $journal.afterPath -isnot [string] -or',
@@ -489,17 +489,20 @@ const openManagedWindowsPathJournal = async (
   return undefined
 }
 
-const isManagedCliLauncher = (content: string): boolean => {
+export const isManagedCliLauncher = (content: string): boolean => {
   const lines = content.split(/\r?\n/)
   if (lines[0] === '#!/bin/sh') {
     return (
-      lines[1] === `# ${MANAGED_LAUNCHER_HEADER_V1}` ||
+      lines[1] === `# ${MANAGED_LAUNCHER_HEADER}` ||
+      lines[1] === `# ${LEGACY_LAUNCHER_HEADER}` ||
       (lines[1] === LEGACY_POSIX_HEADER && LEGACY_POSIX_BODIES.has(lines[2] ?? ''))
     )
   }
   return (
     lines[0]?.toLowerCase() === '@echo off' &&
-    (lines[1] === `rem ${MANAGED_LAUNCHER_HEADER_V1}` || lines[1] === LEGACY_WINDOWS_HEADER)
+    (lines[1] === `rem ${MANAGED_LAUNCHER_HEADER}` ||
+      lines[1] === `rem ${LEGACY_LAUNCHER_HEADER}` ||
+      lines[1] === LEGACY_WINDOWS_HEADER)
   )
 }
 
@@ -744,14 +747,12 @@ export const uninstallCliLauncher = async (
   return { installed: false, target: plan.target, onPath: false }
 }
 
-// AppImage status is content-aware: a legacy shim can exist while still pointing at an unmounted
-// FUSE path. Other packages report installed only when the existing launcher is app-managed.
+// A receipt proves ownership, not usability: an app rename or move invalidates the executable
+// and resource paths on every platform, including ordinary macOS and Windows installations.
 export const getCliLauncherStatus = async (env: CliLauncherEnv): Promise<CliLauncherStatus> => {
   const plan = planCliLauncher(env)
   const content = await readCliLauncher(plan.target)
-  const installed = isLinuxAppImage(env)
-    ? content === plan.shim
-    : content !== undefined && isManagedCliLauncher(content)
+  const installed = content === plan.shim
   return {
     installed,
     target: plan.target,
@@ -763,16 +764,14 @@ export const getCliLauncherStatus = async (env: CliLauncherEnv): Promise<CliLaun
   }
 }
 
-// Only an existing app-managed AppImage launcher is eligible for automatic migration. Comparing the
-// complete planned content covers the stable AppImage path, mount procedure, and CLI entry behavior.
+// Only existing app-managed launchers are eligible. An absent or user-owned command is untouched.
 export const isCliShimStale = async (env: CliLauncherEnv): Promise<boolean> => {
-  if (!isLinuxAppImage(env)) return false
   const plan = planCliLauncher(env)
   const content = await readCliLauncher(plan.target)
   return content !== undefined && isManagedCliLauncher(content) && content !== plan.shim
 }
 
-// Migrate legacy mount-pinned shims and refresh the stable path after the AppImage file itself moves.
+// Refresh executable/resource paths and ownership markers after an upgrade or application move.
 export const ensureCliLauncherCurrent = async (
   env: CliLauncherEnv,
   runCommand: CommandRunner = defaultRunCommand

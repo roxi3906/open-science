@@ -23,9 +23,9 @@ class TestEVirtTable {
   constructor() {
     const harness = (
       globalThis as typeof globalThis & {
-        __openScienceTestTableHarness?: TestTableHarness
+        __appTestTableHarness?: TestTableHarness
       }
-    ).__openScienceTestTableHarness
+    ).__appTestTableHarness
     harness?.instances.push({
       ctx: this.ctx,
       emit: (event) => this.handlers.get(event)?.(),

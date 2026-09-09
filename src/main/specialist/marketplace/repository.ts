@@ -1,4 +1,9 @@
 import { join } from 'node:path'
+import {
+  CURRENT_OFFICIAL_SOURCE_ID,
+  LEGACY_OFFICIAL_SOURCE_ID,
+  currentMarketplaceSourceId
+} from '../../brand-migration/marketplace'
 import { MARKETPLACE_DOCUMENT_INTEGRITY_CODE } from '../../../shared/specialist-marketplace'
 
 import {
@@ -356,6 +361,49 @@ export class MarketplaceRepository {
       return sanitizeDocument(document)
     })
     return result.status === 'found' ? result.value : emptyDocument()
+  }
+
+  async migrateBrandIdentity(): Promise<void> {
+    await this.mutate((document) => {
+      if (
+        document.sources.some((source) =>
+          [CURRENT_OFFICIAL_SOURCE_ID, LEGACY_OFFICIAL_SOURCE_ID].includes(source.id)
+        )
+      )
+        throw new Error('A user Marketplace source conflicts with the reserved official identity.')
+      const current = <T extends { sourceId: string }>(entry: T): T => ({
+        ...entry,
+        sourceId: currentMarketplaceSourceId(entry.sourceId)
+      })
+      return {
+        ...document,
+        installations: document.installations.map(current),
+        pendingInstallations: document.pendingInstallations.map((entry) => ({
+          ...entry,
+          provenance: current(entry.provenance)
+        })),
+        // Cache payloads remain byte-exact signed documents. A current cache wins if both names exist.
+        rootCaches: document.rootCaches
+          .filter(
+            (entry) =>
+              entry.sourceId !== LEGACY_OFFICIAL_SOURCE_ID ||
+              !document.rootCaches.some((other) => other.sourceId === CURRENT_OFFICIAL_SOURCE_ID)
+          )
+          .map(current),
+        releaseCaches: document.releaseCaches
+          .filter(
+            (entry) =>
+              entry.sourceId !== LEGACY_OFFICIAL_SOURCE_ID ||
+              !document.releaseCaches.some(
+                (other) =>
+                  other.sourceId === CURRENT_OFFICIAL_SOURCE_ID &&
+                  other.path === entry.path &&
+                  other.digest === entry.digest
+              )
+          )
+          .map(current)
+      }
+    })
   }
 
   async addSource(source: StoredMarketplaceSource): Promise<void> {

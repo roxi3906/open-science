@@ -461,7 +461,7 @@ describe.skipIf(process.platform === 'win32' || !python3)('managed Python kernel
     expect(discovered.status, discovered.stderr).toBe(0)
     const userSite = discovered.stdout.trim()
     await mkdir(userSite, { recursive: true })
-    await writeFile(join(userSite, 'open_science_managed_sentinel.py'), 'VALUE = "private"\n')
+    await writeFile(join(userSite, 'app_managed_sentinel.py'), 'VALUE = "private"\n')
     await stubEnvPython(request.runtimeRoot, DEFAULT_PY_ENV)
     const previousHome = process.env.HOME
     process.env.HOME = hostHome
@@ -472,10 +472,10 @@ describe.skipIf(process.platform === 'win32' || !python3)('managed Python kernel
     try {
       const result = await executor.execute({
         ...request,
-        code: 'import open_science_managed_sentinel'
+        code: 'import app_managed_sentinel'
       })
       expect(result.status).toBe('failed')
-      expect(JSON.stringify(result)).toMatch(/open_science_managed_sentinel/u)
+      expect(JSON.stringify(result)).toMatch(/app_managed_sentinel/u)
     } finally {
       await executor.shutdown()
       if (previousHome === undefined) delete process.env.HOME
@@ -628,7 +628,7 @@ gate('NotebookKernelExecutor (fake loop)', () => {
     const executor = makeExecutor()
     try {
       const result = await executor.execute({ ...baseRequest(cwdDir), code: 'hello' })
-      expect(result.status).toBe('completed')
+      expect(result.status, JSON.stringify(result)).toBe('completed')
       expect(result.kernelDispatched).toBe(true)
       expect(result.stdout).toBe('hello')
       // The loop reports its resolved cwd (macOS maps /var -> /private/var).
@@ -1022,7 +1022,7 @@ gate('NotebookKernelExecutor (fake loop)', () => {
       expect(discovered.status, discovered.stderr).toBe(0)
       const userSite = discovered.stdout.trim()
       await mkdir(userSite, { recursive: true })
-      await writeFile(join(userSite, 'open_science_external_sentinel.py'), 'VALUE = "available"\n')
+      await writeFile(join(userSite, 'app_external_sentinel.py'), 'VALUE = "available"\n')
       const previousHome = process.env.HOME
       process.env.HOME = hostHome
       const executor = new NotebookKernelExecutor({
@@ -1033,7 +1033,7 @@ gate('NotebookKernelExecutor (fake loop)', () => {
         await expect(
           executor.execute({
             ...baseRequest(cwdDir),
-            code: 'import open_science_external_sentinel; print(open_science_external_sentinel.VALUE)',
+            code: 'import app_external_sentinel; print(app_external_sentinel.VALUE)',
             resolvedInterpreter: { command: python3 as string }
           })
         ).resolves.toMatchObject({ status: 'completed', stdout: 'available\n' })
@@ -1866,7 +1866,7 @@ posixGate('NotebookKernelExecutor (real Python loop mutation policy)', () => {
         id,
         language: 'python',
         source: [
-          'import open_science_definitely_missing_dependency',
+          'import app_definitely_missing_dependency',
           'def dependency_export():',
           '    return 42'
         ].join('\n'),
@@ -1894,7 +1894,7 @@ posixGate('NotebookKernelExecutor (real Python loop mutation policy)', () => {
 
       expect(result).toMatchObject({ status: 'failed', kernelDispatched: false })
       expect(result.traceback).toContain(
-        'Python ModuleNotFoundError: No module named "open_science_definitely_missing_dependency".'
+        'Python ModuleNotFoundError: No module named "app_definitely_missing_dependency".'
       )
       expect(result.traceback).toContain('inspect_packages')
       expect(result.traceback).toContain('manage_packages')
@@ -2538,7 +2538,7 @@ describe.skipIf(!rExecutable || !rScriptExecutable)('NotebookKernelExecutor (rea
       const sourcePath = join(__dirname, '../../../resources/notebook/r_loop.R')
       const loopPath = join(cwdDir, 'r_loop.R')
       const frameDecoded = 'code <- if (n > 0L) rawToChar(acc, multiple = FALSE) else ""'
-      const marker = '__OPEN_SCIENCE_R_FRAME_DECODED__'
+      const marker = '__APP_R_FRAME_DECODED__'
       const loop = await readFile(sourcePath, 'utf8')
       expect(loop).toContain(frameDecoded)
       await writeFile(

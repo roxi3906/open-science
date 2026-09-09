@@ -1,3 +1,4 @@
+import { migrateLegacyToolName } from '../../shared/brand-migration'
 import { createLogger } from '../logger'
 import type { OfficialVendorId } from '../../shared/provider-registry'
 import type {
@@ -157,13 +158,17 @@ const chatToolName = (
   tools: readonly ResponsesBridgeNamespacedTool[]
 ): string => {
   if (typeof item.namespace !== 'string' || item.namespace.length === 0) {
-    return String(item.name ?? '')
+    return migrateLegacyToolName(String(item.name ?? ''))
   }
 
   const match = tools.find(
-    (tool) => tool.namespace === item.namespace && tool.name === String(item.name ?? '')
+    (tool) =>
+      tool.namespace === migrateLegacyToolName(String(item.namespace)) &&
+      tool.name === String(item.name ?? '')
   )
-  return match ? namespacedToolAlias(match) : `${item.namespace}__${String(item.name ?? '')}`
+  return match
+    ? namespacedToolAlias(match)
+    : migrateLegacyToolName(`${item.namespace}__${String(item.name ?? '')}`)
 }
 
 export const inputToMessages = (

@@ -132,14 +132,14 @@ describe('Side chat restricted backend profile', () => {
       default_agent: 'open-science-side-chat',
       permission: {
         '*': 'deny',
-        open_science_host_message_send_message: 'allow'
+        app_host_message_send_message: 'allow'
       },
       agent: {
         'open-science-side-chat': {
           mode: 'primary',
           permission: {
             '*': 'deny',
-            open_science_host_message_send_message: 'allow'
+            app_host_message_send_message: 'allow'
           }
         }
       }

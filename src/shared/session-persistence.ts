@@ -1,3 +1,4 @@
+import { frameworkAppServerName, legacyAppServerName } from './brand-migration'
 import { z } from 'zod'
 
 import {
@@ -3313,7 +3314,11 @@ const isPersistedNotebookRunActivity = (activity: PersistedToolActivity): boolea
     }
 
     for (const tool of NOTEBOOK_RUN_TOOL_SUFFIXES) {
-      if (name === `open-science-notebook_${tool}` || name === `open_science_notebook_${tool}`) {
+      if (
+        name === `open-science-notebook_${tool}` ||
+        name === `${frameworkAppServerName('open-science-notebook')}_${tool}` ||
+        name === `${legacyAppServerName('open-science-notebook')}_${tool}`
+      ) {
         return true
       }
     }

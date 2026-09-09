@@ -341,7 +341,7 @@ const buildFreshReplayCode = (source: ReconstructionSource): string | undefined 
       `__os_exports = ${JSON.stringify(helper.exports)}`,
       '__os_missing = [name for name in __os_exports if name not in __os_private or not callable(__os_private[name])]',
       'if __os_missing:',
-      '    raise RuntimeError("OPEN_SCIENCE_HELPER_MISSING_EXPORT")',
+      '    raise RuntimeError("Open-Science:HELPER_MISSING_EXPORT")',
       'globals().update({name: __os_private[name] for name in __os_exports})',
       'del __os_helper_source, __os_dependency_names, __os_private, __os_exports, __os_missing'
     ].join('\n')

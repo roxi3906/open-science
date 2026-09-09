@@ -24,6 +24,55 @@ afterEach(() => {
 })
 
 describe('native Responses compatibility', () => {
+  it('replays released namespaced and flat tool calls against the current tool identity', () => {
+    const { request } = flattenNativeResponsesRequest({
+      tools: [
+        {
+          type: 'namespace',
+          name: 'mcp__app_notebook',
+          tools: [
+            { type: 'function', name: 'run_cell', parameters: { type: 'object', properties: {} } }
+          ]
+        }
+      ],
+      tool_choice: { type: 'function', namespace: 'mcp__open_science_notebook', name: 'run_cell' },
+      input: [
+        {
+          type: 'function_call',
+          call_id: 'old-1',
+          namespace: 'mcp__open_science_notebook',
+          name: 'run_cell',
+          arguments: '{}'
+        },
+        {
+          type: 'function_call',
+          call_id: 'old-2',
+          name: 'mcp__open_science_notebook__run_cell',
+          arguments: '{}'
+        },
+        { type: 'function_call_output', call_id: 'old-1', output: 'open_science user data' },
+        { type: 'message', role: 'user', content: 'mcp__open_science_notebook__run_cell' }
+      ]
+    })
+    expect(request.tool_choice).toMatchObject({ name: 'mcp__app_notebook__run_cell' })
+    expect(request.input).toEqual([
+      {
+        type: 'function_call',
+        call_id: 'old-1',
+        name: 'mcp__app_notebook__run_cell',
+        arguments: '{}'
+      },
+      {
+        type: 'function_call',
+        call_id: 'old-2',
+        name: 'mcp__app_notebook__run_cell',
+        arguments: '{}'
+      },
+      { type: 'function_call_output', call_id: 'old-1', output: 'open_science user data' },
+      { type: 'message', role: 'user', content: 'mcp__open_science_notebook__run_cell' }
+    ])
+  })
+
   it.each([
     ['JSON', 'application/json', JSON.stringify({ id: 'response', output: [] })],
     ['binary', 'application/octet-stream', 'binary']
@@ -329,7 +378,7 @@ describe('native Responses compatibility', () => {
       tools: [
         {
           type: 'namespace',
-          name: 'mcp__open_science_notebook',
+          name: 'mcp__app_notebook',
           description: 'Open-Science notebook tools.',
           tools: [
             {
@@ -350,13 +399,13 @@ describe('native Responses compatibility', () => {
       ],
       tool_choice: {
         type: 'function',
-        namespace: 'mcp__open_science_notebook',
+        namespace: 'mcp__app_notebook',
         name: 'repl_execute'
       },
       input: [
         {
           type: 'function_call',
-          namespace: 'mcp__open_science_notebook',
+          namespace: 'mcp__app_notebook',
           name: 'repl_execute',
           call_id: 'call-1',
           arguments: '{}'
@@ -368,7 +417,7 @@ describe('native Responses compatibility', () => {
     expect(request.tools).toEqual([
       {
         type: 'function',
-        name: 'mcp__open_science_notebook__repl_execute',
+        name: 'mcp__app_notebook__repl_execute',
         description: 'Open-Science notebook tools.\n\nRun control-plane JavaScript.',
         parameters: { type: 'object' },
         strict: false
@@ -382,15 +431,15 @@ describe('native Responses compatibility', () => {
     ])
     expect(request.tool_choice).toEqual({
       type: 'function',
-      name: 'mcp__open_science_notebook__repl_execute'
+      name: 'mcp__app_notebook__repl_execute'
     })
     expect(request.input[0]).toMatchObject({
       type: 'function_call',
-      name: 'mcp__open_science_notebook__repl_execute'
+      name: 'mcp__app_notebook__repl_execute'
     })
     expect(request.input[0]).not.toHaveProperty('namespace')
-    expect(aliases.get('mcp__open_science_notebook__repl_execute')).toEqual({
-      namespace: 'mcp__open_science_notebook',
+    expect(aliases.get('mcp__app_notebook__repl_execute')).toEqual({
+      namespace: 'mcp__app_notebook',
       name: 'repl_execute'
     })
   })
@@ -430,10 +479,7 @@ describe('native Responses compatibility', () => {
 
   it('restores namespace identity in streamed and completed response items', () => {
     const aliases = new Map([
-      [
-        'mcp__open_science_notebook__repl_execute',
-        { namespace: 'mcp__open_science_notebook', name: 'repl_execute' }
-      ]
+      ['mcp__app_notebook__repl_execute', { namespace: 'mcp__app_notebook', name: 'repl_execute' }]
     ])
 
     expect(
@@ -442,7 +488,7 @@ describe('native Responses compatibility', () => {
           type: 'response.output_item.done',
           item: {
             type: 'function_call',
-            name: 'mcp__open_science_notebook__repl_execute',
+            name: 'mcp__app_notebook__repl_execute',
             arguments: '{}',
             call_id: 'call-1'
           }
@@ -452,7 +498,7 @@ describe('native Responses compatibility', () => {
     ).toMatchObject({
       item: {
         type: 'function_call',
-        namespace: 'mcp__open_science_notebook',
+        namespace: 'mcp__app_notebook',
         name: 'repl_execute'
       }
     })
@@ -464,7 +510,7 @@ describe('native Responses compatibility', () => {
           output: [
             {
               type: 'function_call',
-              name: 'mcp__open_science_notebook__repl_execute',
+              name: 'mcp__app_notebook__repl_execute',
               arguments: '{}',
               call_id: 'call-1'
             }
@@ -475,172 +521,174 @@ describe('native Responses compatibility', () => {
     ).toMatchObject({
       output: [
         {
-          namespace: 'mcp__open_science_notebook',
+          namespace: 'mcp__app_notebook',
           name: 'repl_execute'
         }
       ]
     })
   })
 
-  it('promotes Artifact guidance when a Notebook run returns a generated file', async () => {
-    const privateAssistantText = 'I will export the private result as an artifact:'
-    let upstreamRequest: Record<string, unknown> | undefined
-    const fetchImpl = vi.fn(async (_url: unknown, init?: RequestInit) => {
-      const body = JSON.parse(String(init?.body)) as Record<string, unknown>
-      upstreamRequest = body
-      const artifactRequired =
-        typeof body.instructions === 'string' &&
-        body.instructions.includes('<open_science_artifact_instructions>')
-      const output = artifactRequired
-        ? {
-            id: 'artifact-call-item-1',
-            type: 'function_call',
-            name: 'mcp__open_science_artifacts__write_artifact_file',
-            call_id: 'artifact-call-1',
-            arguments: JSON.stringify({
-              filename: 'private.png',
-              mimeType: 'image/png',
-              source: { kind: 'localPath', path: 'data/private.png' },
-              producerRunId: 'notebook-run-1'
-            })
-          }
-        : {
-            id: 'message-1',
-            type: 'message',
-            role: 'assistant',
-            content: [{ type: 'output_text', text: privateAssistantText }]
-          }
-      const upstream = [
-        { type: 'response.output_item.done', output_index: 0, item: output },
-        {
-          type: 'response.completed',
-          response: {
-            id: 'response-1',
-            status: 'completed',
-            output: [output]
-          }
-        },
-        '[DONE]'
-      ]
-        .map((event) => `data: ${typeof event === 'string' ? event : JSON.stringify(event)}\n\n`)
-        .join('')
-      return new Response(upstream, {
-        status: 200,
-        headers: { 'content-type': 'text/event-stream' }
-      })
-    })
-    const proxy = new NativeResponsesCompatibilityProxy(
-      { baseUrl: 'https://api.example/v1', model: 'model-a' },
-      fetchImpl
-    )
-    const connection = await proxy.start()
-
-    try {
-      const response = await fetch(`${connection.baseUrl}/responses`, {
-        method: 'POST',
-        headers: {
-          authorization: `Bearer ${connection.token}`,
-          'content-type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'model-a',
-          stream: true,
-          instructions: 'base provider instructions',
-          input: [
-            {
-              type: 'message',
-              role: 'developer',
-              content:
-                '<open_science_artifact_instructions>private guidance</open_science_artifact_instructions>'
-            },
-            {
+  it.each(['open-science-artifact-instructions', 'open_science_artifact_instructions'])(
+    'promotes Artifact guidance from %s when a Notebook run returns a generated file',
+    async (tag) => {
+      const privateAssistantText = 'I will export the private result as an artifact:'
+      let upstreamRequest: Record<string, unknown> | undefined
+      const fetchImpl = vi.fn(async (_url: unknown, init?: RequestInit) => {
+        const body = JSON.parse(String(init?.body)) as Record<string, unknown>
+        upstreamRequest = body
+        const artifactRequired =
+          typeof body.instructions === 'string' &&
+          body.instructions.includes('<open-science-artifact-instructions>')
+        const output = artifactRequired
+          ? {
+              id: 'artifact-call-item-1',
               type: 'function_call',
-              namespace: 'mcp__open_science_notebook',
-              name: 'notebook_execute',
-              call_id: 'notebook-call-1',
-              arguments: '{}'
-            },
-            {
-              type: 'function_call_output',
-              call_id: 'notebook-call-1',
-              output:
-                '{"runId":"notebook-run-1","workingFiles":[{"relativePath":"data/private.png"}]}'
+              name: 'mcp__app_artifacts__write_artifact_file',
+              call_id: 'artifact-call-1',
+              arguments: JSON.stringify({
+                filename: 'private.png',
+                mimeType: 'image/png',
+                source: { kind: 'localPath', path: 'data/private.png' },
+                producerRunId: 'notebook-run-1'
+              })
             }
-          ],
-          tools: [
-            {
-              type: 'namespace',
-              name: 'mcp__open_science_notebook',
-              tools: [
-                {
-                  type: 'function',
-                  name: 'notebook_execute',
-                  parameters: { type: 'object' }
-                }
-              ]
-            },
-            {
-              type: 'namespace',
-              name: 'mcp__open_science_artifacts',
-              tools: [
-                {
-                  type: 'function',
-                  name: 'write_artifact_file',
-                  parameters: { type: 'object' }
-                }
-              ]
+          : {
+              id: 'message-1',
+              type: 'message',
+              role: 'assistant',
+              content: [{ type: 'output_text', text: privateAssistantText }]
             }
-          ]
+        const upstream = [
+          { type: 'response.output_item.done', output_index: 0, item: output },
+          {
+            type: 'response.completed',
+            response: {
+              id: 'response-1',
+              status: 'completed',
+              output: [output]
+            }
+          },
+          '[DONE]'
+        ]
+          .map((event) => `data: ${typeof event === 'string' ? event : JSON.stringify(event)}\n\n`)
+          .join('')
+        return new Response(upstream, {
+          status: 200,
+          headers: { 'content-type': 'text/event-stream' }
         })
       })
+      const proxy = new NativeResponsesCompatibilityProxy(
+        { baseUrl: 'https://api.example/v1', model: 'model-a' },
+        fetchImpl
+      )
+      const connection = await proxy.start()
 
-      const responseBody = await response.text()
-      expect(response.ok, responseBody).toBe(true)
-      expect(responseBody).toContain('response.completed')
-      expect(responseBody).not.toContain(privateAssistantText)
-      expect(responseBody).toContain('write_artifact_file')
-      expect(upstreamRequest?.instructions).toContain('base provider instructions')
-      expect(upstreamRequest?.instructions).toContain(
-        '<open_science_artifact_instructions>private guidance</open_science_artifact_instructions>'
-      )
-      expect(JSON.stringify(upstreamRequest?.input)).not.toContain(
-        '<open_science_artifact_instructions>'
-      )
-      const requestLog = logSpies.info.mock.calls.find(
-        ([message]) => message === 'native Responses compatibility request'
-      )
-      const streamLog = logSpies.info.mock.calls.find(
-        ([message]) => message === 'native Responses compatibility stream completed'
-      )
-      expect(requestLog?.[1]).toMatchObject({
-        topLevelArtifactInstructionPresent: true,
-        developerArtifactInstructionPresent: false,
-        artifactInstructionPresent: true,
-        artifactToolPresent: true,
-        functionCallOutputHistoryCount: 1
-      })
-      expect(streamLog?.[1]).toMatchObject({
-        requestId: requestLog?.[1]?.requestId,
-        terminalEventType: 'response.completed',
-        terminalStatus: 'completed',
-        terminalOutputItemCount: 1,
-        terminalMessageCount: 0,
-        observedFunctionCallCount: 1,
-        observedArtifactFunctionCallCount: 1
-      })
-      expect(
-        JSON.stringify(Object.values(logSpies).flatMap((spy) => spy.mock.calls))
-      ).not.toContain(privateAssistantText)
-    } finally {
-      await proxy.close()
+      try {
+        const response = await fetch(`${connection.baseUrl}/responses`, {
+          method: 'POST',
+          headers: {
+            authorization: `Bearer ${connection.token}`,
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: 'model-a',
+            stream: true,
+            instructions: 'base provider instructions',
+            input: [
+              {
+                type: 'message',
+                role: 'developer',
+                content: `<${tag}>private guidance</${tag}>`
+              },
+              {
+                type: 'function_call',
+                namespace: 'mcp__app_notebook',
+                name: 'notebook_execute',
+                call_id: 'notebook-call-1',
+                arguments: '{}'
+              },
+              {
+                type: 'function_call_output',
+                call_id: 'notebook-call-1',
+                output:
+                  '{"runId":"notebook-run-1","workingFiles":[{"relativePath":"data/private.png"}]}'
+              }
+            ],
+            tools: [
+              {
+                type: 'namespace',
+                name: 'mcp__app_notebook',
+                tools: [
+                  {
+                    type: 'function',
+                    name: 'notebook_execute',
+                    parameters: { type: 'object' }
+                  }
+                ]
+              },
+              {
+                type: 'namespace',
+                name: 'mcp__app_artifacts',
+                tools: [
+                  {
+                    type: 'function',
+                    name: 'write_artifact_file',
+                    parameters: { type: 'object' }
+                  }
+                ]
+              }
+            ]
+          })
+        })
+
+        const responseBody = await response.text()
+        expect(response.ok, responseBody).toBe(true)
+        expect(responseBody).toContain('response.completed')
+        expect(responseBody).not.toContain(privateAssistantText)
+        expect(responseBody).toContain('write_artifact_file')
+        expect(upstreamRequest?.instructions).toContain('base provider instructions')
+        expect(upstreamRequest?.instructions).toContain(
+          '<open-science-artifact-instructions>private guidance</open-science-artifact-instructions>'
+        )
+        expect(JSON.stringify(upstreamRequest?.input)).not.toContain(
+          '<open-science-artifact-instructions>'
+        )
+        const requestLog = logSpies.info.mock.calls.find(
+          ([message]) => message === 'native Responses compatibility request'
+        )
+        const streamLog = logSpies.info.mock.calls.find(
+          ([message]) => message === 'native Responses compatibility stream completed'
+        )
+        expect(requestLog?.[1]).toMatchObject({
+          topLevelArtifactInstructionPresent: true,
+          developerArtifactInstructionPresent: false,
+          artifactInstructionPresent: true,
+          artifactToolPresent: true,
+          functionCallOutputHistoryCount: 1
+        })
+        expect(streamLog?.[1]).toMatchObject({
+          requestId: requestLog?.[1]?.requestId,
+          terminalEventType: 'response.completed',
+          terminalStatus: 'completed',
+          terminalOutputItemCount: 1,
+          terminalMessageCount: 0,
+          observedFunctionCallCount: 1,
+          observedArtifactFunctionCallCount: 1
+        })
+        expect(
+          JSON.stringify(Object.values(logSpies).flatMap((spy) => spy.mock.calls))
+        ).not.toContain(privateAssistantText)
+      } finally {
+        await proxy.close()
+      }
     }
-  })
+  )
 
   it('counts an Artifact call emitted before a sparse terminal event', async () => {
     const artifactCall = {
       id: 'artifact-call-item-1',
       type: 'function_call',
-      name: 'mcp__open_science_artifacts__write_artifact_file',
+      name: 'mcp__app_artifacts__write_artifact_file',
       call_id: 'artifact-call-1',
       arguments: '{}'
     }
@@ -685,7 +733,7 @@ describe('native Responses compatibility', () => {
           tools: [
             {
               type: 'namespace',
-              name: 'mcp__open_science_artifacts',
+              name: 'mcp__app_artifacts',
               tools: [
                 {
                   type: 'function',
@@ -1164,7 +1212,7 @@ describe('native Responses compatibility', () => {
         reviewerScope: {
           namespacedTools: [
             {
-              namespace: 'mcp__open_science_reviewer',
+              namespace: 'mcp__app_reviewer',
               name: 'submit_findings',
               description: 'Submit review findings.',
               parameters: { type: 'object' }
@@ -1192,7 +1240,7 @@ describe('native Responses compatibility', () => {
             { type: 'function', name: 'shell_command', parameters: { type: 'object' } },
             {
               type: 'namespace',
-              name: 'mcp__open_science_notebook',
+              name: 'mcp__app_notebook',
               tools: [{ type: 'function', name: 'repl_execute', parameters: { type: 'object' } }]
             }
           ]
@@ -1206,7 +1254,7 @@ describe('native Responses compatibility', () => {
         tools: [
           {
             type: 'function',
-            name: 'mcp__open_science_reviewer__submit_findings',
+            name: 'mcp__app_reviewer__submit_findings',
             description: 'Submit review findings.',
             parameters: { type: 'object' }
           }
@@ -1250,7 +1298,7 @@ describe('native Responses compatibility', () => {
             { type: 'function', name: 'shell_command', parameters: { type: 'object' } },
             {
               type: 'namespace',
-              name: 'mcp__open_science_notebook',
+              name: 'mcp__app_notebook',
               tools: [{ type: 'function', name: 'repl_execute', parameters: { type: 'object' } }]
             }
           ],
@@ -1281,7 +1329,7 @@ describe('native Responses compatibility', () => {
     try {
       proxy.registerHostMessageSession('side-session', [
         {
-          namespace: 'mcp__open_science_host_message',
+          namespace: 'mcp__app_host_message',
           name: 'send_message',
           parameters: { type: 'object' }
         }
@@ -1306,7 +1354,7 @@ describe('native Responses compatibility', () => {
         tools: [
           {
             type: 'function',
-            name: 'mcp__open_science_host_message__send_message'
+            name: 'mcp__app_host_message__send_message'
           }
         ]
       })
@@ -1348,7 +1396,7 @@ describe('native Responses compatibility', () => {
         'expected-side-session',
         [
           {
-            namespace: 'mcp__open_science_host_message',
+            namespace: 'mcp__app_host_message',
             name: 'send_message',
             parameters: { type: 'object' }
           }

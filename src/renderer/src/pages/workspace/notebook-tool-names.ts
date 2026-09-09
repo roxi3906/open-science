@@ -1,3 +1,8 @@
+import {
+  canonicalMigratedAppServerName,
+  frameworkAppServerName,
+  legacyAppServerName
+} from '../../../../shared/brand-migration'
 // Single source of truth for identifying the Open-Science notebook MCP server's kernel-run tools.
 // Both the transcript (workspace-tool-activity-details) and the permission dialog
 // (PermissionApprovalControls) must agree on which tools carry previewable code, so the suffix
@@ -23,7 +28,7 @@ const NOTEBOOK_MEMORY_TOOL_SUFFIXES = [
 ] as const
 
 // The notebook MCP server segment, hyphenated. The responses bridge sanitizes it to
-// open_science_notebook; we normalize `_`→`-` before the exact comparison so both forms match.
+// app_notebook; we normalize `_`→`-` before the exact comparison so both forms match.
 const NOTEBOOK_SERVER_SEGMENT = 'open-science-notebook'
 
 // Returns the matched kernel-run suffix when a tool name is one of the notebook server's run tools,
@@ -31,7 +36,7 @@ const NOTEBOOK_SERVER_SEGMENT = 'open-science-notebook'
 // bridge), <server>.<tool> (others), or the broker-projected <server>/<tool> identity, so only
 // `__`, `.`, and `/` are treated as segment delimiters —
 // single underscores occur inside both the tool suffix (notebook_execute) and the sanitized server
-// name (open_science_notebook) and must not split. The segment immediately before the suffix must
+// name (app_notebook) and must not split. The segment immediately before the suffix must
 // equal the notebook server exactly, so a lookalike (open-science-notebook-staging) or an unrelated
 // server that merely contains the phrase is rejected, and a bare leaf name (no server segment) too.
 const matchNotebookTool = (
@@ -48,7 +53,10 @@ const matchNotebookTool = (
   if (segments.length >= 2) {
     const suffix = segments[segments.length - 1]
     if (suffixes.some((known) => known === suffix)) {
-      const server = segments[segments.length - 2].replace(/_/gu, '-')
+      const server = canonicalMigratedAppServerName(segments[segments.length - 2]).replace(
+        /_/gu,
+        '-'
+      )
       if (server === NOTEBOOK_SERVER_SEGMENT) return suffix
     }
   }
@@ -60,7 +68,8 @@ const matchNotebookTool = (
   for (const suffix of suffixes) {
     if (
       name === `${NOTEBOOK_SERVER_SEGMENT}_${suffix}` ||
-      name === `open_science_notebook_${suffix}`
+      name === `${frameworkAppServerName(NOTEBOOK_SERVER_SEGMENT)}_${suffix}` ||
+      name === `${legacyAppServerName(NOTEBOOK_SERVER_SEGMENT)}_${suffix}`
     ) {
       return suffix
     }
@@ -75,7 +84,11 @@ const matchExactNotebookTool = (
   suffixes: readonly string[]
 ): string | undefined => {
   const name = toolName ?? ''
-  const serverNames = [NOTEBOOK_SERVER_SEGMENT, 'open_science_notebook'] as const
+  const serverNames = [
+    NOTEBOOK_SERVER_SEGMENT,
+    frameworkAppServerName(NOTEBOOK_SERVER_SEGMENT),
+    legacyAppServerName(NOTEBOOK_SERVER_SEGMENT)!
+  ] as const
 
   for (const suffix of suffixes) {
     for (const server of serverNames) {

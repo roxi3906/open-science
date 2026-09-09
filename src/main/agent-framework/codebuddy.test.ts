@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 
 import {
-  OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION,
+  APP_SKILL_RUNTIME_SESSION_OPTION,
   SKILL_RUNTIME_ALLOWED_NAMES_ENV,
   SKILL_RUNTIME_ROOT_ENV
 } from '../skills/runtime-mcp-server'
@@ -334,7 +334,7 @@ describe('codebuddy framework', () => {
       systemPromptAppends: ['Load the matching `mcp-*` skill before the first `host.mcp` call.'],
       skillRuntimeScope: ['mcp-pubmed'],
       sessionOptions: {
-        [OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION]: {
+        [APP_SKILL_RUNTIME_SESSION_OPTION]: {
           command: '/app/electron',
           entryPath: '/app/main.js',
           root: '/app-data/codebuddy/skill-runtime'

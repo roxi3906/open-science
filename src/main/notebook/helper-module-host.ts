@@ -211,7 +211,7 @@ const injectionCode = (
     `__os_available = {**__os_target, **__os_staged}`,
     `__os_dependency_missing = [name for name in __os_dependency_names if name not in __os_available]`,
     `if __os_dependency_missing:`,
-    `    raise RuntimeError(${JSON.stringify(`OPEN_SCIENCE_HELPER_DEPENDENCY_EXPORT_MISSING:${helper.id}`)})`,
+    `    raise RuntimeError(${JSON.stringify(`Open-Science:HELPER_DEPENDENCY_EXPORT_MISSING:${helper.id}`)})`,
     `__os_private = {"__builtins__": __builtins__, **{name: __os_available[name] for name in __os_dependency_names}}`,
     `try:`,
     `    exec(compile(${JSON.stringify(helper.source)}, ${JSON.stringify(filename)}, "exec"), __os_private, __os_private)`,
@@ -227,11 +227,11 @@ const injectionCode = (
     `        __os_safe_module = bool(__os_module_parts) and all(part and part[0] in (__os_ascii_letters + "_") and all(character in __os_ascii_identifier for character in part[1:]) for part in __os_module_parts)`,
     `        if __os_safe_module:`,
     `            __os_safe_detail += ":MISSING_MODULE:" + __os_missing_module`,
-    `    raise RuntimeError(${JSON.stringify(`OPEN_SCIENCE_HELPER_INITIALIZATION_FAILED:${helper.id}`)} + __os_safe_detail) from None`,
+    `    raise RuntimeError(${JSON.stringify(`Open-Science:HELPER_INITIALIZATION_FAILED:${helper.id}`)} + __os_safe_detail) from None`,
     `__os_names = ${JSON.stringify([...helper.exports])}`,
     `__os_missing = [name for name in __os_names if name not in __os_private or not callable(__os_private[name])]`,
     `if __os_missing:`,
-    `    raise RuntimeError(${JSON.stringify(`OPEN_SCIENCE_HELPER_MISSING_EXPORT:${helper.id}`)})`,
+    `    raise RuntimeError(${JSON.stringify(`Open-Science:HELPER_MISSING_EXPORT:${helper.id}`)})`,
     `__os_staged.update({name: __os_private[name] for name in __os_names})`
   ].join('\n')
 
@@ -253,10 +253,10 @@ const notebookHelperInitializationCode = (
     `__os_export_owners = ${JSON.stringify(exportOwners)}`,
     `__os_duplicate_exports = ${JSON.stringify(duplicateExports)}`,
     `if __os_duplicate_exports:`,
-    `    raise RuntimeError("OPEN_SCIENCE_HELPER_EXPORT_COLLISION:" + __os_export_owners[__os_duplicate_exports[0]])`,
+    `    raise RuntimeError("Open-Science:HELPER_EXPORT_COLLISION:" + __os_export_owners[__os_duplicate_exports[0]])`,
     `__os_collisions = [name for name in __os_export_owners if name in __os_target]`,
     `if __os_collisions:`,
-    `    raise RuntimeError("OPEN_SCIENCE_HELPER_EXPORT_COLLISION:" + __os_export_owners[__os_collisions[0]])`,
+    `    raise RuntimeError("Open-Science:HELPER_EXPORT_COLLISION:" + __os_export_owners[__os_collisions[0]])`,
     ...helpers.map(({ code }) => code),
     `__os_target.update(__os_staged)`
   ].join('\n')

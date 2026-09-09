@@ -203,7 +203,7 @@ describe('RuntimeOperationJournal', () => {
     const journal = new RuntimeOperationJournal(path)
     await mkdir(dirname(path), { recursive: true })
     const publication = {
-      workingRoot: 'D:\\OpenScienceTmp\\m-test',
+      workingRoot: 'D:\\Open-ScienceTmp\\m-test',
       authorizations: [{ file: 'python-1.conda', algorithm: 'sha256', digest: 'a'.repeat(64) }]
     }
 

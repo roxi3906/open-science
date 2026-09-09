@@ -1010,10 +1010,10 @@ describe('AcpProviderSessionResumer', () => {
 
     expect(harness.sessionSetupAppends.at(-1)?.join('\n')).toContain('Always cite DOIs.')
     expect(harness.sessionSetupAppends.at(-1)?.join('\n')).toContain(
-      '<open_science_project_agent_context>'
+      '<open-science-project-agent-context>'
     )
     expect(harness.sessionSetupAppends.at(-1)?.join('\n')).toContain(
-      '</open_science_project_agent_context>'
+      '</open-science-project-agent-context>'
     )
     expect(
       harness.registry.lookup('stable-app-session')?.aggregate.snapshot().sessionSetupPromptPrefix
@@ -1040,7 +1040,7 @@ describe('AcpProviderSessionResumer', () => {
     async (route, initialBackend) => {
       const specialistIdentity = {
         append: '',
-        prefix: '<open_science_specialist_identity>Specialist</open_science_specialist_identity>'
+        prefix: '<open-science-specialist-identity>Specialist</open-science-specialist-identity>'
       }
       const continuityToken = route === 'codex-bridge' ? 'bridge-continuity' : undefined
       const harness = createHarness({
@@ -1082,7 +1082,7 @@ describe('AcpProviderSessionResumer', () => {
 
   it('restores the Claude Specialist append during compatible provider resume', async () => {
     const specialistIdentity = {
-      append: '<open_science_specialist_identity>Specialist</open_science_specialist_identity>',
+      append: '<open-science-specialist-identity>Specialist</open-science-specialist-identity>',
       prefix: ''
     }
     const harness = createHarness({ specialistIdentity })

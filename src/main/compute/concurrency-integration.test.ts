@@ -136,7 +136,7 @@ describe('ConcurrencyManager integration with ComputeService', () => {
       command: 'echo resumed',
       commandHash: 'hash',
       timeoutSeconds: 60,
-      remoteWorkdir: '~/.openscience/jobs/persisted-queued-job',
+      remoteWorkdir: '~/.open-science/jobs/persisted-queued-job',
       initialStatus: 'queued'
     })
     const poller = {
@@ -205,7 +205,7 @@ describe('ConcurrencyManager integration with ComputeService', () => {
         command: 'echo resumed',
         commandHash: `hash-${index}`,
         timeoutSeconds: 60,
-        remoteWorkdir: `~/.openscience/jobs/persisted-queued-job-${index}`,
+        remoteWorkdir: `~/.open-science/jobs/persisted-queued-job-${index}`,
         initialStatus: 'queued'
       })
     }
@@ -268,7 +268,7 @@ describe('ConcurrencyManager integration with ComputeService', () => {
       command: 'echo stopped',
       commandHash: 'hash-stop',
       timeoutSeconds: 60,
-      remoteWorkdir: '~/.openscience/jobs/queued-during-runtime-stop',
+      remoteWorkdir: '~/.open-science/jobs/queued-during-runtime-stop',
       initialStatus: 'queued'
     })
     let releaseStartupScan: (() => void) | undefined
@@ -336,7 +336,7 @@ describe('ConcurrencyManager integration with ComputeService', () => {
       command: 'echo handoff',
       commandHash: 'hash',
       timeoutSeconds: 60,
-      remoteWorkdir: '~/.openscience/jobs/queued-handoff-job',
+      remoteWorkdir: '~/.open-science/jobs/queued-handoff-job',
       initialStatus: 'queued'
     })
     const acquire = vi.fn()
@@ -390,7 +390,7 @@ describe('ConcurrencyManager integration with ComputeService', () => {
         command: 'echo queued',
         commandHash: `${jobId}-hash`,
         timeoutSeconds: 60,
-        remoteWorkdir: `~/.openscience/jobs/${jobId}`,
+        remoteWorkdir: `~/.open-science/jobs/${jobId}`,
         initialStatus: 'queued'
       })
     }
@@ -562,7 +562,7 @@ describe('ConcurrencyManager integration with ComputeService', () => {
         command: 'echo test',
         commandHash: `hash-${i}`,
         timeoutSeconds: 60,
-        remoteWorkdir: `~/.openscience/jobs/queued-${i}`,
+        remoteWorkdir: `~/.open-science/jobs/queued-${i}`,
         initialStatus: 'queued'
       })
     }
@@ -593,7 +593,7 @@ describe('ConcurrencyManager integration with ComputeService', () => {
         command: 'echo queued',
         commandHash: `hash-${index}`,
         timeoutSeconds: 60,
-        remoteWorkdir: `~/.openscience/jobs/full-queue-${index}`,
+        remoteWorkdir: `~/.open-science/jobs/full-queue-${index}`,
         initialStatus: 'queued'
       })
     }

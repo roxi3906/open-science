@@ -36,13 +36,13 @@ const job = (overrides: Partial<ComputeJob> = {}): ComputeJob => ({
   output_manifest: undefined,
   harvest_config: undefined,
   timeout_seconds: 600,
-  remote_workdir: '~/.openscience/jobs/job-1',
+  remote_workdir: '~/.open-science/jobs/job-1',
   remote_handle: JSON.stringify({
     pid: 123,
-    exit_code_path: '~/.openscience/jobs/job-1/exit_code',
-    stdout_path: '~/.openscience/jobs/job-1/stdout',
-    stderr_path: '~/.openscience/jobs/job-1/stderr',
-    workdir: '~/.openscience/jobs/job-1'
+    exit_code_path: '~/.open-science/jobs/job-1/exit_code',
+    stdout_path: '~/.open-science/jobs/job-1/stdout',
+    stderr_path: '~/.open-science/jobs/job-1/stderr',
+    workdir: '~/.open-science/jobs/job-1'
   }),
   exit_code: undefined,
   stdout_tail: undefined,
@@ -63,9 +63,9 @@ const slurmJob = (overrides: Partial<ComputeJob> = {}): ComputeJob =>
       driver: 'slurm',
       version: 1,
       scheduler_job_id: '456',
-      workdir: '~/.openscience/jobs/job-1',
-      stdout_path: '~/.openscience/jobs/job-1/stdout',
-      stderr_path: '~/.openscience/jobs/job-1/stderr'
+      workdir: '~/.open-science/jobs/job-1',
+      stdout_path: '~/.open-science/jobs/job-1/stdout',
+      stderr_path: '~/.open-science/jobs/job-1/stderr'
     }),
     ...overrides
   })
@@ -300,7 +300,7 @@ describe('ComputeJobDeletionOwner', () => {
   it('kills only a process still owned by the generated directory, then removes it', () => {
     const rawHandle = job().remote_handle ?? ''
     const handle = JSON.parse(rawHandle) as Parameters<typeof cleanupCommand>[1]
-    const command = cleanupCommand('~/.openscience/jobs/job-1', handle)
+    const command = cleanupCommand('~/.open-science/jobs/job-1', handle)
     expect(command).toContain('kill_job_pid() {')
     expect(command).toContain('process_workdir=$(readlink "/proc/$pid/cwd"')
     expect(command).toContain('command -v lsof')
@@ -316,15 +316,15 @@ describe('ComputeJobDeletionOwner', () => {
     expect(command).toContain('[ "$workdir" = "$expected_workdir" ]')
     expect(command).toContain('job.pid')
     expect(command).toContain('rm -rf -- "$workdir"')
-    expect(command).toContain("test ! -e ~/'.openscience/jobs/job-1'")
-    expect(command).not.toContain("rm -rf -- ~/'.openscience/jobs/job-1'")
+    expect(command).toContain("test ! -e ~/'.open-science/jobs/job-1'")
+    expect(command).not.toContain("rm -rf -- ~/'.open-science/jobs/job-1'")
   })
 
   it.skipIf(process.platform === 'win32')(
     'distinguishes an invalid remote workdir from an explicitly absent one',
     () => {
       const scratchRoot = mkdtempSync(join(tmpdir(), 'compute-cleanup-'))
-      const jobsRoot = join(scratchRoot, '.openscience', 'jobs')
+      const jobsRoot = join(scratchRoot, '.open-science', 'jobs')
       const workdir = join(jobsRoot, 'job-1')
       mkdirSync(jobsRoot, { recursive: true })
       writeFileSync(workdir, 'not a directory')
@@ -425,8 +425,8 @@ describe('ComputeJobDeletionOwner', () => {
         harness.order.push('slurm-recovered')
         return sshSuccess(
           'receipt|456\n' +
-            'expected|/home/researcher/.openscience/jobs/job-1\n' +
-            'active|456|openscience-job-1|/home/researcher/.openscience/jobs/job-1\n'
+            'expected|/home/researcher/.open-science/jobs/job-1\n' +
+            'active|456|open-science-job-1|/home/researcher/.open-science/jobs/job-1\n'
         )
       }
       if (command.startsWith('scancel ')) {
@@ -504,7 +504,7 @@ describe('ComputeJobDeletionOwner', () => {
     'refuses to clean a submitted Job whose existing workdir has no PID witness',
     async () => {
       const scratchRoot = mkdtempSync(join(tmpdir(), 'compute-submitted-cleanup-'))
-      const workdir = join(scratchRoot, '.openscience', 'jobs', 'job-1')
+      const workdir = join(scratchRoot, '.open-science', 'jobs', 'job-1')
       mkdirSync(workdir, { recursive: true })
       const harness = createHarness([
         job({ status: 'submitted', remote_handle: undefined, remote_workdir: workdir })
@@ -727,13 +727,13 @@ describe('ComputeJobDeletionOwner', () => {
   it('retries the full idempotent plan after a later Job cleanup fails', async () => {
     const secondJob = job({
       job_id: 'job-2',
-      remote_workdir: '~/.openscience/jobs/job-2',
+      remote_workdir: '~/.open-science/jobs/job-2',
       remote_handle: JSON.stringify({
         pid: 456,
-        exit_code_path: '~/.openscience/jobs/job-2/exit_code',
-        stdout_path: '~/.openscience/jobs/job-2/stdout',
-        stderr_path: '~/.openscience/jobs/job-2/stderr',
-        workdir: '~/.openscience/jobs/job-2'
+        exit_code_path: '~/.open-science/jobs/job-2/exit_code',
+        stdout_path: '~/.open-science/jobs/job-2/stdout',
+        stderr_path: '~/.open-science/jobs/job-2/stderr',
+        workdir: '~/.open-science/jobs/job-2'
       })
     })
     const harness = createHarness([job(), secondJob])
@@ -890,7 +890,7 @@ describe('ComputeJobDeletionOwner', () => {
     const harness = createHarness([
       job({
         status: 'success',
-        remote_workdir: String.raw`C:\Users\scientist\.openscience\jobs\job-1`,
+        remote_workdir: String.raw`C:\Users\scientist\.open-science\jobs\job-1`,
         remote_handle: undefined
       })
     ])

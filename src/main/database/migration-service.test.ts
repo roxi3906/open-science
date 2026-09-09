@@ -225,7 +225,7 @@ const removeComputeAnalysisSchema = async (
 const removeLiteratureFoundationSchema = async (client: PrismaClient): Promise<void> => {
   await client.$executeRawUnsafe('DROP TABLE "LiteratureInboxPdf"')
   await client.$executeRawUnsafe(
-    'DELETE FROM "_open_science_migrations" WHERE id >= \'0030_literature_foundation\''
+    'DELETE FROM "_open-science-migrations" WHERE id >= \'0030_literature_foundation\''
   )
   for (const table of [
     'ArtifactLiteratureManifest',
@@ -316,6 +316,34 @@ describe('application database migrations', () => {
     if (storageRoot) await rm(storageRoot, { force: true, recursive: true })
   })
 
+  it('migrates the released ledger name after verification without changing migration history', async () => {
+    storageRoot = await mkdtemp(join(tmpdir(), 'open-science-ledger-identity-'))
+    client = createProjectDbClient(storageRoot)
+    await migrateApplicationDatabase(client)
+    const current = await client.$queryRawUnsafe<Array<{ name: string }>>(
+      `SELECT name FROM sqlite_schema WHERE name = '_open-science-migrations'`
+    )
+    if (current.length)
+      await client.$executeRawUnsafe(
+        'ALTER TABLE "_open-science-migrations" RENAME TO "_open_science_migrations"'
+      )
+    const previous = await client.$queryRawUnsafe(
+      'SELECT * FROM "_open_science_migrations" ORDER BY "id"'
+    )
+    await migrateApplicationDatabase(client)
+    const names = await client.$queryRawUnsafe<Array<{ name: string }>>(
+      `SELECT name FROM sqlite_schema WHERE name IN ('_open_science_migrations', '_open-science-migrations')`
+    )
+    expect(names).toEqual([{ name: '_open-science-migrations' }])
+    expect(
+      await client.$queryRawUnsafe('SELECT * FROM "_open-science-migrations" ORDER BY "id"')
+    ).toEqual(previous)
+    await migrateApplicationDatabase(client)
+    expect(
+      await client.$queryRawUnsafe('SELECT * FROM "_open-science-migrations" ORDER BY "id"')
+    ).toEqual(previous)
+  })
+
   it('upgrades existing attachment and pending Inbox PDF rows without inventing provenance', async () => {
     storageRoot = await mkdtemp(join(tmpdir(), 'literature-provenance-upgrade-'))
     client = createProjectDbClient(storageRoot)
@@ -333,7 +361,7 @@ describe('application database migrations', () => {
       'ALTER TABLE "ContentBlob" DROP COLUMN "lastVerificationAttemptAt"'
     )
     await client.$executeRawUnsafe(
-      `DELETE FROM "_open_science_migrations" WHERE "id" >= '0035_literature_pdf_provenance'`
+      `DELETE FROM "_open-science-migrations" WHERE "id" >= '0035_literature_pdf_provenance'`
     )
     const checksum = 'a'.repeat(64)
     const oldCandidate = literatureCandidateInputSchema.parse({
@@ -505,7 +533,7 @@ describe('application database migrations', () => {
   })
 
   it('records the runtime baseline once for a fresh database', async () => {
-    storageRoot = await mkdtemp(join(tmpdir(), 'open science 数据 baseline-'))
+    storageRoot = await mkdtemp(join(tmpdir(), 'open-science 数据 baseline-'))
     client = createProjectDbClient(storageRoot)
     const compatibility: Array<{ sqliteVersion: string }> = []
 
@@ -587,7 +615,7 @@ describe('application database migrations', () => {
     await migrateApplicationDatabase(client)
     await client.$executeRawUnsafe('DROP TABLE "BackgroundResultDelivery"')
     await client.$executeRawUnsafe(
-      `DELETE FROM "_open_science_migrations" WHERE "id" >= '0034_background_result_delivery'`
+      `DELETE FROM "_open-science-migrations" WHERE "id" >= '0034_background_result_delivery'`
     )
 
     await expect(migrateApplicationDatabase(client)).resolves.toEqual({
@@ -623,7 +651,7 @@ describe('application database migrations', () => {
       }
     })
     await client.$executeRawUnsafe(
-      `UPDATE "_open_science_migrations" SET "id" = ?, "checksum" = ? WHERE "id" = ?`,
+      `UPDATE "_open-science-migrations" SET "id" = ?, "checksum" = ? WHERE "id" = ?`,
       '0016_agent_memory',
       '43bd42fc137a0a88fb513f701db6e3e19ed3bdb5b8ead5691b5fad3fb68fb01a',
       '0017_agent_memory_project_scope'
@@ -638,7 +666,7 @@ describe('application database migrations', () => {
     ).resolves.toEqual([{ id: 'memory-1', content: 'Prefers concise answers' }])
     await expect(
       client.$queryRaw<Array<{ checksum: string; id: string }>>`
-        SELECT "id", "checksum" FROM "_open_science_migrations"
+        SELECT "id", "checksum" FROM "_open-science-migrations"
         WHERE "id" IN ('0016_agent_memory', '0017_agent_memory_project_scope')
       `
     ).resolves.toEqual([
@@ -665,7 +693,7 @@ describe('application database migrations', () => {
       'ALTER TABLE "SessionAuxiliaryTurnUsage" DROP COLUMN "providerId"'
     )
     await client.$executeRawUnsafe(
-      `DELETE FROM "_open_science_migrations" WHERE "id" IN ('0015_session_model_call_usage', '0016_compute_job_sensitive_data_encryption', '0017_agent_memory_project_scope', '0018_session_auxiliary_turn_usage', '0019_session_usage_attribution', '0020_compute_job_analysis_state', '0021_compute_job_analysis_constraints', '0022_memory_global_content_unique', '0023_compute_job_operation', '0024_compute_job_file_evidence', '0025_managed_file_version_foundation', '0026_compute_job_remote_cleanup', '0027_project_session_defaults', '0028_database_numeric_and_null_constraints', '0029_compute_host_execution_mode', '0030_literature_foundation')`
+      `DELETE FROM "_open-science-migrations" WHERE "id" IN ('0015_session_model_call_usage', '0016_compute_job_sensitive_data_encryption', '0017_agent_memory_project_scope', '0018_session_auxiliary_turn_usage', '0019_session_usage_attribution', '0020_compute_job_analysis_state', '0021_compute_job_analysis_constraints', '0022_memory_global_content_unique', '0023_compute_job_operation', '0024_compute_job_file_evidence', '0025_managed_file_version_foundation', '0026_compute_job_remote_cleanup', '0027_project_session_defaults', '0028_database_numeric_and_null_constraints', '0029_compute_host_execution_mode', '0030_literature_foundation')`
     )
     await removeComputeAnalysisSchema(client, true)
     await client.$executeRawUnsafe('ALTER TABLE "ComputeJob" DROP COLUMN "fileEvidence"')
@@ -1134,7 +1162,7 @@ describe('application database migrations', () => {
     })
     await expect(
       client.$queryRaw<Array<{ id: string }>>`
-        SELECT "id" FROM "_open_science_migrations" ORDER BY "id"
+        SELECT "id" FROM "_open-science-migrations" ORDER BY "id"
       `
     ).resolves.toEqual([
       { id: '0001_runtime_schema_baseline' },
@@ -1205,13 +1233,13 @@ describe('application database migrations', () => {
     for (const statement of MIGRATION_MANIFEST[0]!.statements) {
       await client.$executeRawUnsafe(statement)
     }
-    await client.$executeRawUnsafe(`CREATE TABLE "_open_science_migrations" (
+    await client.$executeRawUnsafe(`CREATE TABLE "_open-science-migrations" (
       "id" TEXT NOT NULL PRIMARY KEY,
       "checksum" TEXT NOT NULL,
       "appliedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`)
     await client.$executeRaw`
-      INSERT INTO "_open_science_migrations" ("id", "checksum")
+      INSERT INTO "_open-science-migrations" ("id", "checksum")
       VALUES (${'0001_runtime_schema_baseline'}, ${MIGRATION_MANIFEST[0]!.checksum})
     `
     await client.$executeRaw`
@@ -1316,7 +1344,7 @@ describe('application database migrations', () => {
     ).resolves.toEqual([])
     await expect(
       client.$queryRaw<Array<{ id: string }>>`
-        SELECT "id" FROM "_open_science_migrations" ORDER BY "id"
+        SELECT "id" FROM "_open-science-migrations" ORDER BY "id"
       `
     ).resolves.toEqual([
       { id: '0001_runtime_schema_baseline' },
@@ -1515,7 +1543,7 @@ describe('application database migrations', () => {
     await expect(
       client.$queryRaw<Array<{ name: string }>>`
         SELECT name FROM sqlite_schema
-        WHERE name = '_open_science_migrations'
+        WHERE name = '_open-science-migrations'
       `
     ).resolves.toEqual([])
   })
@@ -1640,7 +1668,7 @@ describe('application database migrations', () => {
     await migrateApplicationDatabase(client)
     await client.project.create({ data: { id: 'project-1', name: 'Preserved' } })
     await client.$executeRaw`
-      INSERT INTO "_open_science_migrations" ("id", "checksum")
+      INSERT INTO "_open-science-migrations" ("id", "checksum")
       VALUES (${'9999_future_schema'}, ${'f'.repeat(64)})
     `
 
@@ -1656,7 +1684,7 @@ describe('application database migrations', () => {
     client = createProjectDbClient(storageRoot)
     await migrateApplicationDatabase(client)
     await client.$executeRaw`
-      UPDATE "_open_science_migrations"
+      UPDATE "_open-science-migrations"
       SET "checksum" = ${'0'.repeat(64)}
       WHERE "id" = ${'0001_runtime_schema_baseline'}
     `
@@ -1686,7 +1714,7 @@ describe('application database migrations', () => {
     await expect(
       client.$queryRaw<Array<{ name: string }>>`
         SELECT "name" FROM "sqlite_schema"
-        WHERE "type" = 'table' AND "name" = '_open_science_migrations'
+        WHERE "type" = 'table' AND "name" = '_open-science-migrations'
       `
     ).resolves.toEqual([])
   })
@@ -2003,7 +2031,7 @@ describe('application database migrations', () => {
     await expect(
       client.$queryRaw<Array<{ name: string }>>`
         SELECT "name" FROM "sqlite_schema"
-        WHERE "name" = '_open_science_migrations'
+        WHERE "name" = '_open-science-migrations'
       `
     ).resolves.toEqual([])
   })
@@ -2238,7 +2266,7 @@ describe('application database migrations', () => {
       ).resolves.toEqual([{ id: 'legacy-project', name: 'Preserved' }])
       await expect(
         backupClient.$queryRaw<Array<{ name: string }>>`
-          SELECT "name" FROM "sqlite_schema" WHERE "name" = '_open_science_migrations'
+          SELECT "name" FROM "sqlite_schema" WHERE "name" = '_open-science-migrations'
         `
       ).resolves.toEqual([])
     } finally {
@@ -2267,7 +2295,7 @@ describe('application database migrations', () => {
     ).resolves.toEqual([{ value: 'keep-me' }])
     await expect(
       client.$queryRawUnsafe<Array<{ name: string }>>(
-        `SELECT "name" FROM "sqlite_schema" WHERE "name" = '_open_science_migrations'`
+        `SELECT "name" FROM "sqlite_schema" WHERE "name" = '_open-science-migrations'`
       )
     ).resolves.toEqual([])
   })
@@ -2353,7 +2381,7 @@ describe('application database migrations', () => {
     ])
     await expect(
       client.$queryRaw<Array<{ id: string }>>`
-        SELECT "id" FROM "_open_science_migrations" WHERE "id" = ${firstId}
+        SELECT "id" FROM "_open-science-migrations" WHERE "id" = ${firstId}
       `
     ).resolves.toEqual([{ id: firstId }])
     await expect(
@@ -2383,7 +2411,7 @@ describe('application database migrations', () => {
     await expect(
       client.$queryRaw<Array<{ name: string }>>`
         SELECT "name" FROM "sqlite_schema"
-        WHERE "name" = '_open_science_migrations'
+        WHERE "name" = '_open-science-migrations'
       `
     ).resolves.toEqual([])
   })
@@ -2585,7 +2613,7 @@ describe('application database migrations', () => {
     await expect(
       client.$queryRaw<Array<{ name: string }>>`
         SELECT "name" FROM "sqlite_schema"
-        WHERE "name" = '_open_science_migrations'
+        WHERE "name" = '_open-science-migrations'
       `
     ).resolves.toEqual([])
   })
@@ -2622,7 +2650,7 @@ describe('application database migrations', () => {
     await expect(
       client.$queryRaw<Array<{ name: string }>>`
         SELECT "name" FROM "sqlite_schema"
-        WHERE "name" = '_open_science_migrations'
+        WHERE "name" = '_open-science-migrations'
       `
     ).resolves.toEqual([])
     await expect(access(temporaryBackupPath)).rejects.toMatchObject({ code: 'ENOENT' })
@@ -2815,7 +2843,7 @@ describe('application database migrations', () => {
     })
     await expect(
       client.$queryRaw<Array<{ count: bigint }>>`
-        SELECT COUNT(*) AS "count" FROM "_open_science_migrations"
+        SELECT COUNT(*) AS "count" FROM "_open-science-migrations"
       `
     ).rejects.toThrow()
   })
@@ -2862,7 +2890,7 @@ describe('application database migrations', () => {
     })
     await expect(
       client.$queryRaw<Array<{ name: string }>>`
-        SELECT "name" FROM "sqlite_schema" WHERE "name" = '_open_science_migrations'
+        SELECT "name" FROM "sqlite_schema" WHERE "name" = '_open-science-migrations'
       `
     ).resolves.toEqual([])
   })
@@ -2906,7 +2934,7 @@ describe('application database migrations', () => {
   it('rolls back baseline schema changes when the ledger insert fails', async () => {
     storageRoot = await mkdtemp(join(tmpdir(), 'open-science-database-rollback-'))
     client = createProjectDbClient(storageRoot)
-    await client.$executeRawUnsafe(`CREATE TABLE "_open_science_migrations" (
+    await client.$executeRawUnsafe(`CREATE TABLE "_open-science-migrations" (
       "id" TEXT NOT NULL PRIMARY KEY,
       "checksum" TEXT NOT NULL CHECK ("checksum" = 'reject-insert'),
       "appliedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -2924,7 +2952,7 @@ describe('application database migrations', () => {
     ).resolves.toEqual([])
     await expect(
       client.$queryRaw<Array<{ count: bigint }>>`
-        SELECT COUNT(*) AS "count" FROM "_open_science_migrations"
+        SELECT COUNT(*) AS "count" FROM "_open-science-migrations"
       `
     ).resolves.toEqual([{ count: 0n }])
   })
@@ -3153,7 +3181,7 @@ describe('application database migrations', () => {
     await expect(verifyCurrentApplicationSchema(client)).resolves.toBeUndefined()
     await expect(
       client.$queryRawUnsafe<Array<{ id: string }>>(
-        'SELECT "id" FROM "_open_science_migrations" ORDER BY "id"'
+        'SELECT "id" FROM "_open-science-migrations" ORDER BY "id"'
       )
     ).resolves.toEqual(MIGRATION_MANIFEST.map(({ id }) => ({ id })))
     await expect(access(backupPath)).resolves.toBeUndefined()

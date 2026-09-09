@@ -33,7 +33,7 @@ import {
   STATE_FILE,
   TOKEN_FILE
 } from './config-root.mjs'
-import { connectToOpenScience } from '../packages/open-science/index.mjs'
+import { connect } from '../packages/open-science/index.mjs'
 
 // A running daemon's on-disk state, as findServiceState would return it.
 const RUNNING_STATE = { pid: 4242, port: 44100, configRoot: '/tmp/os-config' }
@@ -134,7 +134,7 @@ describe('C01 automatic service discovery', () => {
     'connects the SDK past a %s candidate',
     async (preferred) => {
       await withCandidates(preferred, async ({ deps }) => {
-        const client = await connectToOpenScience({ fetch: deps.fetch })
+        const client = await connect({ fetch: deps.fetch })
         expect(client.baseUrl).toBe('http://127.0.0.1:44102')
       })
     }
@@ -238,7 +238,7 @@ describe('C01 automatic service discovery', () => {
         await statusCommand({ json: true }, deps)
         expect(JSON.parse(deps.log.mock.calls[0][0])).toEqual({ running: false })
         expect(deps.fetch.mock.calls.some(([url]) => url.includes(':44102/'))).toBe(false)
-        await expect(connectToOpenScience({ fetch: deps.fetch })).rejects.toThrow()
+        await expect(connect({ fetch: deps.fetch })).rejects.toThrow()
         expect(deps.fetch.mock.calls.some(([url]) => url.includes(':44102/'))).toBe(false)
       })
     }
@@ -288,9 +288,7 @@ describe('C01 automatic service discovery', () => {
         controller.abort(reason)
         throw reason
       })
-      await expect(
-        connectToOpenScience({ fetch: deps.fetch, signal: controller.signal })
-      ).rejects.toBe(reason)
+      await expect(connect({ fetch: deps.fetch, signal: controller.signal })).rejects.toBe(reason)
       expect(deps.fetch).toHaveBeenCalledTimes(1)
     })
   })

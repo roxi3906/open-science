@@ -318,7 +318,7 @@ const buildExecutionNotebook = (
           {
             cell_type: 'code',
             execution_count: typeof run.executionCount === 'number' ? run.executionCount : null,
-            metadata: { open_science_run_id: asString(run.runId) },
+            metadata: { 'open-science-run-id': asString(run.runId) },
             outputs: toNotebookOutputs(run.outputs),
             source: toSourceLines(script)
           }
@@ -334,7 +334,7 @@ const buildExecutionNotebook = (
         name: kernel,
         ...(metadata.runtimeVersion ? { version: metadata.runtimeVersion } : {})
       },
-      open_science: {
+      'open-science': {
         artifact_id: metadata.artifactId,
         artifact_version_id: metadata.versionId,
         producer_run_id: metadata.producerRunId,

@@ -78,7 +78,7 @@ function geneRecord(g: Record<string, unknown>): Record<string, unknown> {
 }
 
 // GTEx Portal API v2 (https://gtexportal.org/api/v2): read-only tissue/sample metadata, bulk RNA-seq
-// expression, and precomputed/on-the-fly eQTL associations. Tool ids mirror the official openscience
+// expression, and precomputed/on-the-fly eQTL associations. Tool ids mirror the official open-science
 // GTEx surface; paged routes are walked to a count-verified `total`.
 export const EXPRESSION_TOOLS: ToolDescriptor[] = [
   {

@@ -988,7 +988,7 @@ describe('workspace conversation items', () => {
       formatActivityTitle(
         createActivity({
           status: 'in_progress',
-          providerToolName: 'mcp__open_science_notebook__remember_memory',
+          providerToolName: 'mcp__app_notebook__remember_memory',
           toolKind: 'other'
         }),
         undefined,
@@ -1063,7 +1063,7 @@ describe('workspace conversation items', () => {
         createActivity({
           id: 'tool-notebook-underscore',
           status: 'completed',
-          providerToolName: 'mcp__open_science_notebook__notebook_execute',
+          providerToolName: 'mcp__app_notebook__notebook_execute',
           toolKind: 'other'
         }),
         undefined,

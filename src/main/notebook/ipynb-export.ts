@@ -24,7 +24,7 @@ type NbformatOutput =
       execution_count?: number | null
     }
 
-type OpenScienceCellMetadata = {
+type AppCellMetadata = {
   runId: string
   cellId: string
   source: NotebookRunRecord['source']
@@ -40,7 +40,7 @@ type NbformatCodeCell = {
   execution_count: number | null
   id: string
   metadata: {
-    open_science: OpenScienceCellMetadata
+    'open-science': AppCellMetadata
     tags?: string[]
   }
   outputs: NbformatOutput[]
@@ -58,7 +58,7 @@ type IpynbNotebook = {
     language_info: {
       name: string
     }
-    open_science: {
+    'open-science': {
       sessionId: string
       // Open-Science export metadata uses the immutable Project id.
       projectId: string
@@ -231,7 +231,7 @@ const runToCell = (run: NotebookRunRecord, seen: Set<string>): NbformatCodeCell 
       ? run.outputs.map((output) => mapOutput(output, executionCount))
       : fallbackTextOutputs(run)
   const metadata: NbformatCodeCell['metadata'] = {
-    open_science: {
+    'open-science': {
       runId: run.runId,
       cellId: run.cellId,
       source: run.source,
@@ -279,7 +279,7 @@ const runDocumentToIpynb = (
     metadata: {
       kernelspec,
       language_info: { name: kernelspec.language },
-      open_science: {
+      'open-science': {
         sessionId: document.sessionId,
         projectId,
         ...(document.artifactSessionId ? { artifactSessionId: document.artifactSessionId } : {}),

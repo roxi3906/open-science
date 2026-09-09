@@ -68,7 +68,7 @@ const makeJob = (overrides: Partial<ComputeJob> = {}): ComputeJob => ({
   output_manifest: undefined,
   harvest_config: undefined,
   timeout_seconds: 3600,
-  remote_workdir: '~/.openscience/jobs/job-1',
+  remote_workdir: '~/.open-science/jobs/job-1',
   remote_handle: undefined,
   exit_code: 0,
   stdout_tail: 'hello',
@@ -386,7 +386,7 @@ describe('harvestJob — clean harvest', () => {
     })
 
     expect(scp.calls.map(([remotePath]) => remotePath)).toEqual([
-      '~/.openscience/jobs/job-1/result.csv'
+      '~/.open-science/jobs/job-1/result.csv'
     ])
   })
 
@@ -580,7 +580,7 @@ describe('harvestJob — clean harvest', () => {
       signal
     })
     expect(vi.mocked(ssh.run).mock.calls[0]?.[1]).toContain(
-      "find ~/'.openscience/jobs/job-1' -type f"
+      "find ~/'.open-science/jobs/job-1' -type f"
     )
     // Four bounded copies: declared outputs first, then stdout and stderr with the remaining budget.
     expect(scp.calls.length).toBe(4)
@@ -1285,13 +1285,13 @@ describe('harvestJob - bounded logs and disk reserve', () => {
     const jobs = [
       makeJob({
         job_id: 'job-concurrent-1',
-        remote_workdir: '~/.openscience/jobs/job-concurrent-1',
+        remote_workdir: '~/.open-science/jobs/job-concurrent-1',
         output_manifest: JSON.stringify(['*.result']),
         harvest_config: JSON.stringify({ max_file_mb: 1, max_total_mb: 1 })
       }),
       makeJob({
         job_id: 'job-concurrent-2',
-        remote_workdir: '~/.openscience/jobs/job-concurrent-2',
+        remote_workdir: '~/.open-science/jobs/job-concurrent-2',
         output_manifest: JSON.stringify(['*.result']),
         harvest_config: JSON.stringify({ max_file_mb: 1, max_total_mb: 1 })
       })
@@ -1348,13 +1348,13 @@ describe('harvestJob - bounded logs and disk reserve', () => {
     await symlink(storageRoot, aliasRoot, 'dir')
     const firstJob = makeJob({
       job_id: 'job-budget-1',
-      remote_workdir: '~/.openscience/jobs/job-budget-1',
+      remote_workdir: '~/.open-science/jobs/job-budget-1',
       output_manifest: JSON.stringify(['*.result']),
       harvest_config: JSON.stringify({ max_file_mb: 1, max_total_mb: 1 })
     })
     const secondJob = makeJob({
       job_id: 'job-budget-2',
-      remote_workdir: '~/.openscience/jobs/job-budget-2',
+      remote_workdir: '~/.open-science/jobs/job-budget-2',
       output_manifest: JSON.stringify(['*.result']),
       harvest_config: JSON.stringify({ max_file_mb: 1, max_total_mb: 1 })
     })

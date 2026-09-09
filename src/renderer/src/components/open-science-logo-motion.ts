@@ -260,7 +260,7 @@ const drawResolvedLogo = (
   }
 }
 
-export const drawOpenScienceLogoFrame = (
+export const drawBrandLogoFrame = (
   context: CanvasRenderingContext2D,
   particles: readonly LogoParticle[],
   metrics: LogoCanvasMetrics,

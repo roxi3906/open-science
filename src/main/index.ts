@@ -1,4 +1,6 @@
+import { migrateWindowsCliProfile, windowsUserPath } from './brand-migration/windows-cli-profile'
 import { createRequire } from 'node:module'
+import { existsSync } from 'node:fs'
 import { isAbsolute, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -13,6 +15,13 @@ import {
   SKILL_RUNTIME_MCP_SERVER_ARG
 } from './mcp-server-args'
 import { createApplicationLifecycleShutdown } from './application-runtime'
+import { migrateDesktopIdentity } from './brand-migration/desktop-identity'
+import {
+  ENCRYPTION_PROBE_ARG,
+  migrateEncryptionIdentity,
+  previousDesktopName,
+  runEncryptionProbe
+} from './brand-migration/encryption-bootstrap'
 import { installChildProcessGoneLogging, startLocalCrashReporting } from './crash-diagnostics'
 import type { DiagnosticOperation } from './diagnostics/operation'
 import {
@@ -39,7 +48,9 @@ const bootstrapLog = createLogger('bootstrap')
 let startupDiagnostics: DiagnosticOperation | undefined
 let startupFlush = flushLogs
 
-if (shouldRunArtifactMcpServer) {
+if (process.argv.includes(ENCRYPTION_PROBE_ARG)) {
+  runEncryptionProbe()
+} else if (shouldRunArtifactMcpServer) {
   // Reuse the packaged entry point as a Node stdio MCP server; import it only in this mode.
   void import('./artifacts/mcp-server')
     .then(({ runArtifactMcpServer }) => runArtifactMcpServer())
@@ -119,12 +130,81 @@ async function startElectronApp(mainEntryPath: string): Promise<void> {
   // Establish identity and single-writer ownership before opening main.log. A secondary launch must
   // never rotate or append to the primary process's file sink. These two modules are lightweight; all
   // backend imports remain behind the lock.
-  // Keep Chromium state and installed CLI launchers in the pre-rename profile directory.
-  if (!app.commandLine.hasSwitch('user-data-dir')) {
-    app.setPath(
-      'userData',
-      join(app.getPath('appData'), app.isPackaged ? 'Open Science' : 'Open Science (DEV)')
+  let releaseIdentityMigration: (() => void) | undefined
+  const currentDesktopName = app.isPackaged ? APP_NAME : `${APP_NAME} (DEV)`
+  // Explicit preview/certification profiles must never migrate a user's installed application.
+  const isolatedProfile =
+    app.commandLine.hasSwitch('user-data-dir') ||
+    (!app.isPackaged &&
+      Boolean(
+        process.env.OPEN_SCIENCE_USER_DATA?.trim() || process.env.OPEN_SCIENCE_STORAGE_ROOT?.trim()
+      )) ||
+    Boolean(process.env.OPEN_SCIENCE_E2E_STORAGE_ROOT?.trim())
+  if (!isolatedProfile) {
+    const previousName = previousDesktopName(app.isPackaged)
+    const previousProfile = join(app.getPath('appData'), previousName)
+    const currentProfile = join(app.getPath('appData'), currentDesktopName)
+    const stateDirectory = join(
+      app.getPath('home'),
+      app.isPackaged ? '.open-science' : '.open-science-project'
     )
+    try {
+      if (existsSync(previousProfile)) {
+        app.setPath('userData', previousProfile)
+        if (!app.requestSingleInstanceLock()) {
+          throw new Error(
+            'Close the previous Open-Science application before continuing the upgrade.'
+          )
+        }
+      }
+      const native = createRequire(import.meta.url)(
+        '@aipoch/brand-migration-native'
+      ) as typeof import('@aipoch/brand-migration-native')
+      releaseIdentityMigration = migrateDesktopIdentity({
+        stateDirectory,
+        previousProfile,
+        currentProfile,
+        currentName: currentDesktopName,
+        hasLegacySettings: existsSync(join(stateDirectory, 'settings.json')),
+        native,
+        migrateKey: () =>
+          migrateEncryptionIdentity({
+            platform: process.platform,
+            packaged: app.isPackaged,
+            executable: process.execPath,
+            mainEntry: mainEntryPath,
+            previousName,
+            currentName: currentDesktopName,
+            passwordStore: app.commandLine.getSwitchValue('password-store'),
+            native
+          }),
+        afterProfileMove: () => {
+          if (process.platform === 'win32')
+            migrateWindowsCliProfile({
+              stateDirectory,
+              previousProfile,
+              currentProfile,
+              ...windowsUserPath
+            })
+        },
+        onProgress: (phase) => bootstrapLog.info('desktop identity migration', { phase })
+      })
+      app.releaseSingleInstanceLock()
+      app.setPath('userData', currentProfile)
+      app.setPath('sessionData', currentProfile)
+    } catch (error) {
+      releaseIdentityMigration?.()
+      // Stop synchronously before Chromium can open the profile with an unverified encryption key.
+      const { dialog } = createRequire(import.meta.url)('electron') as typeof import('electron')
+      dialog.showErrorBox(
+        'Open-Science upgrade could not finish',
+        error instanceof Error
+          ? error.message
+          : 'Migration failed. Restart the application to retry.'
+      )
+      app.exit(1)
+      return
+    }
   }
   app.setName(app.isPackaged ? APP_NAME : `${APP_NAME} (DEV)`)
   // Unpackaged isolate: a second electron-vite from a worktree would otherwise lose the
@@ -165,9 +245,11 @@ async function startElectronApp(mainEntryPath: string): Promise<void> {
       onSecondInstance: (argv) => preStartupSecondInstanceRelay.signal(argv)
     })
   ) {
+    releaseIdentityMigration?.()
     app.quit()
     return
   }
+  releaseIdentityMigration?.()
   const webMode = parseWebModeOptions(process.argv)
   let bindSystemShutdownWindow = (window: InstanceType<typeof BrowserWindow>): void => {
     void window

@@ -281,7 +281,7 @@ export type StoredSettings = {
   // Absent means it still needs to run (or a previous attempt failed and should retry).
   pathsNormalizedAt?: number
   // Set once the user has answered the one-time "move your legacy .open-science data into the
-  // visible OpenScience folder" prompt (by moving, choosing another folder, or declining). Absent
+  // visible Open-Science folder" prompt (by moving, choosing another folder, or declining). Absent
   // means it has never been answered, so an eligible legacy install may still be offered the prompt.
   legacyDataMovePromptDismissedAt?: number
   // Per-language v4 environment enablement: an explicit per-env enabled override map plus the separate

@@ -73,7 +73,7 @@ describe('ImageInputCompatibilityOwner', () => {
       { type: 'text', text: 'What changed?' },
       {
         type: 'text',
-        text: expect.stringContaining('<open_science_vision_evidence_instructions>')
+        text: expect.stringContaining('<open-science-vision-evidence-instructions>')
       },
       {
         type: 'text',
@@ -84,7 +84,7 @@ describe('ImageInputCompatibilityOwner', () => {
     expect(serialized).toContain(
       'Do not use filesystem, shell, Notebook, MCP, Skill, plugin, or network tools merely to find, open, read, or parse the images again.'
     )
-    expect(serialized.match(/<open_science_vision_evidence_instructions>/g)).toHaveLength(1)
+    expect(serialized.match(/<open-science-vision-evidence-instructions>/g)).toHaveLength(1)
     expect(serialized).not.toContain(image.data)
     expect(serialized).not.toContain(secondImage.data)
     expect(run).toHaveBeenCalledWith(
@@ -254,7 +254,7 @@ describe('ImageInputCompatibilityOwner', () => {
       },
       { type: 'text', text: 'Continue the conversation.' }
     ])
-    expect(JSON.stringify(prepared)).not.toContain('<open_science_vision_evidence_instructions>')
+    expect(JSON.stringify(prepared)).not.toContain('<open-science-vision-evidence-instructions>')
   })
 
   it('keeps model-produced delimiters inside the untrusted evidence boundary', async () => {

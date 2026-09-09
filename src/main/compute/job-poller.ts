@@ -1,3 +1,4 @@
+import { remoteJobMarker, legacyRemoteJobWorkdir } from '../brand-migration/remote-jobs'
 import { randomBytes } from 'node:crypto'
 
 import type { ComputeJob, JobSummary } from '../../shared/compute'
@@ -11,7 +12,6 @@ import {
   type ComputeConnectionLease
 } from './connection-broker'
 import {
-  computeRemoteWorkdir,
   quoteRemotePath,
   REMOTE_PROCESS_OWNERSHIP_FUNCTION,
   type RemoteHandle
@@ -62,7 +62,8 @@ const POLL_BATCH_MAX_JOBS = 8
 const POLLER_KILL_GRACE_SECONDS = 60
 
 const buildDispatchRecoveryCommand = (workdir: string): string => {
-  const marker = '/.openscience/jobs/'
+  const marker = remoteJobMarker(workdir)
+  if (!marker) throw new Error('Unsafe remote Compute Job path.')
   const markerIndex = workdir.lastIndexOf(marker)
   if (markerIndex < 0) throw new Error('Unsafe remote Compute Job recovery path.')
   const scratchRoot = markerIndex === 0 ? '/' : workdir.slice(0, markerIndex)
@@ -376,7 +377,7 @@ export class JobPoller {
     for (const job of legacyNoHandle) {
       if (signal.aborted) return
       const fallbackWorkdir = hasRecoveryFallback
-        ? computeRemoteWorkdir(recoveryFallbackRoot, job.job_id)
+        ? legacyRemoteJobWorkdir(recoveryFallbackRoot, job.job_id)
         : undefined
       const recovered = await this._recoverSubmittedJob(job, connection, signal, fallbackWorkdir)
       if (recovered) withHandle.push(recovered)

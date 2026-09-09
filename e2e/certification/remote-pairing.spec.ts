@@ -66,7 +66,7 @@ test('re-enters with a trusted browser after the Electron app restarts', async (
   const pairing = await remoteRequest('/')
   expect(pairing.status).toBe(200)
   expect(pairing.body).toContain('Approve this browser')
-  const pairingCookie = cookieValue(pairing.setCookie, 'open_science_remote_pairing')
+  const pairingCookie = cookieValue(pairing.setCookie, 'open-science-remote-pairing')
   expect(pairingCookie).toBeDefined()
 
   const approved = await page.evaluate(async () => {
@@ -88,10 +88,10 @@ test('re-enters with a trusted browser after the Electron app restarts', async (
   })
   expect(approved.trustedBrowsers).toHaveLength(1)
 
-  const status = await remoteRequest('/__open_science_remote/pair/status', pairingCookie as string)
+  const status = await remoteRequest('/__open-science-remote/pair/status', pairingCookie as string)
   expect(status.status).toBe(200)
   expect(JSON.parse(status.body)).toEqual({ status: 'approved' })
-  const sessionCookie = cookieValue(status.setCookie, 'open_science_remote_session')
+  const sessionCookie = cookieValue(status.setCookie, 'open-science-remote-session')
   expect(sessionCookie).toBeDefined()
   expect((await remoteRequest('/api/bootstrap', sessionCookie)).status).toBe(200)
 

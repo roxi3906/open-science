@@ -449,10 +449,10 @@ describe('artifact MCP server', () => {
     const config = createArtifactMcpServerConfig({
       command: 'C:\\Open-Science.exe',
       entryPath: 'C:\\app\\main.js',
-      storageRoot: 'C:\\OpenScience',
+      storageRoot: 'C:\\Open-Science',
       projectId: 'default-project',
       sessionId: 'session-1',
-      currentRunFile: 'C:\\OpenScience\\current-run.json',
+      currentRunFile: 'C:\\Open-Science\\current-run.json',
       allowedImportRoots: ['C:\\workspace'],
       rpcEndpoint: 'http://localhost',
       rpcSocketPath: '\\\\.\\pipe\\open-science-notebook'

@@ -1,3 +1,5 @@
+import { migrateLegacyToolName } from '../../shared/brand-migration'
+import { migrateArtifactInstructionTags } from '../brand-migration/owned-markers'
 import { randomUUID } from 'node:crypto'
 import type { ServerResponse } from 'node:http'
 
@@ -152,10 +154,28 @@ const containsText = (value: unknown, marker: string): boolean => {
   return isObject(value) && Object.values(value).some((item) => containsText(item, marker))
 }
 
-const ARTIFACT_INSTRUCTIONS_START = '<open_science_artifact_instructions>'
-const ARTIFACT_INSTRUCTIONS_END = '</open_science_artifact_instructions>'
+const ARTIFACT_INSTRUCTIONS_START = '<open-science-artifact-instructions>'
+const ARTIFACT_INSTRUCTIONS_END = '</open-science-artifact-instructions>'
 
 const promoteArtifactDeveloperInstructions = (body: JsonObject): JsonObject => {
+  body = {
+    ...body,
+    ...(typeof body.instructions === 'string'
+      ? { instructions: migrateArtifactInstructionTags(body.instructions) }
+      : {}),
+    ...(Array.isArray(body.input)
+      ? {
+          input: body.input.map((item) =>
+            isObject(item) &&
+            item.type === 'message' &&
+            item.role === 'developer' &&
+            typeof item.content === 'string'
+              ? { ...item, content: migrateArtifactInstructionTags(item.content) }
+              : item
+          )
+        }
+      : {})
+  }
   if (
     containsText(body.instructions, ARTIFACT_INSTRUCTIONS_START) ||
     (body.instructions != null && typeof body.instructions !== 'string') ||
@@ -202,12 +222,11 @@ const isArtifactTool = (value: unknown, aliases: NativeResponsesToolAliases): bo
     typeof value.namespace === 'string'
       ? { namespace: value.namespace, name: value.name }
       : aliases.get(value.name)
-  return (
-    identity?.namespace === 'mcp__open_science_artifacts' && identity.name === 'write_artifact_file'
-  )
+  return identity?.namespace === 'mcp__app_artifacts' && identity.name === 'write_artifact_file'
 }
 
-const namespaceAlias = (namespace: string, name: string): string => `${namespace}__${name}`
+const namespaceAlias = (namespace: string, name: string): string =>
+  migrateLegacyToolName(`${namespace}__${name}`)
 
 const combinedDescription = (namespaceDescription: unknown, toolDescription: unknown): string =>
   [namespaceDescription, toolDescription]
@@ -215,32 +234,18 @@ const combinedDescription = (namespaceDescription: unknown, toolDescription: unk
     .map((value) => value.trim())
     .join('\n\n')
 
-const flattenHistoryItem = (item: unknown): unknown => {
-  if (!isObject(item)) return item
-  if (
-    (item.type !== 'function_call' && item.type !== 'custom_tool_call') ||
-    typeof item.namespace !== 'string' ||
-    typeof item.name !== 'string'
-  ) {
-    return item
-  }
-
-  const { namespace, ...withoutNamespace } = item
-  return { ...withoutNamespace, name: namespaceAlias(namespace, item.name) }
+const flattenToolChoice = (value: unknown): unknown => {
+  if (!isObject(value) || typeof value.name !== 'string') return value
+  if (typeof value.namespace !== 'string')
+    return { ...value, name: migrateLegacyToolName(value.name) }
+  const { namespace, ...withoutNamespace } = value
+  return { ...withoutNamespace, name: namespaceAlias(namespace, value.name) }
 }
 
-const flattenToolChoice = (toolChoice: unknown): unknown => {
-  if (
-    !isObject(toolChoice) ||
-    typeof toolChoice.namespace !== 'string' ||
-    typeof toolChoice.name !== 'string'
-  ) {
-    return toolChoice
-  }
-
-  const { namespace, ...withoutNamespace } = toolChoice
-  return { ...withoutNamespace, name: namespaceAlias(namespace, toolChoice.name) }
-}
+const flattenHistoryItem = (item: unknown): unknown =>
+  isObject(item) && (item.type === 'function_call' || item.type === 'custom_tool_call')
+    ? flattenToolChoice(item)
+    : item
 
 export const flattenNativeResponsesRequest = (
   body: JsonObject
@@ -907,10 +912,10 @@ export class NativeResponsesCompatibilityProxy {
       )
       const topLevelArtifactInstructionPresent = containsText(
         upstreamRequest.instructions,
-        '<open_science_artifact_instructions>'
+        '<open-science-artifact-instructions>'
       )
       const developerArtifactInstructionPresent = developerItems.some((item) =>
-        containsText(item.content, '<open_science_artifact_instructions>')
+        containsText(item.content, '<open-science-artifact-instructions>')
       )
       log.info('native Responses compatibility request', {
         requestId,
@@ -941,7 +946,7 @@ export class NativeResponsesCompatibilityProxy {
         ).length,
         promptCacheKeyPresent: promptCacheKey !== undefined,
         namespaceToolCount: aliases.size,
-        literatureToolPresent: aliases.has('mcp__open_science_literature__read_document'),
+        literatureToolPresent: aliases.has('mcp__app_literature__read_document'),
         stream: body.stream === true,
         reviewerScoped,
         toolLessScoped

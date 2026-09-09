@@ -25,7 +25,7 @@ const createOwner = (
   providers: ProviderAccountsModule
 } => {
   let settings = {
-    version: 2,
+    version: 3,
     providers: [{ ...provider, ...providerPatch }],
     agentFrameworkId: 'opencode' as const,
     sessionDetailsModel: configuration

@@ -5,17 +5,17 @@ import { expect, it } from 'vitest'
 it('publishes the complete safe Connector and credential contracts', () => {
   const path = resolve('packages/open-science/connector-contract.fixture.ts').split(sep).join('/')
   const source = `
-    import type { OpenScienceClient } from './index'
+    import type { Client } from './index'
     import type * as Shared from '../../src/shared/settings'
     type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false
     type Assert<T extends true> = T
-    type List = Assert<Equal<Awaited<ReturnType<OpenScienceClient['listConnectors']>>, Shared.ConnectorsSnapshot>>
-    type Detail = Assert<Equal<Awaited<ReturnType<OpenScienceClient['getConnector']>>, Shared.ConnectorDetailView | Shared.CustomServerView>>
-    type Add = Assert<Equal<Parameters<OpenScienceClient['addConnector']>[0], Shared.AddCustomServerRequest>>
-    type Update = Assert<Equal<Parameters<OpenScienceClient['updateConnector']>[1], Omit<Shared.UpdateCustomServerRequest, 'id'>>>
-    type Credentials = Assert<Equal<Awaited<ReturnType<OpenScienceClient['listCredentials']>>, Shared.DeviceCredentialsSnapshot>>
-    type Create = Assert<Equal<Parameters<OpenScienceClient['createCredential']>[0], Shared.CreateDeviceCredentialRequest>>
-    type Created = Assert<Equal<Awaited<ReturnType<OpenScienceClient['createCredential']>>, Shared.CreateDeviceCredentialResult>>
+    type List = Assert<Equal<Awaited<ReturnType<Client['listConnectors']>>, Shared.ConnectorsSnapshot>>
+    type Detail = Assert<Equal<Awaited<ReturnType<Client['getConnector']>>, Shared.ConnectorDetailView | Shared.CustomServerView>>
+    type Add = Assert<Equal<Parameters<Client['addConnector']>[0], Shared.AddCustomServerRequest>>
+    type Update = Assert<Equal<Parameters<Client['updateConnector']>[1], Omit<Shared.UpdateCustomServerRequest, 'id'>>>
+    type Credentials = Assert<Equal<Awaited<ReturnType<Client['listCredentials']>>, Shared.DeviceCredentialsSnapshot>>
+    type Create = Assert<Equal<Parameters<Client['createCredential']>[0], Shared.CreateDeviceCredentialRequest>>
+    type Created = Assert<Equal<Awaited<ReturnType<Client['createCredential']>>, Shared.CreateDeviceCredentialResult>>
   `
   const options: ts.CompilerOptions = {
     noEmit: true,

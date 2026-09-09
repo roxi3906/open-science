@@ -10,7 +10,7 @@ import {
 } from './validate'
 
 const toolCallSse = [
-  'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_1","function":{"name":"open_science_bridge_probe","arguments":"{}"}}]},"finish_reason":"tool_calls"}]}',
+  'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_1","function":{"name":"app_bridge_probe","arguments":"{}"}}]},"finish_reason":"tool_calls"}]}',
   'data: [DONE]',
   ''
 ].join('\n\n')
@@ -146,7 +146,7 @@ describe('validate: request construction', () => {
       tools: [
         {
           type: 'function',
-          function: { name: 'open_science_bridge_probe' }
+          function: { name: 'app_bridge_probe' }
         }
       ],
       tool_choice: 'auto'
@@ -247,7 +247,7 @@ describe('validate: bridge contract', () => {
     expect(
       hasBridgeProbeToolCall(
         [
-          'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_","function":{"name":"open_science_","arguments":"{"}}]}}]}',
+          'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_","function":{"name":"app_","arguments":"{"}}]}}]}',
           'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"1","function":{"name":"bridge_probe","arguments":"}"}}]},"finish_reason":"tool_calls"}]}',
           'data: [DONE]',
           ''
@@ -256,7 +256,7 @@ describe('validate: bridge contract', () => {
     ).toBe(true)
     expect(
       hasBridgeProbeToolCall(
-        '{"choices":[{"message":{"tool_calls":[{"id":"call_1","function":{"name":"open_science_bridge_probe","arguments":"{}"}}]}}]}'
+        '{"choices":[{"message":{"tool_calls":[{"id":"call_1","function":{"name":"app_bridge_probe","arguments":"{}"}}]}}]}'
       )
     ).toBe(false)
     expect(hasBridgeProbeToolCall('data: not-json\n\n')).toBe(false)
@@ -425,7 +425,7 @@ describe('validate: provider dispatch', () => {
       tools: [
         {
           type: 'function',
-          function: { name: 'open_science_bridge_probe' }
+          function: { name: 'app_bridge_probe' }
         }
       ]
     })

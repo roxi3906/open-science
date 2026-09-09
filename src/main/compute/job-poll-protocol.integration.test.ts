@@ -13,10 +13,10 @@ const providerId = 'ssh:cluster'
 const remoteHandle = (jobId: string): string =>
   JSON.stringify({
     pid: jobId === 'damaged-job' ? 101 : 202,
-    exit_code_path: `~/.openscience/jobs/${jobId}/exit_code`,
-    stdout_path: `~/.openscience/jobs/${jobId}/stdout`,
-    stderr_path: `~/.openscience/jobs/${jobId}/stderr`,
-    workdir: `~/.openscience/jobs/${jobId}`
+    exit_code_path: `~/.open-science/jobs/${jobId}/exit_code`,
+    stdout_path: `~/.open-science/jobs/${jobId}/stdout`,
+    stderr_path: `~/.open-science/jobs/${jobId}/stderr`,
+    workdir: `~/.open-science/jobs/${jobId}`
   })
 
 it('isolates incomplete poll protocol while another Compute Job completes', async () => {
@@ -34,7 +34,7 @@ it('isolates incomplete poll protocol while another Compute Job completes', asyn
         intent: 'protocol integrity',
         command: 'echo done',
         commandHash: `${jobId}-hash`,
-        remoteWorkdir: `~/.openscience/jobs/${jobId}`,
+        remoteWorkdir: `~/.open-science/jobs/${jobId}`,
         initialStatus: 'running'
       })
       await jobRepository.update(jobId, { remoteHandle: remoteHandle(jobId) })
@@ -118,7 +118,7 @@ it('recovers malformed handles from durable workdirs without blocking a healthy 
         intent: 'handle recovery',
         command: 'echo done',
         commandHash: `${jobId}-hash`,
-        remoteWorkdir: `~/.openscience/jobs/${jobId}`,
+        remoteWorkdir: `~/.open-science/jobs/${jobId}`,
         initialStatus: 'running'
       })
     }
@@ -135,13 +135,13 @@ it('recovers malformed handles from durable workdirs without blocking a healthy 
     await jobRepository.update('healthy-job', { remoteHandle: remoteHandle('healthy-job') })
 
     const run = vi.fn(async (command: string) => {
-      if (command.includes('OPEN_SCIENCE_DISPATCH_RECOVERY_V1')) {
+      if (command.includes('open-science-dispatch-recovery-v1')) {
         const jobId = command.includes('malformed-json') ? 'malformed-json' : 'invalid-shape'
         const pid = jobId === 'malformed-json' ? 301 : 302
         return {
           exitCode: 0,
           stdout: [
-            'OPEN_SCIENCE_DISPATCH_RECOVERY_V1',
+            'open-science-dispatch-recovery-v1',
             'workdir:1',
             'exit_code:',
             `pid:${pid}`,
@@ -187,10 +187,10 @@ it('recovers malformed handles from durable workdirs without blocking a healthy 
       expect(recovered?.status).toBe('running')
       expect(JSON.parse(recovered?.remote_handle ?? '')).toEqual({
         pid,
-        exit_code_path: `~/.openscience/jobs/${jobId}/exit_code`,
-        stdout_path: `~/.openscience/jobs/${jobId}/stdout`,
-        stderr_path: `~/.openscience/jobs/${jobId}/stderr`,
-        workdir: `~/.openscience/jobs/${jobId}`
+        exit_code_path: `~/.open-science/jobs/${jobId}/exit_code`,
+        stdout_path: `~/.open-science/jobs/${jobId}/stdout`,
+        stderr_path: `~/.open-science/jobs/${jobId}/stderr`,
+        workdir: `~/.open-science/jobs/${jobId}`
       })
     }
     expect(await jobRepository.get('healthy-job')).toMatchObject({
@@ -218,7 +218,7 @@ it('safely converges a persistently ambiguous malformed handle across poller res
         intent: 'handle convergence',
         command: 'echo done',
         commandHash: `${jobId}-hash`,
-        remoteWorkdir: `~/.openscience/jobs/${jobId}`,
+        remoteWorkdir: `~/.open-science/jobs/${jobId}`,
         initialStatus: 'running'
       })
     }
@@ -226,11 +226,11 @@ it('safely converges a persistently ambiguous malformed handle across poller res
     await jobRepository.update('healthy-sibling', { remoteHandle: remoteHandle('healthy-sibling') })
 
     const run = vi.fn(async (command: string) => {
-      if (command.includes('OPEN_SCIENCE_DISPATCH_RECOVERY_V1')) {
+      if (command.includes('open-science-dispatch-recovery-v1')) {
         return {
           exitCode: 0,
           stdout: [
-            'OPEN_SCIENCE_DISPATCH_RECOVERY_V1',
+            'open-science-dispatch-recovery-v1',
             'workdir:1',
             'exit_code:',
             'pid:not-a-pid',

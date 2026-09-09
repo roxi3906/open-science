@@ -13,7 +13,7 @@ const HOST_MESSAGE_CONTENT_INSTRUCTION =
   'Send only the advisory content; do not prepend a Side chat source or relay label.'
 const HOST_MESSAGE_NAMESPACED_TOOLS = [
   {
-    namespace: 'mcp__open_science_host_message',
+    namespace: 'mcp__app_host_message',
     name: HOST_SEND_MESSAGE_TOOL_NAME,
     description: `Send advisory context to the parent main conversation. If Main is running, delivery is attempted in the current turn; otherwise it is queued for the next real main user turn without waking Main. Use only after the user explicitly asks in the current Side chat turn to send, relay, forward, or tell something to Main. Do not use for ordinary Side chat questions, requests, follow-ups, or suggestions. ${HOST_MESSAGE_CONTENT_INSTRUCTION}`,
     parameters: {

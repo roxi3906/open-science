@@ -2492,7 +2492,7 @@ export const RENDERER_API_CONTRACT = Object.freeze({
   )
 } as const)
 
-export type OpenScienceAPI = RendererApiFromContract<typeof RENDERER_API_CONTRACT>
+export type AppApi = RendererApiFromContract<typeof RENDERER_API_CONTRACT>
 
 export type RendererApiContractPath = keyof typeof RENDERER_API_CONTRACT
 export type RendererApiContractValue<Path extends RendererApiContractPath> = ContractValue<

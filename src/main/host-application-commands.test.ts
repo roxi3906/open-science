@@ -153,7 +153,7 @@ const createDependencies = (): HostApplicationCommandDependencies => ({
     validateDataRoot: vi.fn(async () => ({ ok: true as const })),
     inspectDataRoot: vi.fn(async () => ({
       kind: 'move' as const,
-      dataRoot: '/target/OpenScience'
+      dataRoot: '/target/Open-Science'
     })),
     migrate: vi.fn(async () => ({ ok: true as const, cleanupPending: false })),
     setDataRootAndRelaunch: vi.fn(async () => ({ ok: true as const })),

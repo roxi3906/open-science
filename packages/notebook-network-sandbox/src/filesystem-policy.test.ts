@@ -133,10 +133,10 @@ describe('Notebook filesystem policy', () => {
   it('turns native permission failures into an actionable structured violation', () => {
     const log = new ViolationLog()
     expect(log.attach('command', 'cat: /private/data.csv: Permission denied')).toContain(
-      'OPEN_SCIENCE_FILESYSTEM_ACCESS_BLOCKED: /private/data.csv'
+      'Open-Science:FILESYSTEM_ACCESS_BLOCKED: /private/data.csv'
     )
     expect(log.attach('read-only', 'bash: /private/output.csv: Read-only file system')).toContain(
-      'OPEN_SCIENCE_FILESYSTEM_ACCESS_BLOCKED: /private/output.csv'
+      'Open-Science:FILESYSTEM_ACCESS_BLOCKED: /private/output.csv'
     )
     expect(log.attach('command', 'ordinary process failure')).toBe('ordinary process failure')
   })
@@ -159,14 +159,14 @@ describe('Notebook filesystem policy', () => {
 
     expect(
       log.attach('hidden', `/bin/cat: ${hiddenPath}: No such file or directory`, hidden)
-    ).toContain(`OPEN_SCIENCE_FILESYSTEM_ACCESS_BLOCKED: ${hiddenPath}`)
+    ).toContain(`Open-Science:FILESYSTEM_ACCESS_BLOCKED: ${hiddenPath}`)
     expect(
       log.attach(
         'ordinary-missing',
         `/bin/cat: ${ordinaryMissingPath}: No such file or directory`,
         hidden
       )
-    ).not.toContain('OPEN_SCIENCE_FILESYSTEM_ACCESS_BLOCKED')
+    ).not.toContain('Open-Science:FILESYSTEM_ACCESS_BLOCKED')
   })
 
   linuxIt('keeps hidden Linux mounts read-only while restoring workspace writes', async () => {
@@ -243,7 +243,7 @@ describe('Notebook filesystem policy', () => {
     log.record('command', 'deny network-outbound example.org:443 (not approved)')
 
     expect(log.attach('command', 'curl: (22) The requested URL returned error: 403')).toContain(
-      'OPEN_SCIENCE_NETWORK_DOMAIN_BLOCKED'
+      'Open-Science:NETWORK_DOMAIN_BLOCKED'
     )
   })
 })

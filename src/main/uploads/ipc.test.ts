@@ -116,7 +116,7 @@ describe('default upload repository', () => {
       ]
     })
 
-    // Uploads follow the configurable data root; a fresh dev install defaults to <home>/OpenScience-DEV.
+    // Uploads follow the configurable data root; a fresh dev install defaults to <home>/Open-Science-DEV.
     expect(attachment.path).toBe(
       join(
         homeRoot,

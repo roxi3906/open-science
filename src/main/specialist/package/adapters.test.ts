@@ -290,17 +290,17 @@ describe('Specialist package source adapters', () => {
     const packageFiles = Object.fromEntries(
       await Promise.all(
         ['manifest.json', 'specialist.json', 'README.txt'].map(async (fileName) => [
-          `openscience-specialist-template/${fileName}`,
+          `open-science-specialist-template/${fileName}`,
           new Uint8Array(await readFile(join(fixtureRoot, fileName)))
         ])
       )
     )
     const zip = zipSync({
       ...packageFiles,
-      'openscience-specialist-template/THIRD_PARTY_NOTICES.txt':
+      'open-science-specialist-template/THIRD_PARTY_NOTICES.txt':
         encoder.encode('Third-party notices'),
-      '__MACOSX/openscience-specialist-template/._manifest.json': new Uint8Array([1, 2, 3]),
-      '__MACOSX/openscience-specialist-template/._specialist.json': new Uint8Array([4, 5, 6])
+      '__MACOSX/open-science-specialist-template/._manifest.json': new Uint8Array([1, 2, 3]),
+      '__MACOSX/open-science-specialist-template/._specialist.json': new Uint8Array([4, 5, 6])
     })
 
     const archive = validateSpecialistZip(zip, catalog)
@@ -316,17 +316,17 @@ describe('Specialist package source adapters', () => {
     const packageFiles = Object.fromEntries(
       await Promise.all(
         ['manifest.json', 'specialist.json', 'README.txt'].map(async (fileName) => [
-          `openscience-specialist-template/${fileName}`,
+          `open-science-specialist-template/${fileName}`,
           new Uint8Array(await readFile(join(fixtureRoot, fileName)))
         ])
       )
     )
     const zip = zipSync({
-      'openscience-specialist-template/': new Uint8Array(),
+      'open-science-specialist-template/': new Uint8Array(),
       ...packageFiles,
       '__MACOSX/': new Uint8Array(),
-      '__MACOSX/openscience-specialist-template/': new Uint8Array(),
-      '__MACOSX/openscience-specialist-template/._manifest.json': new Uint8Array([1, 2, 3])
+      '__MACOSX/open-science-specialist-template/': new Uint8Array(),
+      '__MACOSX/open-science-specialist-template/._manifest.json': new Uint8Array([1, 2, 3])
     })
 
     const archive = validateSpecialistZip(zip, catalog)

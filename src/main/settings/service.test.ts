@@ -126,13 +126,13 @@ const validAnthropicResponse = (): Response =>
 
 const validBridgeToolCallResponse = (): Response =>
   new Response(
-    'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_1","function":{"name":"open_science_bridge_probe","arguments":"{}"}}]},"finish_reason":"tool_calls"}]}\n\ndata: [DONE]\n\n',
+    'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_1","function":{"name":"app_bridge_probe","arguments":"{}"}}]},"finish_reason":"tool_calls"}]}\n\ndata: [DONE]\n\n',
     { status: 200, headers: { 'content-type': 'text/event-stream' } }
   )
 
 const validNativeCompatibilityToolCallResponse = (): Response =>
   new Response(
-    'data: {"type":"response.output_item.added","item":{"type":"function_call","id":"fc_1","call_id":"call_1","name":"open_science__bridge_probe","arguments":"{}"}}\n\ndata: {"type":"response.completed","response":{"output":[{"type":"function_call","id":"fc_1","call_id":"call_1","name":"open_science__bridge_probe","arguments":"{}"}]}}\n\n',
+    'data: {"type":"response.output_item.added","item":{"type":"function_call","id":"fc_1","call_id":"call_1","name":"app__bridge_probe","arguments":"{}"}}\n\ndata: {"type":"response.completed","response":{"output":[{"type":"function_call","id":"fc_1","call_id":"call_1","name":"app__bridge_probe","arguments":"{}"}]}}\n\n',
     { status: 200, headers: { 'content-type': 'text/event-stream' } }
   )
 
@@ -462,17 +462,17 @@ describe('SettingsService: providers', () => {
     expect(await readFile(join(storageRoot, 'codex-subscription', 'config.toml'), 'utf8')).toBe(
       [
         'cli_auth_credentials_store = "file"',
-        '# Open Science: begin imported Codex route selection',
+        '# Open-Science: begin imported Codex route selection',
         'model_provider = "subscription-route"',
-        '# Open Science: end imported Codex route selection',
-        '# Open Science: begin imported Codex provider',
+        '# Open-Science: end imported Codex route selection',
+        '# Open-Science: begin imported Codex provider',
         '[model_providers."subscription-route"]',
         'name = "OpenAI"',
         'base_url = "http://127.0.0.1:1087/v1"',
         'wire_api = "responses"',
         'requires_openai_auth = true',
         'supports_websockets = false',
-        '# Open Science: end imported Codex provider',
+        '# Open-Science: end imported Codex provider',
         ''
       ].join('\n')
     )
@@ -1926,7 +1926,7 @@ describe('SettingsService: validation', () => {
     expect(fetchMock.mock.calls[0][0]).toBe('https://g/v1/chat/completions')
     expect(body).toMatchObject({
       stream: true,
-      tools: [{ type: 'function', function: { name: 'open_science_bridge_probe' } }]
+      tools: [{ type: 'function', function: { name: 'app_bridge_probe' } }]
     })
   })
 })
@@ -3001,37 +3001,37 @@ describe('SettingsService: preflight & spawn config', () => {
         expect.objectContaining({
           type: 'function',
           function: expect.objectContaining({
-            name: 'mcp__open_science_notebook__ask_user_question'
+            name: 'mcp__app_notebook__ask_user_question'
           })
         }),
         expect.objectContaining({
           type: 'function',
           function: expect.objectContaining({
-            name: 'mcp__open_science_notebook__notebook_execute',
+            name: 'mcp__app_notebook__notebook_execute',
             description: expect.stringContaining('MUST call host.mcp')
           })
         }),
         expect.objectContaining({
           type: 'function',
           function: expect.objectContaining({
-            name: 'mcp__open_science_artifacts__write_artifact_file'
+            name: 'mcp__app_artifacts__write_artifact_file'
           })
         }),
         expect.objectContaining({
           type: 'function',
           function: expect.objectContaining({
-            name: 'mcp__open_science_skills__request_skill_import'
+            name: 'mcp__app_skills__request_skill_import'
           })
         })
       ])
     })
     expect(JSON.stringify(upstreamRequest?.tools)).not.toContain(
-      'mcp__open_science_activity__begin_activity_group'
+      'mcp__app_activity__begin_activity_group'
     )
     const upstreamMessages = JSON.stringify(upstreamRequest?.messages)
     expect(upstreamRequest).toMatchObject({ thinking: { type: 'disabled' } })
     expect(upstreamRequest).not.toHaveProperty('reasoning_effort')
-    expect(upstreamMessages).not.toContain('<open_science_connector_instructions>')
+    expect(upstreamMessages).not.toContain('<open-science-connector-instructions>')
     expect(upstreamMessages).not.toContain('host.mcp("pubmed", "search_articles"')
 
     // Connector skill docs (host.mcp guidance) must be materialized into Codex's own home, not only
@@ -3063,8 +3063,8 @@ describe('SettingsService: preflight & spawn config', () => {
     const disabledToolNames = (
       (capturedDisabledRequest?.tools as Array<{ function?: { name?: string } }> | undefined) ?? []
     ).map((tool) => tool.function?.name)
-    expect(disabledToolNames).toContain('mcp__open_science_notebook__notebook_execute')
-    expect(disabledToolNames).not.toContain('mcp__open_science_skills__request_skill_import')
+    expect(disabledToolNames).toContain('mcp__app_notebook__notebook_execute')
+    expect(disabledToolNames).not.toContain('mcp__app_skills__request_skill_import')
     await disabledBackend.responsesBridgeLease?.release()
   })
 
@@ -3186,8 +3186,8 @@ describe('SettingsService: preflight & spawn config', () => {
       }
     ])
     expect(upstreamToolNames).toEqual([
-      expect.arrayContaining(['mcp__open_science_reviewer__submit_findings']),
-      expect.arrayContaining(['mcp__open_science_reviewer__submit_findings'])
+      expect.arrayContaining(['mcp__app_reviewer__submit_findings']),
+      expect.arrayContaining(['mcp__app_reviewer__submit_findings'])
     ])
 
     await firstBackend.responsesBridgeLease?.release()
@@ -3627,7 +3627,7 @@ describe('SettingsService: official vendors', () => {
     expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toMatchObject({
       model: 'deepseek-v4-pro',
       stream: true,
-      tools: [{ type: 'function', name: 'open_science__bridge_probe' }]
+      tools: [{ type: 'function', name: 'app__bridge_probe' }]
     })
   })
 
@@ -3648,7 +3648,7 @@ describe('SettingsService: official vendors', () => {
     expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toMatchObject({
       model: 'deepseek-v4-flash',
       stream: true,
-      tools: [{ type: 'function', name: 'open_science__bridge_probe' }]
+      tools: [{ type: 'function', name: 'app__bridge_probe' }]
     })
   })
 
@@ -3666,7 +3666,7 @@ describe('SettingsService: official vendors', () => {
     expect(fetchMock.mock.calls[0][0]).toBe('https://api.x.ai/v1/responses')
     expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toMatchObject({
       stream: true,
-      tools: [{ type: 'function', name: 'open_science__bridge_probe' }]
+      tools: [{ type: 'function', name: 'app__bridge_probe' }]
     })
   })
 

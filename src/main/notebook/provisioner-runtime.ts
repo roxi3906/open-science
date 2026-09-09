@@ -94,9 +94,9 @@ const executableEnv = ({
 
 const R_RUNTIME_PATH_PROBE = [
   'normalize <- function(path) normalizePath(path, winslash="/", mustWork=FALSE)',
-  'cat("OPEN_SCIENCE_R_HOME=", normalize(R.home()), "\\n", sep="")',
-  'cat("OPEN_SCIENCE_R_BASE_LIBRARY=", normalize(R.home("library")), "\\n", sep="")',
-  'for (path in .libPaths()) cat("OPEN_SCIENCE_R_LIBRARY=", normalize(path), "\\n", sep="")'
+  'cat("open-science-r-home=", normalize(R.home()), "\\n", sep="")',
+  'cat("open-science-r-base-library=", normalize(R.home("library")), "\\n", sep="")',
+  'for (path in .libPaths()) cat("open-science-r-library=", normalize(path), "\\n", sep="")'
 ].join('; ')
 
 const canonicalPath = (path: string): string => {
@@ -136,9 +136,9 @@ const assertRRuntimePaths = (
       .filter((line) => line.startsWith(marker))
       .map((line) => line.slice(marker.length).trim())
       .filter(Boolean)
-  const homes = values('OPEN_SCIENCE_R_HOME=')
-  const baseLibraries = values('OPEN_SCIENCE_R_BASE_LIBRARY=')
-  const libraries = values('OPEN_SCIENCE_R_LIBRARY=')
+  const homes = values('open-science-r-home=')
+  const baseLibraries = values('open-science-r-base-library=')
+  const libraries = values('open-science-r-library=')
   if (
     homes.length !== 1 ||
     baseLibraries.length !== 1 ||

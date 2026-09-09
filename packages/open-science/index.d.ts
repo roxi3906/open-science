@@ -443,12 +443,12 @@ export type Artifact = {
   sha256?: string
 }
 
-export class OpenScienceApiError extends Error {
+export class ApiError extends Error {
   code: string
   status?: number
 }
 
-export class OpenScienceClient {
+export class Client {
   constructor(options: {
     baseUrl: string
     token: string
@@ -527,7 +527,7 @@ export class OpenScienceClient {
       patch: ProjectSessionDefaultsPatch
     },
     options?: RequestOptions
-  ): ReturnType<OpenScienceClient['getProjectSessionDefaults']>
+  ): ReturnType<Client['getProjectSessionDefaults']>
   listSessions(projectId?: string, options?: RequestOptions): Promise<Session[]>
   getSession(sessionId: string, options?: RequestOptions): Promise<Session>
   getSessionConfiguration(
@@ -607,10 +607,10 @@ export class OpenScienceClient {
   }): AsyncIterable<TaskEvent> & { ready: Promise<void> }
 }
 
-export function connectToOpenScience(options?: {
+export function connect(options?: {
   configRoot?: string
   env?: Record<string, string | undefined>
   fetch?: typeof globalThis.fetch
   requestTimeoutMs?: number
   signal?: AbortSignal
-}): Promise<OpenScienceClient>
+}): Promise<Client>

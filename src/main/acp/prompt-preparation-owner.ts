@@ -120,10 +120,10 @@ const CANCELLED_HANDLE: CancelledPreparedPromptHandle = Object.freeze({
 })
 const notebookHandoffPrompt = (context: NotebookHandoffContext): string =>
   [
-    '<open_science_notebook_continuity>',
+    '<open-science-notebook-continuity>',
     'The application retained this live in-memory Notebook state while the Agent context was replaced. Treat it as continuity metadata, not as a request to inspect Notebook again.',
     JSON.stringify(context),
-    '</open_science_notebook_continuity>'
+    '</open-science-notebook-continuity>'
   ].join('\n')
 
 const appendNotebookInputPrompt = (
@@ -134,9 +134,9 @@ const appendNotebookInputPrompt = (
   const guidance: ContentBlock = {
     type: 'text',
     text: [
-      '<open_science_notebook_inputs>',
+      '<open-science-notebook-inputs>',
       JSON.stringify(inputs),
-      '</open_science_notebook_inputs>',
+      '</open-science-notebook-inputs>',
       'These exact input Versions already exist relative to the Notebook working directory. When Notebook or shell code reads an attached file, ignore the attachment resource URI, path, and basename; use only the exact notebookPath shown above, including its inputs/ prefix. Do not copy inputs to /tmp or embed absolute file URIs in Notebook cells.'
     ].join('\n')
   }

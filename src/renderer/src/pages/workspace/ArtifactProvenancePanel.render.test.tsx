@@ -2008,7 +2008,7 @@ describe('ArtifactProvenancePanel', () => {
     )
     for (const [index, kernel] of ['python', 'r'].entries()) {
       const notebook = JSON.parse(new TextDecoder().decode(saveBlobFile.mock.calls[index]![0].data))
-      expect(notebook.metadata.open_science).toMatchObject({
+      expect(notebook.metadata['open-science']).toMatchObject({
         kernel_filter: kernel,
         snapshot_scope: { retained_run_count: 2, kernels: ['python', 'r'] }
       })
@@ -2277,7 +2277,7 @@ describe('Provenance selection and evidence completeness', () => {
     await clickTab('Download notebook')
     expect(saveBlobFile).toHaveBeenCalledOnce()
     const notebook = JSON.parse(new TextDecoder().decode(saveBlobFile.mock.calls[0]![0].data))
-    expect.soft(notebook.metadata.open_science.truncation).toEqual(truncation)
+    expect.soft(notebook.metadata['open-science'].truncation).toEqual(truncation)
     expect(notebook.cells[0]).toMatchObject({ cell_type: 'markdown' })
     expect(notebook.cells[0].source.join('')).toContain(
       'omitted 3 earlier runs, 17 outputs, and 2 inputs'

@@ -124,7 +124,7 @@ const parsePage = (value: unknown, requestedPage: number): ReviewerPreviewPage =
 }
 
 const runtimeCall = (method: 'initialize' | 'preparePage', argument: unknown): string =>
-  `window.__openScienceReviewerPagedPreview.${method}(${JSON.stringify(argument)})`
+  `window.__appReviewerPagedPreview.${method}(${JSON.stringify(argument)})`
 
 const throwIfAborted = (signal?: AbortSignal): void => {
   if (signal?.aborted) throw signal.reason ?? new Error('Reviewer page preview was aborted.')

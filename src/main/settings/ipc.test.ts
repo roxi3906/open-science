@@ -223,8 +223,8 @@ const createFakeService = (): FakeSettingsService => ({
   setNetworkProxy: vi.fn().mockResolvedValue({ mode: 'system' }),
   setNotebookNetwork: vi.fn().mockResolvedValue({
     allowedDomains: [],
-    disabledOpenScienceDomainGroups: [],
-    disabledOpenScienceDomains: []
+    disabledAppDomainGroups: [],
+    disabledAppDomains: []
   }),
   listSkills: vi.fn().mockResolvedValue([]),
   getSkillDetail: vi.fn().mockResolvedValue({
@@ -1330,8 +1330,8 @@ describe('settings IPC handlers', () => {
       'settings:set-notebook-network',
       {
         allowedDomains: [],
-        disabledOpenScienceDomainGroups: [],
-        disabledOpenScienceDomains: []
+        disabledAppDomainGroups: [],
+        disabledAppDomains: []
       }
     ]
   ])('broadcasts the current SettingsSnapshot after %s', async (channel, payload) => {

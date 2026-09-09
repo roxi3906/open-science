@@ -128,7 +128,7 @@ describe('Literature MCP server', () => {
 
       expect(textBlocks).toHaveLength(2)
       expect(JSON.parse(textBlocks[0]?.text ?? '')).toEqual({
-        openScienceLiteraturePresentation: {
+        'open-science-literature-presentation': {
           retrievalMode: 'bm25',
           documentNames: ['paper.pdf'],
           passageCount: 2,

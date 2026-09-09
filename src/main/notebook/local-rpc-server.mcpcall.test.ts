@@ -1409,7 +1409,7 @@ describe('computeCall RPC', () => {
       hidden_files: [],
       output_files: ['hpc/job-42/featured/out.result'],
       left_on_remote: [],
-      remote_workdir: '~/.openscience/jobs/job-42',
+      remote_workdir: '~/.open-science/jobs/job-42',
       stdout_tail: 'done\n',
       stderr_tail: ''
     }

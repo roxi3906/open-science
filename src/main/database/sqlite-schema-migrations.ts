@@ -209,7 +209,7 @@ const applyRebuildTableSet = async (
     const targetDdl = withOptionalLegacyColumns(table.canonicalTableDdl, optionalColumns)
     prepared.push({
       tableName: table.tableName,
-      backupTableName: `__open_science_rebuild_${table.tableName}`,
+      backupTableName: `__open-science-rebuild_${table.tableName}`,
       targetDdl,
       copyColumns: [...table.columns, ...optionalColumns.map(({ name }) => name)],
       sourceRowCount: await countRows(client, table.tableName),
@@ -328,7 +328,7 @@ const rebuildTable = async (
   client: SqliteExecutor,
   migration: SqliteCheckConstraintMigration
 ): Promise<void> => {
-  const replacementTableName = `__open_science_migrate_${migration.tableName}`
+  const replacementTableName = `__open-science-migrate_${migration.tableName}`
   await migrationSqlExecutor.execute(
     client,
     `DROP TABLE IF EXISTS ${quoteIdentifier(replacementTableName)}`

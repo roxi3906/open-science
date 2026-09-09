@@ -3,19 +3,19 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
-  OPEN_SCIENCE_DOMAIN_GROUPS,
+  APP_DOMAIN_GROUPS,
   validateCustomAllowedDomain,
   type NotebookNetworkSettings,
   type NotebookNetworkStatus,
   type NotebookNetworkStatusReason,
-  type OpenScienceDomainGroupId
+  type AppDomainGroupId
 } from '../../../../shared/notebook-network'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { useSettingsStore } from '@/stores/settings-store'
 
-const GROUP_LABELS: Record<OpenScienceDomainGroupId, string> = {
+const GROUP_LABELS: Record<AppDomainGroupId, string> = {
   packageRegistries: 'Package registries and source code',
   nih: 'NIH and NCBI',
   genomics: 'Genomics and pathways',
@@ -101,20 +101,20 @@ const NotebookNetworkDomainsForm = (): React.JSX.Element => {
     }
   }
 
-  const toggleGroup = (id: OpenScienceDomainGroupId, enabled: boolean): void => {
+  const toggleGroup = (id: AppDomainGroupId, enabled: boolean): void => {
     setMessage(undefined)
-    const disabled = new Set(draft.disabledOpenScienceDomainGroups)
+    const disabled = new Set(draft.disabledAppDomainGroups)
     if (enabled) disabled.delete(id)
     else disabled.add(id)
-    setDraft({ ...draft, disabledOpenScienceDomainGroups: [...disabled] })
+    setDraft({ ...draft, disabledAppDomainGroups: [...disabled] })
   }
 
   const toggleBuiltInDomain = (domain: string, enabled: boolean): void => {
     setMessage(undefined)
-    const disabled = new Set(draft.disabledOpenScienceDomains)
+    const disabled = new Set(draft.disabledAppDomains)
     if (enabled) disabled.delete(domain)
     else disabled.add(domain)
-    setDraft({ ...draft, disabledOpenScienceDomains: [...disabled] })
+    setDraft({ ...draft, disabledAppDomains: [...disabled] })
   }
 
   const addDomain = (): void => {
@@ -277,8 +277,8 @@ const NotebookNetworkDomainsForm = (): React.JSX.Element => {
           )}
         </p>
         <div className="divide-y divide-border rounded-xl border border-border">
-          {OPEN_SCIENCE_DOMAIN_GROUPS.map((group) => {
-            const groupEnabled = !draft.disabledOpenScienceDomainGroups.includes(group.id)
+          {APP_DOMAIN_GROUPS.map((group) => {
+            const groupEnabled = !draft.disabledAppDomainGroups.includes(group.id)
             return (
               <details key={group.id} className="group px-4 py-3">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
@@ -308,7 +308,7 @@ const NotebookNetworkDomainsForm = (): React.JSX.Element => {
                       <Switch
                         size="sm"
                         disabled={isSaving || !groupEnabled || group.locked}
-                        checked={groupEnabled && !draft.disabledOpenScienceDomains.includes(domain)}
+                        checked={groupEnabled && !draft.disabledAppDomains.includes(domain)}
                         aria-label={t('Allow {{domain}}', { domain })}
                         onCheckedChange={(checked) => toggleBuiltInDomain(domain, checked)}
                       />

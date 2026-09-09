@@ -255,12 +255,12 @@ describe('createComputeJobRuntime', () => {
       status: 'running',
       remote_handle: JSON.stringify({
         pid: 1234,
-        exit_code_path: '~/.openscience/jobs/job-running/exit_code',
-        stdout_path: '~/.openscience/jobs/job-running/stdout',
-        stderr_path: '~/.openscience/jobs/job-running/stderr',
-        workdir: '~/.openscience/jobs/job-running'
+        exit_code_path: '~/.open-science/jobs/job-running/exit_code',
+        stdout_path: '~/.open-science/jobs/job-running/stdout',
+        stderr_path: '~/.open-science/jobs/job-running/stderr',
+        workdir: '~/.open-science/jobs/job-running'
       }),
-      remote_workdir: '~/.openscience/jobs/job-running'
+      remote_workdir: '~/.open-science/jobs/job-running'
     } as ComputeJob
     const terminalJob = {
       ...runningJob,

@@ -10,7 +10,7 @@ import type {
 } from '../settings/responses-bridge'
 import {
   loadSkillDocumentContent,
-  OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION
+  APP_SKILL_RUNTIME_SESSION_OPTION
 } from '../skills/runtime-mcp-server'
 import { AcpSessionPresentationPolicy } from './session-presentation-policy'
 import type { SessionCapabilityPolicy } from './session-capability-owner'
@@ -67,7 +67,7 @@ const CODEBUDDY_SKILL_RESOURCE_ROOT = '${CODEBUDDY_CONFIG_DIR}/skill-runtime/.cl
 const codeBuddySkillRuntimeRoot = (
   options: Readonly<Record<string, unknown>> | undefined
 ): string | undefined => {
-  const runtime = options?.[OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION]
+  const runtime = options?.[APP_SKILL_RUNTIME_SESSION_OPTION]
   if (typeof runtime !== 'object' || runtime === null || Array.isArray(runtime)) return undefined
   const root = (runtime as Record<string, unknown>).root
   return typeof root === 'string' ? root : undefined
@@ -251,22 +251,22 @@ class AcpTurnSkillOwner {
         ? undefined
         : state.scope?.kind === 'specialist'
           ? [
-              '<open_science_specialist_skill_scope>',
+              '<open-science-specialist-skill-scope>',
               'Current Specialist Skill discovery is limited to the following exact list. It supersedes and revokes every earlier Specialist Skill or Connector scope in this conversation. This list does not grant tool or Connector permissions.',
               ...state.scope.frameworkNames.map((name) => `- ${name}`),
-              '</open_science_specialist_skill_scope>'
+              '</open-science-specialist-skill-scope>'
             ].join('\n')
           : state.scope?.kind === 'main'
             ? [
-                '<open_science_main_agent_scope>',
+                '<open-science-main-agent-scope>',
                 'Current agent: Main Agent. Any earlier Specialist identity and Specialist-specific Skill or Connector scope in this conversation is no longer active. Use only capabilities available in the current Main Agent runtime.',
-                '</open_science_main_agent_scope>'
+                '</open-science-main-agent-scope>'
               ].join('\n')
             : undefined
     const codeBuddyGuidance =
       input.frameworkId === 'codebuddy'
         ? [
-            '<open_science_codebuddy_skill_route>',
+            '<open-science-codebuddy-skill-route>',
             'This turn replaces every earlier CodeBuddy Skill route. The exact Skill documents listed below are already loaded by Open-Science for this turn.',
             ...(codeBuddySkillNames.length > 0
               ? [
@@ -275,16 +275,16 @@ class AcpTurnSkillOwner {
                   'Use only the `host.mcp` Connector names and methods documented below; do not guess Connector names or methods.',
                   'Resolve every relative reference, script, or asset path in a loaded document against its `resource-root`. Keep the environment-backed root expression literal in local tool calls; do not print or resolve `CODEBUDDY_CONFIG_DIR`.',
                   ...loadedCodeBuddySkills.flatMap(({ name, resourceRoot, document }) => [
-                    `<open_science_loaded_skill name="${name}" resource-root="${resourceRoot}">`,
+                    `<open-science-loaded-skill name="${name}" resource-root="${resourceRoot}">`,
                     document,
-                    '</open_science_loaded_skill>'
+                    '</open-science-loaded-skill>'
                   ])
                 ]
               : [
                   '- (none)',
                   'No Skill is routed for this turn. Do not call `mcp__skills__load_skill`, use Notebook `host.skills`, or guess Connector names or methods.'
                 ]),
-            '</open_science_codebuddy_skill_route>'
+            '</open-science-codebuddy-skill-route>'
           ].join('\n')
         : undefined
     const guidance = [scopeGuidance, codeBuddyGuidance]
@@ -373,7 +373,7 @@ class AcpTurnSkillOwner {
       // Skill discovery fallback, so require a second independent empty verdict before continuing.
       if (selected.length === 0 && !codebuddy.signal?.aborted) {
         selected = await codebuddy.selectSkills(
-          `${input.selectionText}\n\n<open_science_skill_route_verification>The first routing pass selected no Skill. Re-evaluate the catalog specifically for any capability that could materially help execute the request; keep the selection empty only when none applies.</open_science_skill_route_verification>`,
+          `${input.selectionText}\n\n<open-science-skill-route-verification>The first routing pass selected no Skill. Re-evaluate the catalog specifically for any capability that could materially help execute the request; keep the selection empty only when none applies.</open-science-skill-route-verification>`,
           catalog,
           codebuddy.signal,
           codebuddy.observeUsage

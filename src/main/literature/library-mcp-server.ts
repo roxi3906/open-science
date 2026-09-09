@@ -209,7 +209,7 @@ const presentationContent = (
   presentation: LiteratureLibraryPresentation
 ): { type: 'text'; text: string } => ({
   type: 'text',
-  text: JSON.stringify({ openScienceLiteraturePresentation: presentation })
+  text: JSON.stringify({ 'open-science-literature-presentation': presentation })
 })
 
 const itemTitles = (items: readonly LiteratureItemView[]): string[] =>

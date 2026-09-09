@@ -10,7 +10,7 @@ describe('activity group tool events', () => {
   it.each([
     'mcp__open-science-activity__begin_activity_group',
     'open-science-activity_begin_activity_group',
-    'mcp__open_science_activity__begin_activity_group',
+    'mcp__app_activity__begin_activity_group',
     'mcp.open-science-activity.begin_activity_group',
     'open_science_activity_begin_activity_group'
   ])('recognizes framework tool identity %s', (providerToolName) => {

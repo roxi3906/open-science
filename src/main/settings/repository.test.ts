@@ -459,7 +459,7 @@ describe('settings repository', () => {
   it('returns empty settings when nothing is stored yet', async () => {
     const repository = new SettingsRepository(await createStorageRoot())
 
-    await expect(repository.getSettings()).resolves.toEqual({ version: 2, providers: [] })
+    await expect(repository.getSettings()).resolves.toEqual({ version: 3, providers: [] })
   })
 
   it('writes settings.json atomically and reads it back', async () => {
@@ -472,7 +472,7 @@ describe('settings repository', () => {
     const raw = JSON.parse(await readFile(join(root, 'settings.json'), 'utf8')) as {
       version: number
     }
-    expect(raw.version).toBe(2)
+    expect(raw.version).toBe(3)
 
     const settings = await repository.getSettings()
     expect(settings.claude).toEqual({ resolvedPath: '/bin/claude', version: '2.1.0' })
@@ -1281,7 +1281,7 @@ describe('settings repository', () => {
     // A relative dataRoot (corrupt or hand-edited settings.json) must be dropped so the data tree
     // never resolves against process.cwd(); initDataRoot then falls back to the default.
     expect(sanitizeSettings({ dataRoot: 'relative/path' }).dataRoot).toBeUndefined()
-    expect(sanitizeSettings({ dataRoot: './OpenScience' }).dataRoot).toBeUndefined()
+    expect(sanitizeSettings({ dataRoot: './Open-Science' }).dataRoot).toBeUndefined()
 
     // Whitespace-only is not a path.
     expect(sanitizeSettings({ dataRoot: '   ' }).dataRoot).toBeUndefined()
@@ -1387,7 +1387,7 @@ describe('settings repository: v2 official providers & activeModel migration', (
     )
 
     const settings = await new SettingsRepository(root).getSettings()
-    expect(settings.version).toBe(2)
+    expect(settings.version).toBe(3)
     expect(settings.activeModel).toBe('legacy-m')
   })
 

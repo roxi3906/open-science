@@ -52,7 +52,8 @@ type CacheMarker = { schema?: number; canonicalRoot?: string; userIdentity?: str
 
 type TempParentMarker = { schema?: number; kind?: string; userIdentity?: string }
 
-const WINDOWS_TEMP_PARENT = 'OpenScienceTmp'
+const WINDOWS_TEMP_PARENT = 'Open-Science-Tmp'
+const LEGACY_WINDOWS_TEMP_PARENT = 'OpenScienceTmp'
 const TEMP_PARENT_MARKER_FILE = '.open-science-temp.json'
 const TEMP_PARENT_MARKER_KIND = 'micromamba-working-cache-parent'
 
@@ -493,7 +494,8 @@ const candidatePaths = (
   canonicalRoot: string,
   leaf: string,
   env: NodeJS.ProcessEnv,
-  canonicalize: (path: string) => string
+  canonicalize: (path: string) => string,
+  temporaryParent = WINDOWS_TEMP_PARENT
 ): CachePathCandidate[] => {
   const runtimeVolume = win32.parse(canonicalRoot).root
   const seenTemporaryRoots = new Set([windowsKey(runtimeVolume)])
@@ -508,13 +510,13 @@ const candidatePaths = (
     })
   const profile = env.USERPROFILE ? win32.normalize(canonicalize(env.USERPROFILE)) : undefined
   const primary = {
-    path: win32.join(runtimeVolume, WINDOWS_TEMP_PARENT, leaf),
+    path: win32.join(runtimeVolume, temporaryParent, leaf),
     managedParent: true
   }
   return [
     primary,
     ...perUserTemps.map((perUserTemp) => ({
-      path: win32.join(perUserTemp, WINDOWS_TEMP_PARENT, leaf),
+      path: win32.join(perUserTemp, temporaryParent, leaf),
       profileBoundary: perUserTemp,
       managedParent: true
     })),
@@ -654,7 +656,7 @@ export const selectMicromambaCache = (
 // Recovery reads an exact working-cache path from the operation journal. Revalidate that persisted
 // path without creating it before any recursive scan: a damaged journal must not turn archive
 // publication into an arbitrary-directory traversal, and a cache parent may have been replaced by a
-// reparse point while the app was stopped. The marker-bound OpenScienceTmp form remains valid even if
+// reparse point while the app was stopped. A marker-bound temporary parent remains valid even if
 // TEMP changed between runs; the fixed profile fallback must remain inside the current profile.
 export const isTrustedMicromambaWorkingCacheForRoot = (
   root: string,
@@ -690,7 +692,14 @@ export const isTrustedMicromambaWorkingCacheForRoot = (
 
   const parent = win32.dirname(normalized)
   const parentLeaf = win32.basename(parent).toLowerCase()
-  if (parentLeaf !== WINDOWS_TEMP_PARENT.toLowerCase() && parentLeaf !== 'os-tmp') return false
+  if (
+    ![
+      WINDOWS_TEMP_PARENT.toLowerCase(),
+      LEGACY_WINDOWS_TEMP_PARENT.toLowerCase(),
+      'os-tmp'
+    ].includes(parentLeaf)
+  )
+    return false
   const profile = env.USERPROFILE ? win32.normalize(canonicalize(env.USERPROFILE)) : undefined
   if (parentLeaf === 'os-tmp' && (!profile || !isInside(profile, parent))) return false
 
@@ -878,6 +887,15 @@ export const removeMicromambaCacheForRoot = (
     deps.remove ?? ((path: string): void => rmSync(path, { recursive: true, force: true }))
   const cleanupCandidates = [
     ...candidatePaths(identity.canonicalRoot, identity.leaf, env, canonicalize),
+    ...candidatePaths(
+      identity.canonicalRoot,
+      identity.leaf,
+      env,
+      canonicalize,
+      LEGACY_WINDOWS_TEMP_PARENT
+    ).filter(
+      (candidate) => win32.basename(win32.dirname(candidate.path)) === LEGACY_WINDOWS_TEMP_PARENT
+    ),
     ...legacyCleanupCandidatePaths(
       identity.canonicalRoot,
       identity.legacyLeaf,

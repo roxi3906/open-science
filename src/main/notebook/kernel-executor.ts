@@ -401,23 +401,23 @@ const helperInitializationError = (
   helpers: readonly NotebookHelperModuleInjection[],
   responseError: string
 ): Error => {
-  const stage = responseError.includes('OPEN_SCIENCE_HELPER_MISSING_EXPORT')
+  const stage = responseError.includes('Open-Science:HELPER_MISSING_EXPORT')
     ? 'HELPER_MISSING_EXPORT'
-    : responseError.includes('OPEN_SCIENCE_HELPER_EXPORT_COLLISION')
+    : responseError.includes('Open-Science:HELPER_EXPORT_COLLISION')
       ? 'HELPER_EXPORT_COLLISION'
-      : responseError.includes('OPEN_SCIENCE_HELPER_DEPENDENCY_EXPORT_MISSING')
+      : responseError.includes('Open-Science:HELPER_DEPENDENCY_EXPORT_MISSING')
         ? 'HELPER_DEPENDENCY_EXPORT_MISSING'
         : 'HELPER_INITIALIZATION_FAILED'
   const helper =
     helpers.find(({ id }) =>
-      responseError.includes(`${stage.replace(/^HELPER_/, 'OPEN_SCIENCE_HELPER_')}:${id}`)
+      responseError.includes(`${stage.replace(/^HELPER_/, 'Open-Science:HELPER_')}:${id}`)
     ) ??
     helpers.find(({ id }) => responseError.includes(`:${id}`)) ??
     helpers[0]
   if (!helper) return new Error(`${stage}: helper plan failed before producer dispatch.`)
   const initializationDiagnostic = responseError.match(
     new RegExp(
-      `OPEN_SCIENCE_HELPER_INITIALIZATION_FAILED:${helper.id}:` +
+      `Open-Science:HELPER_INITIALIZATION_FAILED:${helper.id}:` +
         `([A-Za-z_][A-Za-z0-9_]{0,127})` +
         `(?::MISSING_MODULE:([A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*))?`
     )

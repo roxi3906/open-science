@@ -1,4 +1,9 @@
 import type { AgentFrameworkId } from './types'
+import {
+  canonicalMigratedAppServerName,
+  frameworkAppServerName,
+  legacyAppServerName
+} from '../../shared/brand-migration'
 
 type AppMcpServerDefinition = {
   canonicalName: string
@@ -12,17 +17,17 @@ type AppMcpServerDefinition = {
 const APP_MCP_SERVERS: readonly AppMcpServerDefinition[] = [
   {
     canonicalName: 'open-science-activity',
-    openCodeName: 'open_science_activity',
+    openCodeName: 'app_activity',
     tools: ['begin_activity_group']
   },
   {
     canonicalName: 'open-science-artifacts',
-    openCodeName: 'open_science_artifacts',
+    openCodeName: 'app_artifacts',
     tools: ['write_artifact_file']
   },
   {
     canonicalName: 'open-science-notebook',
-    openCodeName: 'open_science_notebook',
+    openCodeName: 'app_notebook',
     tools: [
       'ask_user_question',
       'notebook_execute',
@@ -44,22 +49,22 @@ const APP_MCP_SERVERS: readonly AppMcpServerDefinition[] = [
   },
   {
     canonicalName: 'open-science-skills',
-    openCodeName: 'open_science_skills',
+    openCodeName: 'app_skills',
     tools: ['request_skill_import']
   },
   {
     canonicalName: 'open-science-plan',
-    openCodeName: 'open_science_plan',
+    openCodeName: 'app_plan',
     tools: ['generate_plan', 'update_step_status']
   },
   {
     canonicalName: 'open-science-literature',
-    openCodeName: 'open_science_literature',
+    openCodeName: 'app_literature',
     tools: ['read_document']
   },
   {
     canonicalName: 'open-science-library',
-    openCodeName: 'open_science_library',
+    openCodeName: 'app_library',
     tools: [
       'search_library',
       'read_library_abstract',
@@ -73,7 +78,7 @@ const APP_MCP_SERVERS: readonly AppMcpServerDefinition[] = [
   },
   {
     canonicalName: 'open-science-host-message',
-    openCodeName: 'open_science_host_message',
+    openCodeName: 'app_host_message',
     tools: ['send_message'],
     // Side chat owns this fixed relationship scope; it is never a user-grantable primary capability.
     rememberedPermission: false
@@ -90,13 +95,15 @@ const APP_MCP_SERVER_BY_OPENCODE_NAME = new Map(
 const frameworkSafeMcpServerName = (name: string): string => name.replace(/[^a-zA-Z0-9_]/g, '_')
 
 const canonicalAppMcpServerName = (name: string): string =>
-  APP_MCP_SERVER_BY_OPENCODE_NAME.get(name)?.canonicalName ?? name
+  APP_MCP_SERVER_BY_OPENCODE_NAME.get(name)?.canonicalName ?? canonicalMigratedAppServerName(name)
 
 const modelFacingAppMcpServerName = (frameworkId: AgentFrameworkId, name: string): string => {
   const canonicalName = canonicalAppMcpServerName(name)
   const definition = APP_MCP_SERVER_BY_CANONICAL_NAME.get(canonicalName)
 
-  return frameworkId === 'opencode' && definition ? definition.openCodeName : canonicalName
+  return (frameworkId === 'opencode' || frameworkId === 'codebuddy') && definition
+    ? definition.openCodeName
+    : canonicalName
 }
 
 const appMcpServerAliases = (name: string): readonly string[] => {
@@ -106,7 +113,7 @@ const appMcpServerAliases = (name: string): readonly string[] => {
   return [
     ...new Set(
       definition
-        ? [definition.canonicalName, definition.openCodeName]
+        ? [definition.canonicalName, definition.openCodeName, legacyAppServerName(canonicalName)!]
         : [canonicalName, frameworkSafeMcpServerName(canonicalName)]
     )
   ]
@@ -173,7 +180,7 @@ const modelFacingAppMcpToolName = (
     return `${modelFacingAppMcpServerName(frameworkId, canonicalServer)}_${tool}`
   }
 
-  return `mcp__${canonicalServer.replace(/[^a-zA-Z0-9_]/g, '_')}__${tool}`
+  return `mcp__${frameworkId === 'claude-code' ? canonicalServer : frameworkAppServerName(canonicalServer)}__${tool}`
 }
 
 const renderAppMcpToolReferences = (frameworkId: AgentFrameworkId, text: string): string => {

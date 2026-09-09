@@ -1,3 +1,4 @@
+import { frameworkAppServerName } from '../../shared/brand-migration'
 import { z } from 'zod'
 import {
   CODEX_ISOLATED_PROVIDER_ID,
@@ -124,8 +125,7 @@ const transportTargetId = (
   providerId: string,
   model: string
 ): string => JSON.stringify([frameworkId, providerId, model])
-const namespaceFor = (serverName: string): string =>
-  `mcp__${serverName.replace(/[^a-zA-Z0-9_]/g, '_')}`
+const namespaceFor = (serverName: string): string => `mcp__${frameworkAppServerName(serverName)}`
 const NOTEBOOK_TOOLS: ResponsesBridgeNamespacedTool[] = NOTEBOOK_RPC_TOOLS.map((tool) => ({
   namespace: namespaceFor(NOTEBOOK_MCP_SERVER_NAME),
   name: tool.name,

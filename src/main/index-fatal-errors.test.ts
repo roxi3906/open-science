@@ -1,5 +1,4 @@
 import { spawn } from 'node:child_process'
-import { join } from 'node:path'
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -12,7 +11,7 @@ const mocks = vi.hoisted(() => {
   }
   const app = {
     isPackaged: false,
-    commandLine: { hasSwitch: vi.fn(() => false) },
+    commandLine: { hasSwitch: vi.fn((name: string) => name === 'user-data-dir') },
     setName: vi.fn(),
     setPath: vi.fn(),
     getPath: vi.fn(() => 'test-logs'),
@@ -166,32 +165,13 @@ afterEach(() => {
 })
 
 describe('main-process fatal errors', () => {
-  it.each([true, false])(
-    'retains the Electron profile across rebranding (packaged=%s)',
-    async (packaged) => {
-      mocks.app.isPackaged = packaged
-      try {
-        await bootUntilFailureHandlersAreInstalled()
-        expect(mocks.app.setPath).toHaveBeenCalledWith(
-          'userData',
-          join('test-logs', packaged ? 'Open Science' : 'Open Science (DEV)')
-        )
-        expect(mocks.app.setName).toHaveBeenCalledWith(
-          packaged ? 'Open-Science' : 'Open-Science (DEV)'
-        )
-      } finally {
-        mocks.app.isPackaged = false
-      }
-    }
-  )
-
   it('respects an explicit Chromium user-data-dir instead of replacing the profile', async () => {
     mocks.app.commandLine.hasSwitch.mockReturnValue(true)
     try {
       await bootUntilFailureHandlersAreInstalled()
       expect(mocks.app.setPath).not.toHaveBeenCalled()
     } finally {
-      mocks.app.commandLine.hasSwitch.mockReturnValue(false)
+      mocks.app.commandLine.hasSwitch.mockImplementation((name: string) => name === 'user-data-dir')
     }
   })
 

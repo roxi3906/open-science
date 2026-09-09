@@ -101,7 +101,7 @@ describe('planCliLauncher', () => {
     expect(plan.target).toBe(join(home, '.local', 'bin', 'open-science'))
     expect(plan.mode).toBe(0o755)
     expect(plan.shim).toContain('#!/bin/sh')
-    expect(plan.shim).toContain('Format version: 1')
+    expect(plan.shim).toContain('Format version: 2')
     expect(plan.shim).toContain('ELECTRON_RUN_AS_NODE=1')
     // Packaged: pins the app path and single-quotes both paths (they contain a space).
     expect(plan.shim).toContain("OPEN_SCIENCE_APP_PATH='/opt/Open-Science/open-science'")
@@ -499,7 +499,7 @@ describe.each([
     await mkdir(plan.binDir, { recursive: true })
     await writeFile(plan.target, legacyContent)
 
-    await expect(getCliLauncherStatus(env)).resolves.toMatchObject({ installed: true })
+    await expect(getCliLauncherStatus(env)).resolves.toMatchObject({ installed: false })
     await installCliLauncher(env, () => true)
     await expect(readFile(plan.target, 'utf8')).resolves.toBe(plan.shim)
     await uninstallCliLauncher(env, () => true)
@@ -602,7 +602,10 @@ describe('buildWindowsPathCommand', () => {
       "$pendingTempPath = [IO.Path]::Combine([IO.Path]::GetDirectoryName($pendingPath), '.open-science-path-pending.' + [Guid]::NewGuid().ToString('N') + '.tmp')"
     )
     expect(script).toContain(`$receiptPath = '${join(binDir, '.open-science-path-receipt')}'`)
-    expect(script).toContain(`$receiptOwner = '${WINDOWS_PATH_RECEIPT_OWNER}'`)
+    expect(script).toContain(
+      "$receiptOwner = 'Open-Science Windows PATH entry. Managed by the app.'"
+    )
+    expect(script).toContain(`$legacyReceiptOwner = '${WINDOWS_PATH_RECEIPT_OWNER}'`)
     expect(script).toContain("TrimEnd([char[]]'\\/') -ieq $normalizedBinDir")
     expect(script).toContain("[Environment]::SetEnvironmentVariable('Path'")
     expect(script).toContain(
@@ -957,4 +960,44 @@ describe('AppImage reconciliation platform boundary', () => {
     expect(await ensureCliLauncherCurrent(env)).toBeUndefined()
     expect(await readFile(plan.target, 'utf8')).toBe('user-managed launcher')
   })
+})
+
+describe('launcher reconciliation after application rename', () => {
+  it.each(['darwin', 'linux', 'win32'] as const)(
+    'repairs an installed %s launcher after its executable and resources move',
+    async (platform) => {
+      const createEnv = platform === 'win32' ? winEnv : posixEnv
+      const old = createEnv({
+        platform,
+        appExecPath: '/Applications/Open Science.app/Contents/MacOS/Open Science',
+        cliEntryPath: '/Applications/Open Science.app/Contents/Resources/cli/index.mjs'
+      })
+      const current = createEnv({
+        platform,
+        appExecPath: '/Applications/Open-Science.app/Contents/MacOS/Open-Science',
+        cliEntryPath: '/Applications/Open-Science.app/Contents/Resources/cli/index.mjs'
+      })
+      // Use a frozen released receipt, not the current generator, to prove upgrade support.
+      const plan = planCliLauncher(old)
+      await mkdir(plan.binDir, { recursive: true })
+      await writeFile(
+        plan.target,
+        platform === 'win32'
+          ? '@echo off\r\nrem Open Science command-line launcher. Managed by the app. Format version: 1.\r\n"/Applications/Open Science.app/Contents/MacOS/Open Science" old-cli %*\r\n'
+          : '#!/bin/sh\n# Open Science command-line launcher. Managed by the app. Format version: 1.\nexec "/Applications/Open Science.app/Contents/MacOS/Open Science" old-cli "$@"\n'
+      )
+
+      expect(await getCliLauncherStatus(current)).toMatchObject({ installed: false })
+      expect(await isCliShimStale(current)).toBe(true)
+      expect(await ensureCliLauncherCurrent(current, () => true)).toMatchObject({
+        installed: true
+      })
+      const repaired = await readFile(plan.target, 'utf8')
+      expect(repaired).toContain('/Applications/Open-Science.app/Contents/MacOS/Open-Science')
+      expect(repaired).toContain('/Applications/Open-Science.app/Contents/Resources/cli/index.mjs')
+      expect(repaired).not.toContain('Open Science')
+      expect(await isCliShimStale(current)).toBe(false)
+      expect(await ensureCliLauncherCurrent(current)).toBeUndefined()
+    }
+  )
 })

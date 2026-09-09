@@ -28,10 +28,10 @@ const scope = {
 
 const remoteHandle = JSON.stringify({
   pid: 4321,
-  workdir: '~/.openscience/jobs/job-1',
-  exit_code_path: '~/.openscience/jobs/job-1/exit_code',
-  stdout_path: '~/.openscience/jobs/job-1/stdout',
-  stderr_path: '~/.openscience/jobs/job-1/stderr'
+  workdir: '~/.open-science/jobs/job-1',
+  exit_code_path: '~/.open-science/jobs/job-1/exit_code',
+  stdout_path: '~/.open-science/jobs/job-1/stdout',
+  stderr_path: '~/.open-science/jobs/job-1/stderr'
 })
 
 const success = (stdout: string): Awaited<ReturnType<ComputeConnectionLease['run']>> => ({
@@ -87,7 +87,7 @@ describe('Compute Job cancellation owner (SQLite + fake SSH)', () => {
         command: 'sleep 100',
         commandHash: 'hash',
         executionMode,
-        remoteWorkdir: '~/.openscience/jobs/job-1',
+        remoteWorkdir: '~/.open-science/jobs/job-1',
         initialStatus: status,
         allowUnencryptedPersistence: !encrypted
       })
@@ -253,8 +253,8 @@ describe('Compute Job cancellation owner (SQLite + fake SSH)', () => {
       .fn<ComputeConnectionLease['run']>()
       .mockResolvedValue(
         success(
-          'expected|/home/researcher/.openscience/jobs/job-1\n' +
-            'active|456|openscience-job-1|/shared/other/.openscience/jobs/job-1\n'
+          'expected|/home/researcher/.open-science/jobs/job-1\n' +
+            'active|456|open-science-job-1|/shared/other/.open-science/jobs/job-1\n'
         )
       )
     const owner = new ComputeJobCancellationOwner(operations, jobs)
@@ -371,7 +371,7 @@ describe('Compute Job cancellation owner (SQLite + fake SSH)', () => {
     await reaper.runOnce()
 
     expect(run).toHaveBeenCalledWith(
-      expect.stringContaining('.openscience/jobs/job-1'),
+      expect.stringContaining('.open-science/jobs/job-1'),
       expect.anything()
     )
     expect(run.mock.calls[0]?.[0]).toContain('job_pid_is_owned 4321')

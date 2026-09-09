@@ -20,7 +20,7 @@ describe('defaultDiscoveryDeps Windows conda R probes', () => {
       stdout: '',
       stderr: 'R scripting front-end version 4.6.0 (2026-04-24)'
     }))
-    const deps = defaultDiscoveryDeps('C:\\Users\\HM\\OpenScience\\runtime', undefined, {
+    const deps = defaultDiscoveryDeps('C:\\Users\\HM\\Open-Science\\runtime', undefined, {
       platform: 'win32',
       exec
     })
@@ -58,7 +58,7 @@ describe('defaultDiscoveryDeps Windows conda R probes', () => {
   })
 
   it('activates the interpreter own conda prefix for version and jsonlite probes', async () => {
-    const prefix = 'C:\\Users\\HM\\OpenScience\\runtime\\envs\\default-r'
+    const prefix = 'C:\\Users\\HM\\Open-Science\\runtime\\envs\\default-r'
     const interpreter = `${prefix}\\Lib\\R\\bin\\R.exe`
     const exec = vi.fn(
       async (
@@ -80,7 +80,7 @@ describe('defaultDiscoveryDeps Windows conda R probes', () => {
           : { stdout: 'TRUE', stderr: '' }
       }
     )
-    const deps = defaultDiscoveryDeps('C:\\Users\\HM\\OpenScience\\runtime', undefined, {
+    const deps = defaultDiscoveryDeps('C:\\Users\\HM\\Open-Science\\runtime', undefined, {
       platform: 'win32',
       exec
     })
@@ -108,7 +108,7 @@ describe('defaultDiscoveryDeps Windows conda R probes', () => {
           : { stdout: 'TRUE', stderr: '' }
       }
     )
-    const deps = defaultDiscoveryDeps('C:\\Users\\HM\\OpenScience\\runtime', undefined, {
+    const deps = defaultDiscoveryDeps('C:\\Users\\HM\\Open-Science\\runtime', undefined, {
       platform: 'win32',
       env,
       exec
@@ -184,10 +184,10 @@ describe('discoverInterpreters', () => {
 
   it('uses the injected platform when classifying interpreter provenance', async () => {
     const platform: NodeJS.Platform = process.platform === 'win32' ? 'linux' : 'win32'
-    const runtimeRoot = join(tmpdir(), 'OpenScience', 'runtime')
+    const runtimeRoot = join(tmpdir(), 'Open-Science', 'runtime')
     const interpreterPath = join(
       tmpdir(),
-      'openscience',
+      'open-science',
       'runtime',
       'envs',
       'analysis',

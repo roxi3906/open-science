@@ -44,12 +44,12 @@ const VISION_SYSTEM_PROMPT = [
 ].join(' ')
 
 const VISION_EVIDENCE_USAGE_GUIDANCE = [
-  '<open_science_vision_evidence_instructions>',
+  '<open-science-vision-evidence-instructions>',
   'The populated `<attached-image-evidence>` blocks in this prompt are the application-prepared representation of attached images for the active text-only model.',
   'When the user request can be answered only by inspecting, transcribing, summarizing, or explaining those images, answer directly from the supplied evidence.',
   'Do not use filesystem, shell, Notebook, MCP, Skill, plugin, or network tools merely to find, open, read, or parse the images again.',
   'Use tools when the user request independently requires work beyond reading the images, such as comparing project files, running an analysis, or creating an output.',
-  '</open_science_vision_evidence_instructions>'
+  '</open-science-vision-evidence-instructions>'
 ].join('\n')
 
 type ImageEvidence = Readonly<{

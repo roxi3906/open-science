@@ -683,11 +683,11 @@ class CommandGateway {
     try {
       const decision = await this.#options.decide(host, port)
       if (!this.#active || generation !== this.#connectionGeneration) {
-        return { allowed: false, message: 'OPEN_SCIENCE_NETWORK_POLICY_BLOCKED' }
+        return { allowed: false, message: 'Open-Science:NETWORK_POLICY_BLOCKED' }
       }
       return decision
     } catch {
-      return { allowed: false, message: 'OPEN_SCIENCE_NETWORK_POLICY_BLOCKED' }
+      return { allowed: false, message: 'Open-Science:NETWORK_POLICY_BLOCKED' }
     }
   }
 
@@ -727,7 +727,7 @@ class CommandGateway {
           ? new URL(request.url)
           : new URL(request.url ?? '/', `http://${request.headers.host ?? ''}`)
     } catch {
-      rejectHttp(response, 'OPEN_SCIENCE_NETWORK_POLICY_BLOCKED: malformed proxy request')
+      rejectHttp(response, 'Open-Science:NETWORK_POLICY_BLOCKED: malformed proxy request')
       return
     }
     if (target.hostname === LOCAL_RPC_BROKER_HOST) {
@@ -737,7 +737,7 @@ class CommandGateway {
     const port = defaultPort(target)
     const decision = await this.#authorize(target.hostname, port, generation)
     if (!decision.allowed) {
-      rejectHttp(response, decision.message ?? 'OPEN_SCIENCE_NETWORK_POLICY_BLOCKED')
+      rejectHttp(response, decision.message ?? 'Open-Science:NETWORK_POLICY_BLOCKED')
       return
     }
     const proxyUrl = selectProxy(this.#parent, target.hostname, port, target.protocol === 'https:')
@@ -840,7 +840,7 @@ class CommandGateway {
   #forwardLocalRpc(request: IncomingMessage, response: ServerResponse, target: URL): void {
     const socketPath = this.#options.localRpcSocketPath
     if (!socketPath || target.protocol !== 'http:' || defaultPort(target) !== 80) {
-      rejectHttp(response, 'OPEN_SCIENCE_NETWORK_POLICY_BLOCKED: local RPC route unavailable')
+      rejectHttp(response, 'Open-Science:NETWORK_POLICY_BLOCKED: local RPC route unavailable')
       return
     }
     const headers = withoutConnectionHeaders(request.headers)
@@ -877,12 +877,12 @@ class CommandGateway {
     try {
       destination = parseAuthority(request.url ?? '', 443)
     } catch {
-      rejectSocket(client, 'OPEN_SCIENCE_NETWORK_POLICY_BLOCKED: malformed CONNECT target')
+      rejectSocket(client, 'Open-Science:NETWORK_POLICY_BLOCKED: malformed CONNECT target')
       return
     }
     const decision = await this.#authorize(destination.host, destination.port, generation)
     if (!decision.allowed) {
-      rejectSocket(client, decision.message ?? 'OPEN_SCIENCE_NETWORK_POLICY_BLOCKED')
+      rejectSocket(client, decision.message ?? 'Open-Science:NETWORK_POLICY_BLOCKED')
       return
     }
     try {

@@ -1,13 +1,11 @@
+import { frameworkAppServerName } from '../../shared/brand-migration'
 import { z } from 'zod'
 
 import { REVIEWER_MCP_SERVER_NAME, REVIEWER_MCP_TOOLS } from '../../shared/reviewer'
 import type { ResponsesBridgeNamespacedTool } from '../settings/responses-bridge'
 import { reviewerArtifactReadInputSchema, submitFindingsBridgeInputSchema } from './mcp-server'
 
-export const REVIEWER_BRIDGE_TOOL_NAMESPACE = `mcp__${REVIEWER_MCP_SERVER_NAME.replace(
-  /[^a-zA-Z0-9_]/g,
-  '_'
-)}`
+export const REVIEWER_BRIDGE_TOOL_NAMESPACE = `mcp__${frameworkAppServerName(REVIEWER_MCP_SERVER_NAME)}`
 
 export const REVIEWER_BRIDGE_NAMESPACED_TOOLS: ResponsesBridgeNamespacedTool[] = [
   {

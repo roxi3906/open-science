@@ -46,7 +46,7 @@ const DOT_STYLES: IndicatorDotStyle[] = [
   }
 ]
 
-const OpenScienceThinkingIndicator = (): React.JSX.Element => (
+const BrandThinkingIndicator = (): React.JSX.Element => (
   <span
     data-testid="open-science-thinking-indicator"
     className="open-science-thinking-indicator text-text-300"
@@ -62,4 +62,4 @@ const OpenScienceThinkingIndicator = (): React.JSX.Element => (
   </span>
 )
 
-export { OpenScienceThinkingIndicator }
+export { BrandThinkingIndicator }

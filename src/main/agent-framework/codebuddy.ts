@@ -17,7 +17,7 @@ import { openAiChatCompletionsUrl, openAiCompletionsBase } from '../settings/bas
 import type { ResolvedProvider } from '../settings/provider-env'
 import { augmentedPathEnv } from '../settings/shell-path'
 import {
-  OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION,
+  APP_SKILL_RUNTIME_SESSION_OPTION,
   narrowSkillRuntimeAcpServers
 } from '../skills/runtime-mcp-server'
 import { isProductionDelegatedWorkFramework } from '../delegation/production-readiness'
@@ -244,7 +244,7 @@ export const createCodeBuddyFramework = ({
 
   buildSessionSetup(ctx: SessionSetupContext): SessionSetup {
     const sessionOptions = { ...(ctx.sessionOptions ?? {}) }
-    const skillRuntime = recordValue(sessionOptions[OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION])
+    const skillRuntime = recordValue(sessionOptions[APP_SKILL_RUNTIME_SESSION_OPTION])
     const externalRetrievalGuidance =
       'Open-Science owns external-data routing for CodeBuddy. Do not use WebFetch, WebSearch, or direct HTTP (including curl or wget from Bash or PowerShell) as a fallback for missing or failed Skill/Connector routing. If no routed Skill or Connector is available, report that external retrieval is unavailable.'
     const skillProjectionAvailable =

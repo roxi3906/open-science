@@ -38,7 +38,7 @@ describe('SessionCacheOwner', () => {
   })
 
   it('creates the Session cache when the configured data root does not exist yet', async () => {
-    const absentRoot = join(storageRoot, 'OpenScience')
+    const absentRoot = join(storageRoot, 'Open-Science')
     const freshOwner = new SessionCacheOwner(absentRoot)
 
     const operation = await freshOwner.createOperationFile('project-1', 'session-1', 'result.csv')

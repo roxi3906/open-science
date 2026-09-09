@@ -11,6 +11,47 @@ import {
 } from './repository'
 
 describe('MarketplaceRepository', () => {
+  it('migrates only the official source identity without changing signed cache bytes', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'marketplace-brand-migration-'))
+    const repository = new MarketplaceRepository(root)
+    const rootBytes = Uint8Array.from(Buffer.from('{"name":"OpenScience signed payload"}'))
+    const signatureBytes = Uint8Array.from(Buffer.from('unchanged signature'))
+    await repository.cacheRoot(
+      'openscience-official',
+      rootBytes,
+      signatureBytes,
+      '2026-08-17T00:00:00.000Z'
+    )
+    await repository.recordInstallation({
+      sourceId: 'openscience-official',
+      specialistId: 'research',
+      publisher: 'Original Publisher',
+      version: '1.0.0',
+      releasePath: 'releases/research/1.0.0.json',
+      releaseDigest: 'a'.repeat(64),
+      artifactDigest: 'b'.repeat(64),
+      upstreamCommit: 'c'.repeat(40),
+      selectedSkillIds: [],
+      selectedConnectorIds: [],
+      installedAt: '2026-08-17T00:00:00.000Z'
+    })
+    await repository.migrateBrandIdentity()
+    expect((await repository.getAll()).installations[0]).toMatchObject({
+      sourceId: 'open-science-official',
+      specialistId: 'research',
+      publisher: 'Original Publisher',
+      releaseDigest: 'a'.repeat(64)
+    })
+    expect(await repository.getCachedRoot('open-science-official')).toMatchObject({
+      rootBytes,
+      signatureBytes
+    })
+    const path = join(root, 'specialist-marketplace.json')
+    const saved = await readFile(path, 'utf8')
+    expect(saved).not.toContain('openscience-official')
+    await repository.migrateBrandIdentity()
+    expect(await readFile(path, 'utf8')).toBe(saved)
+  })
   it('recovers a valid historical temp when the primary is missing', async () => {
     const root = await mkdtemp(join(tmpdir(), 'marketplace-repository-temp-'))
     await writeFile(

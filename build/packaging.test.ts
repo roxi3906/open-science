@@ -236,7 +236,9 @@ describe('NSIS installer include (build/installer.nsh)', () => {
     expect(init).toContain('ReadRegStr $perMachineInstallDirCache HKEY_LOCAL_MACHINE')
     expect(init).toContain('ReadRegStr $perUserInstallDirCache HKEY_CURRENT_USER')
     expect(init).not.toContain('ReadRegStr $shellInstallDirCache SHELL_CONTEXT')
-    expect(init.match(/!insertmacro preserveNestedDataRoot/g) ?? []).toHaveLength(1)
+    expect(init.match(/!insertmacro preserveNestedDataRoot/g) ?? []).toHaveLength(2)
+    expect(init).toContain('$perUserCurrentDataBackup per-user-current Open-Science')
+    expect(machineProtection).toContain('$perMachineCurrentDataBackup machine-current Open-Science')
     expect(machineProtection).toContain(
       '!insertmacro preserveNestedDataRoot $perMachineInstallDirCache $perMachineDataBackup machine'
     )
@@ -283,13 +285,11 @@ describe('NSIS installer include (build/installer.nsh)', () => {
     )
     expect(selectedModeAt).toBeGreaterThan(-1)
     expect(selectedModeAt).toBeLessThan(preserveMachineAt)
-    expect(pageHook).toContain(
-      '!define openScienceOriginalInstFilesPre ${MUI_PAGE_CUSTOMFUNCTION_PRE}'
-    )
+    expect(pageHook).toContain('!define appOriginalInstFilesPre ${MUI_PAGE_CUSTOMFUNCTION_PRE}')
     expect(pageHook).toContain(
       '!define MUI_PAGE_CUSTOMFUNCTION_PRE protectNestedDataRootsForInstall'
     )
-    expect(header).toContain('Call ${openScienceOriginalInstFilesPre}')
+    expect(header).toContain('Call ${appOriginalInstFilesPre}')
     expect(header).toContain('!insertmacro protectMachineDataRootForSelectedMode')
   })
 

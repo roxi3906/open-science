@@ -154,8 +154,8 @@ const allowCitationPreviewDomain = async (page: Page): Promise<void> => {
   await page.evaluate(async () => {
     await window.api.settings.setNotebookNetwork({
       allowedDomains: ['citation.example'],
-      disabledOpenScienceDomainGroups: [],
-      disabledOpenScienceDomains: []
+      disabledAppDomainGroups: [],
+      disabledAppDomains: []
     })
   })
   await page.reload({ waitUntil: 'domcontentloaded' })

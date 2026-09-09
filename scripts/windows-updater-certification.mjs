@@ -255,7 +255,7 @@ Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
 
-public static class OpenScienceProcessObserver
+public static class AppProcessObserver
 {
     [DllImport("kernel32.dll", SetLastError = true)]
     public static extern IntPtr OpenProcess(uint access, bool inheritHandle, uint processId);
@@ -289,24 +289,24 @@ if (-not $candidate) {
   exit 124
 }
 $access = 0x00100000 -bor 0x00001000
-$handle = [OpenScienceProcessObserver]::OpenProcess($access, $false, [uint32]$candidate.ProcessId)
+$handle = [AppProcessObserver]::OpenProcess($access, $false, [uint32]$candidate.ProcessId)
 if ($handle -eq [IntPtr]::Zero) {
   [Console]::Error.Write("Could not observe updater installer process $($candidate.ProcessId).")
   exit 126
 }
-$wait = [OpenScienceProcessObserver]::WaitForSingleObject($handle, 300000)
+$wait = [AppProcessObserver]::WaitForSingleObject($handle, 300000)
 if ($wait -eq 0x00000102) {
-  [OpenScienceProcessObserver]::CloseHandle($handle) | Out-Null
+  [AppProcessObserver]::CloseHandle($handle) | Out-Null
   [Console]::Error.Write("The updater installer process $($candidate.ProcessId) did not exit.")
   exit 125
 }
 [uint32]$exitCode = 0
-if ($wait -ne 0 -or -not [OpenScienceProcessObserver]::GetExitCodeProcess($handle, [ref]$exitCode)) {
-  [OpenScienceProcessObserver]::CloseHandle($handle) | Out-Null
+if ($wait -ne 0 -or -not [AppProcessObserver]::GetExitCodeProcess($handle, [ref]$exitCode)) {
+  [AppProcessObserver]::CloseHandle($handle) | Out-Null
   [Console]::Error.Write("Could not read updater installer exit code for process $($candidate.ProcessId).")
   exit 126
 }
-[OpenScienceProcessObserver]::CloseHandle($handle) | Out-Null
+[AppProcessObserver]::CloseHandle($handle) | Out-Null
 [Console]::Out.Write("installer pid=$($candidate.ProcessId) exit=$exitCode")
 exit $exitCode
 `.trim()

@@ -1,11 +1,11 @@
 import { chmod, mkdtemp, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import type { IncomingMessage } from 'node:http'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { authenticateRequest, loadOrCreateWebToken } from './auth'
+import { authenticateRequest, loadOrCreateWebToken, persistAuthCookie } from './auth'
 
 const dirs: string[] = []
 
@@ -17,6 +17,39 @@ const request = (headers: Record<string, string>): IncomingMessage =>
   ({ headers }) as unknown as IncomingMessage
 
 describe('web authentication', () => {
+  it('migrates a valid released cookie and rejects malformed current cookies without fallback', () => {
+    const token = 't'.repeat(43)
+    const url = new URL('http://127.0.0.1:44100/api/bootstrap')
+    const authenticate = (cookie: string): ReturnType<typeof authenticateRequest> =>
+      authenticateRequest(request({ host: url.host, cookie }), url, token)
+    expect(authenticate(`open_science_web_token=${token}`)).toMatchObject({
+      ok: true,
+      migrateCookie: true
+    })
+    expect(authenticate(`open-science-web-token=${token}`)).toMatchObject({
+      ok: true,
+      migrateCookie: false
+    })
+    for (const current of ['wrong', '%ZZ', '']) {
+      expect(
+        authenticate(`open-science-web-token=${current}; open_science_web_token=${token}`).ok
+      ).toBe(false)
+    }
+    let cookies: unknown
+    persistAuthCookie(
+      {
+        setHeader: (_name: string, value: unknown) => {
+          cookies = value
+        }
+      } as ServerResponse,
+      token
+    )
+    expect(cookies).toEqual([
+      `open-science-web-token=${token}; HttpOnly; SameSite=Strict; Path=/`,
+      'open_science_web_token=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0'
+    ])
+  })
+
   it('creates and reuses a persistent random token', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'open-science-web-auth-'))
     dirs.push(dir)

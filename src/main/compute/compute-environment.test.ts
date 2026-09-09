@@ -27,13 +27,37 @@ describe('Compute environment resolution', () => {
     const command = applyComputeEnvironment('python analysis.py', 'rna.gpu-1')
 
     expect(command).toContain(
-      'OPEN_SCIENCE_ENV_FILE="$HOME/.openscience/environments/rna.gpu-1.sh"'
+      'OPEN_SCIENCE_ENV_FILE="$HOME/.open-science/environments/rna.gpu-1.sh"'
     )
     expect(command).toContain('. "$OPEN_SCIENCE_ENV_FILE"')
     expect(command.indexOf('. "$OPEN_SCIENCE_ENV_FILE"')).toBeLessThan(
       command.indexOf('python analysis.py')
     )
   })
+
+  it.skipIf(process.platform === 'win32')(
+    'reads released activation paths but prefers the current file',
+    () => {
+      const home = mkdtempSync(join(tmpdir(), 'compute-environment-home-'))
+      roots.push(home)
+      const oldDirectory = join(home, '.openscience', 'environments')
+      const newDirectory = join(home, '.open-science', 'environments')
+      mkdirSync(oldDirectory, { recursive: true })
+      writeFileSync(join(oldDirectory, 'legacy.sh'), 'export COMPUTE_ENV_WITNESS=old\n')
+      const run = (): ReturnType<typeof spawnSync> =>
+        spawnSync(
+          'bash',
+          ['-c', applyComputeEnvironment('printf %s "$COMPUTE_ENV_WITNESS"', 'legacy')],
+          { encoding: 'utf8', env: { ...process.env, HOME: home } }
+        )
+      expect(run().stdout).toBe('old')
+      mkdirSync(newDirectory, { recursive: true })
+      writeFileSync(join(newDirectory, 'legacy.sh'), 'export COMPUTE_ENV_WITNESS=current\n')
+      expect(run().stdout).toBe('current')
+      writeFileSync(join(newDirectory, 'legacy.sh'), 'false\n')
+      expect(run().status).toBe(1)
+    }
+  )
 
   it('keeps scheduler directives ahead of the activation preamble', () => {
     const command = applyComputeEnvironment(
@@ -66,11 +90,11 @@ describe('Compute environment resolution', () => {
         env: { ...process.env, HOME: home }
       })
 
-      expect(command).toContain('~/.openscience/environments/protein-gpu.sh')
+      expect(command).toContain('~/.open-science/environments/protein-gpu.sh')
       expect(command).toContain('compute-env-setup Skill')
       expect(command).toContain('exit 78')
       expect(result.status).toBe(78)
-      expect(result.stderr).toContain('~/.openscience/environments/protein-gpu.sh')
+      expect(result.stderr).toContain('~/.open-science/environments/protein-gpu.sh')
       expect(result.stderr).toContain('os-compute-env-setup')
     }
   )
@@ -80,7 +104,7 @@ describe('Compute environment resolution', () => {
     () => {
       const home = mkdtempSync(join(tmpdir(), 'compute-environment-home-'))
       roots.push(home)
-      const directory = join(home, '.openscience', 'environments')
+      const directory = join(home, '.open-science', 'environments')
       mkdirSync(directory, { recursive: true })
       writeFileSync(join(directory, 'broken.sh'), 'false\nexport SHOULD_NOT_EXIST=yes\n')
 
@@ -100,7 +124,7 @@ describe('Compute environment resolution', () => {
     () => {
       const home = mkdtempSync(join(tmpdir(), 'compute-environment-home-'))
       roots.push(home)
-      const directory = join(home, '.openscience', 'environments')
+      const directory = join(home, '.open-science', 'environments')
       mkdirSync(directory, { recursive: true })
       writeFileSync(join(directory, 'working.sh'), 'export COMPUTE_ENV_WITNESS=ready\n')
 
@@ -121,7 +145,7 @@ describe('Compute environment resolution', () => {
     () => {
       const home = mkdtempSync(join(tmpdir(), 'compute-environment-home-'))
       roots.push(home)
-      const directory = join(home, '.openscience', 'environments')
+      const directory = join(home, '.open-science', 'environments')
       mkdirSync(directory, { recursive: true })
       writeFileSync(join(directory, 'working.sh'), 'export COMPUTE_ENV_WITNESS=ready\n')
 
@@ -141,7 +165,7 @@ describe('Compute environment resolution', () => {
     () => {
       const home = mkdtempSync(join(tmpdir(), 'compute-environment-home-'))
       roots.push(home)
-      const directory = join(home, '.openscience', 'environments')
+      const directory = join(home, '.open-science', 'environments')
       mkdirSync(directory, { recursive: true })
       writeFileSync(join(directory, 'working.sh'), 'export COMPUTE_ENV_WITNESS=ready\n')
 
@@ -170,6 +194,6 @@ describe('Compute environment resolution', () => {
 
   it.each(['python', 'cuda-12.4', 'rna_seq', 'R4'])('accepts environment name %j', (name) => {
     expect(() => validateComputeEnvironmentName(name)).not.toThrow()
-    expect(computeEnvironmentPath(name)).toBe(`~/.openscience/environments/${name}.sh`)
+    expect(computeEnvironmentPath(name)).toBe(`~/.open-science/environments/${name}.sh`)
   })
 })

@@ -41,7 +41,7 @@ const readBinding = async (
 describe('EnvironmentStateTracker', () => {
   it('activates the complete Windows Conda DLL path for managed R probes', () => {
     const inherited = { Path: 'C:\\Windows\\System32', KEEP_ME: 'yes' }
-    const prefix = 'C:\\Users\\Helix\\OpenScience\\runtime\\envs\\.r'
+    const prefix = 'C:\\Users\\Helix\\Open-Science\\runtime\\envs\\.r'
 
     expect(
       environmentCaptureProcessEnv(
@@ -72,7 +72,7 @@ describe('EnvironmentStateTracker', () => {
 
   it('passes the activated Windows Conda DLL path to default R inventory and fingerprint spawns', async () => {
     dataRoot = await mkdtemp(join(tmpdir(), 'open-science-env-r-spawn-'))
-    const prefix = 'C:\\Users\\Helix\\OpenScience\\runtime\\envs\\.r'
+    const prefix = 'C:\\Users\\Helix\\Open-Science\\runtime\\envs\\.r'
     const execute = vi.fn(
       async (
         _command: string,

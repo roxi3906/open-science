@@ -5749,7 +5749,7 @@ describe('session store', () => {
   it('keeps a staged upload path until the main process publishes its immutable Version', () => {
     const attachment = createUploadAttachment({
       id: 'staged-upload-1',
-      path: '/Users/example/OpenScience-DEV/uploads/default-project/.pending/staged.csv'
+      path: '/Users/example/Open-Science-DEV/uploads/default-project/.pending/staged.csv'
     })
     const pending = useSessionStore.getState().appendPendingUserMessage({
       content: 'Analyze the uploaded file',

@@ -1444,6 +1444,7 @@ const startWebHttpServer = async (options: WebServerOptions): Promise<RunningWeb
         json(response, 400, { error: 'Malformed URL encoding.' })
         return
       }
+      if (auth.ok && auth.migrateCookie) persistAuthCookie(response, options.token)
       if (auth.ok && auth.queryToken && request.method === 'GET' && url.pathname === '/') {
         persistAuthCookie(response, options.token)
         url.searchParams.delete('token')

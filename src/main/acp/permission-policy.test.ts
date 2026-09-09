@@ -197,7 +197,7 @@ describe('permission policy', () => {
   it('auto-approves only the server-qualified Artifact save capability without prompting', () => {
     for (const providerToolName of [
       'mcp__open-science-artifacts__write_artifact_file',
-      'mcp__open_science_artifacts__write_artifact_file',
+      'mcp__app_artifacts__write_artifact_file',
       'mcp.open-science-artifacts.write_artifact_file',
       'open-science-artifacts_write_artifact_file',
       'open_science_artifacts_write_artifact_file',
@@ -255,7 +255,7 @@ describe('permission policy', () => {
   it('auto-approves only the server-qualified user choice capability without prompting', () => {
     for (const providerToolName of [
       'mcp__open-science-notebook__ask_user_question',
-      'mcp__open_science_notebook__ask_user_question',
+      'mcp__app_notebook__ask_user_question',
       'mcp.open-science-notebook.ask_user_question',
       'open-science-notebook_ask_user_question',
       'open_science_notebook_ask_user_question'
@@ -297,7 +297,7 @@ describe('permission policy', () => {
     ],
     ['opencode', 'opencode' as const, 'open_science_notebook_request_network_access', false],
     ['codex-response', 'codex' as const, 'mcp.open-science-notebook.request_network_access', true],
-    ['codex-bridge', 'codex' as const, 'mcp__open_science_notebook__request_network_access', true]
+    ['codex-bridge', 'codex' as const, 'mcp__app_notebook__request_network_access', true]
   ])(
     'auto-approves the trusted %s network request tool so its conversation decision is the only prompt',
     (_route, frameworkId, providerToolName, requiresCorrelation) => {

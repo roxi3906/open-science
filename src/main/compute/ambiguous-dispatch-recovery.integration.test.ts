@@ -82,7 +82,7 @@ describe('ambiguous Compute Job dispatch recovery', () => {
   })
 
   it('adopts a launched submitted job after restart when its PID still owns the deterministic workdir', async () => {
-    const remoteWorkdir = '/scratch/.openscience/jobs/job-running'
+    const remoteWorkdir = '/scratch/.open-science/jobs/job-running'
     await createSubmittedJob({
       id: 'job-running',
       remoteWorkdir
@@ -90,7 +90,7 @@ describe('ambiguous Compute Job dispatch recovery', () => {
     const run = vi.fn(async () =>
       successfulRun(
         [
-          'OPEN_SCIENCE_DISPATCH_RECOVERY_V1',
+          'open-science-dispatch-recovery-v1',
           'workdir:1',
           'exit_code:',
           'pid:4321',
@@ -121,7 +121,7 @@ describe('ambiguous Compute Job dispatch recovery', () => {
   })
 
   it('adopts a launched job when lsof proves cwd on a host without procfs', async () => {
-    const remoteWorkdir = '/scratch/.openscience/jobs/job-lsof'
+    const remoteWorkdir = '/scratch/.open-science/jobs/job-lsof'
     await createSubmittedJob({
       id: 'job-lsof',
       intent: 'portable restart recovery',
@@ -130,7 +130,7 @@ describe('ambiguous Compute Job dispatch recovery', () => {
     const run = vi.fn<ComputeConnectionLease['run']>(async (command) =>
       successfulRun(
         [
-          'OPEN_SCIENCE_DISPATCH_RECOVERY_V1',
+          'open-science-dispatch-recovery-v1',
           'workdir:1',
           'exit_code:',
           'pid:4321',
@@ -150,7 +150,7 @@ describe('ambiguous Compute Job dispatch recovery', () => {
   })
 
   it('converges an already-exited submitted job to terminal state and starts harvest after restart', async () => {
-    const remoteWorkdir = '/scratch/.openscience/jobs/job-exited'
+    const remoteWorkdir = '/scratch/.open-science/jobs/job-exited'
     await createSubmittedJob({
       id: 'job-exited',
       command: 'exit 7',
@@ -161,7 +161,7 @@ describe('ambiguous Compute Job dispatch recovery', () => {
         run: vi.fn(async () =>
           successfulRun(
             [
-              'OPEN_SCIENCE_DISPATCH_RECOVERY_V1',
+              'open-science-dispatch-recovery-v1',
               'workdir:1',
               'exit_code:7',
               'pid:8765',
@@ -195,7 +195,7 @@ describe('ambiguous Compute Job dispatch recovery', () => {
   })
 
   it('never adopts a reused PID whose cwd does not match the job workdir', async () => {
-    const remoteWorkdir = '/scratch/.openscience/jobs/job-vanished'
+    const remoteWorkdir = '/scratch/.open-science/jobs/job-vanished'
     await createSubmittedJob({
       id: 'job-vanished',
       command: 'run-and-vanish',
@@ -206,7 +206,7 @@ describe('ambiguous Compute Job dispatch recovery', () => {
         run: vi.fn(async () =>
           successfulRun(
             [
-              'OPEN_SCIENCE_DISPATCH_RECOVERY_V1',
+              'open-science-dispatch-recovery-v1',
               'workdir:1',
               'exit_code:',
               'pid:9999',
@@ -241,7 +241,7 @@ describe('ambiguous Compute Job dispatch recovery', () => {
   })
 
   it('keeps a submitted job recoverable when the recovery protocol is missing cwd_match', async () => {
-    const remoteWorkdir = '/scratch/.openscience/jobs/job-incomplete-protocol'
+    const remoteWorkdir = '/scratch/.open-science/jobs/job-incomplete-protocol'
     await createSubmittedJob({
       id: 'job-incomplete-protocol',
       remoteWorkdir
@@ -250,7 +250,7 @@ describe('ambiguous Compute Job dispatch recovery', () => {
       acquire: vi.fn(async () => ({
         run: vi.fn(async () =>
           successfulRun(
-            ['OPEN_SCIENCE_DISPATCH_RECOVERY_V1', 'workdir:1', 'exit_code:', 'pid:4321'].join('\n')
+            ['open-science-dispatch-recovery-v1', 'workdir:1', 'exit_code:', 'pid:4321'].join('\n')
           )
         ),
         upload: vi.fn(),
@@ -287,7 +287,7 @@ describe('ambiguous Compute Job dispatch recovery', () => {
       intent: 'waiting for capacity',
       command: 'echo queued',
       commandHash: 'hash',
-      remoteWorkdir: '/scratch/.openscience/jobs/job-queued',
+      remoteWorkdir: '/scratch/.open-science/jobs/job-queued',
       initialStatus: 'queued'
     })
     const acquire = vi.fn<ComputeConnectionBrokerAcquirer['acquire']>()
@@ -310,7 +310,7 @@ describe('ambiguous Compute Job dispatch recovery', () => {
       .mockResolvedValueOnce(
         successfulRun(
           [
-            'OPEN_SCIENCE_DISPATCH_RECOVERY_V1',
+            'open-science-dispatch-recovery-v1',
             'workdir:1',
             'exit_code:',
             'pid:2468',
@@ -351,7 +351,7 @@ describe('ambiguous Compute Job dispatch recovery', () => {
 
   it('keeps a launched job recoverable when persisting its local handle fails', async () => {
     const recoveryOutput = [
-      'OPEN_SCIENCE_DISPATCH_RECOVERY_V1',
+      'open-science-dispatch-recovery-v1',
       'workdir:1',
       'exit_code:',
       'pid:2468',
@@ -412,7 +412,7 @@ describe('ambiguous Compute Job dispatch recovery', () => {
 
   it('keeps a timed-out job active when its termination handle becomes untrustworthy', async () => {
     const jobId = 'job-untrustworthy-timeout-handle'
-    const remoteWorkdir = `/scratch/.openscience/jobs/${jobId}`
+    const remoteWorkdir = `/scratch/.open-science/jobs/${jobId}`
     const handle = {
       pid: 2468,
       exit_code_path: `${remoteWorkdir}/exit_code`,
@@ -483,7 +483,7 @@ describe('ambiguous Compute Job dispatch recovery', () => {
       .mockResolvedValueOnce(
         successfulRun(
           [
-            'OPEN_SCIENCE_DISPATCH_RECOVERY_V1',
+            'open-science-dispatch-recovery-v1',
             'workdir:0',
             'exit_code:',
             'pid:',
@@ -527,7 +527,7 @@ describe('ambiguous Compute Job dispatch recovery', () => {
       .mockResolvedValueOnce(
         successfulRun(
           [
-            'OPEN_SCIENCE_DISPATCH_RECOVERY_V1',
+            'open-science-dispatch-recovery-v1',
             'workdir:0',
             'exit_code:',
             'pid:',
@@ -627,14 +627,14 @@ describe('ambiguous Compute Job dispatch recovery', () => {
   it('keeps an existing but inconclusive remote workdir submitted for a later recovery tick', async () => {
     await createSubmittedJob({
       id: 'job-inconclusive',
-      remoteWorkdir: '/scratch/.openscience/jobs/job-inconclusive'
+      remoteWorkdir: '/scratch/.open-science/jobs/job-inconclusive'
     })
     const connectionBroker: ComputeConnectionBrokerAcquirer = {
       acquire: vi.fn(async () => ({
         run: vi.fn(async () =>
           successfulRun(
             [
-              'OPEN_SCIENCE_DISPATCH_RECOVERY_V1',
+              'open-science-dispatch-recovery-v1',
               'workdir:1',
               'exit_code:',
               'pid:',
@@ -674,13 +674,13 @@ describe('ambiguous Compute Job dispatch recovery', () => {
   })
 
   it('requires consecutive pending observations before settling interrupted dispatch', async () => {
-    const remoteWorkdir = '/scratch/.openscience/jobs/job-nonconsecutive'
+    const remoteWorkdir = '/scratch/.open-science/jobs/job-nonconsecutive'
     await createSubmittedJob({
       id: 'job-nonconsecutive',
       remoteWorkdir
     })
     const pendingOutput = [
-      'OPEN_SCIENCE_DISPATCH_RECOVERY_V1',
+      'open-science-dispatch-recovery-v1',
       'workdir:1',
       'exit_code:',
       'pid:',

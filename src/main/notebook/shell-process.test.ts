@@ -45,8 +45,8 @@ describe('notebook shell process behavior', () => {
       ])
 
       const script = Buffer.from(invocation.args.at(-1) ?? '', 'base64').toString('utf16le')
-      expect(script).toContain('[Console]::OutputEncoding = $openScienceUtf8')
-      expect(script).toContain('$OutputEncoding = $openScienceUtf8')
+      expect(script).toContain('[Console]::OutputEncoding = $appUtf8')
+      expect(script).toContain('$OutputEncoding = $appUtf8')
       expect(script).toContain('$env:PSModulePath = $env:OPEN_SCIENCE_PSMODULEPATH')
       expect(script).toContain(
         'Import-Module "$PSHOME\\Modules\\Microsoft.PowerShell.Management\\Microsoft.PowerShell.Management.psd1" -ErrorAction Stop'
@@ -61,17 +61,17 @@ describe('notebook shell process behavior', () => {
       expect(script).toContain("$ErrorActionPreference = 'Stop'")
       expect(script).toContain('catch {')
       expect(script).toContain('[Console]::Error.WriteLine($_.ToString())')
-      const encodedCommand = script.match(/\$openScienceCommandBase64 = '([A-Za-z0-9+/=]+)'/)?.[1]
+      const encodedCommand = script.match(/\$appCommandBase64 = '([A-Za-z0-9+/=]+)'/)?.[1]
       expect(Buffer.from(encodedCommand ?? '', 'base64').toString('utf8')).toBe(
         'cp "source.png" "destination.png"'
       )
-      expect(script).toContain('[ScriptBlock]::Create($openScienceCommandText)')
-      expect(script).toContain('& $openScienceCommand')
-      expect(script).toContain('$openScienceSucceeded = $?')
-      expect(script).toContain('exit $openScienceNativeExitCode')
-      expect(script).toMatch(/if \(\$openScienceSucceeded\) \{ exit 0 \}/)
-      expect(script.indexOf('exit $openScienceNativeExitCode')).toBeLessThan(
-        script.indexOf('if ($openScienceSucceeded) { exit 0 }')
+      expect(script).toContain('[ScriptBlock]::Create($appCommandText)')
+      expect(script).toContain('& $appCommand')
+      expect(script).toContain('$appSucceeded = $?')
+      expect(script).toContain('exit $appNativeExitCode')
+      expect(script).toMatch(/if \(\$appSucceeded\) \{ exit 0 \}/)
+      expect(script.indexOf('exit $appNativeExitCode')).toBeLessThan(
+        script.indexOf('if ($appSucceeded) { exit 0 }')
       )
       expect(script).toMatch(/exit 1\s*$/)
     })
@@ -81,13 +81,13 @@ describe('notebook shell process behavior', () => {
       const command = "Write-Output 'first'\n# keep this comment\nWrite-Output 'continued' `"
       const invocation = resolveShellInvocation(command, 'win32')
       const script = Buffer.from(invocation.args.at(-1) ?? '', 'base64').toString('utf16le')
-      const encodedCommand = script.match(/\$openScienceCommandBase64 = '([A-Za-z0-9+/=]+)'/)?.[1]
+      const encodedCommand = script.match(/\$appCommandBase64 = '([A-Za-z0-9+/=]+)'/)?.[1]
 
       expect(script).not.toContain(command)
       expect(encodedCommand).toBeDefined()
       expect(Buffer.from(encodedCommand ?? '', 'base64').toString('utf8')).toBe(command)
-      expect(script).toContain('[ScriptBlock]::Create($openScienceCommandText)')
-      expect(script).toContain('& $openScienceCommand')
+      expect(script).toContain('[ScriptBlock]::Create($appCommandText)')
+      expect(script).toContain('& $appCommand')
     })
   })
 
@@ -123,7 +123,7 @@ describe('notebook shell process behavior', () => {
     })
 
     it('keeps Windows shell runtime variables while excluding host secrets', () => {
-      const runtimeRoot = 'D:\\OpenScience\\runtime'
+      const runtimeRoot = 'D:\\Open-Science\\runtime'
       const env = buildShellEnv(
         '/notebook/handoff',
         'win32',

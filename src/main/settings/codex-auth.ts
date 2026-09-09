@@ -1,3 +1,4 @@
+import { migrateCodexMarkers } from '../brand-migration/owned-markers'
 import { spawn } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { chmod, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
@@ -168,7 +169,7 @@ const UNSAFE_IMPORTED_ROUTE_KEYS = new Set([
 // path (for example a loopback proxy endpoint) without copying models, MCP servers, hooks,
 // headers, bearer tokens, or any other user configuration into the app-owned profile.
 const extractCodexProviderRoute = (configToml: string): ImportedCodexProviderRoute | undefined => {
-  const lines = configToml.split(/\r?\n/)
+  const lines = migrateCodexMarkers(configToml).split(/\r?\n/)
   let activeProviderId: string | undefined
 
   for (const line of lines) {
@@ -273,16 +274,16 @@ export const projectSafeCodexProviderRoute = (configToml: string): string | unde
 }
 
 // These delimiters identify persisted config blocks from existing installations.
-const IMPORTED_ROUTE_SELECTION_BEGIN = '# Open Science: begin imported Codex route selection'
-const IMPORTED_ROUTE_SELECTION_END = '# Open Science: end imported Codex route selection'
-const IMPORTED_ROUTE_PROVIDER_BEGIN = '# Open Science: begin imported Codex provider'
-const IMPORTED_ROUTE_PROVIDER_END = '# Open Science: end imported Codex provider'
-const IMPORTED_ROUTE_PRESERVED_LINE = '# Open Science: preserved Codex config '
+const IMPORTED_ROUTE_SELECTION_BEGIN = '# Open-Science: begin imported Codex route selection'
+const IMPORTED_ROUTE_SELECTION_END = '# Open-Science: end imported Codex route selection'
+const IMPORTED_ROUTE_PROVIDER_BEGIN = '# Open-Science: begin imported Codex provider'
+const IMPORTED_ROUTE_PROVIDER_END = '# Open-Science: end imported Codex provider'
+const IMPORTED_ROUTE_PRESERVED_LINE = '# Open-Science: preserved Codex config '
 const CODEX_FILE_CREDENTIAL_STORE = 'cli_auth_credentials_store = "file"'
-const TRANSPORT_ROUTE_SELECTION_BEGIN = '# Open Science: begin Codex transport route selection'
-const TRANSPORT_ROUTE_SELECTION_END = '# Open Science: end Codex transport route selection'
-const TRANSPORT_ROUTE_PROVIDER_BEGIN = '# Open Science: begin Codex transport provider'
-const TRANSPORT_ROUTE_PROVIDER_END = '# Open Science: end Codex transport provider'
+const TRANSPORT_ROUTE_SELECTION_BEGIN = '# Open-Science: begin Codex transport route selection'
+const TRANSPORT_ROUTE_SELECTION_END = '# Open-Science: end Codex transport route selection'
+const TRANSPORT_ROUTE_PROVIDER_BEGIN = '# Open-Science: begin Codex transport provider'
+const TRANSPORT_ROUTE_PROVIDER_END = '# Open-Science: end Codex transport provider'
 const CODEX_TRANSPORT_PROVIDER_IDS = [
   'open-science-chatgpt-https',
   'open-science-chatgpt-websocket'
@@ -308,7 +309,7 @@ const serializeCodexCredentialStore = (
   existingConfigToml: string,
   credentialStore: 'file' | 'ephemeral'
 ): string => {
-  const lines = existingConfigToml.split(/\r?\n/)
+  const lines = migrateCodexMarkers(existingConfigToml).split(/\r?\n/)
   const result: string[] = []
   let inTopLevel = true
 
@@ -410,7 +411,7 @@ const removeCodexTransportRoute = (configToml: string): string =>
   removeLegacyCodexTransportRoute(
     restoreCompleteMarkedBlock(
       restoreCompleteMarkedBlock(
-        configToml.split(/\r?\n/),
+        migrateCodexMarkers(configToml).split(/\r?\n/),
         TRANSPORT_ROUTE_SELECTION_BEGIN,
         TRANSPORT_ROUTE_SELECTION_END
       ),
@@ -472,7 +473,7 @@ const serializeCodexSubscriptionTransport = (
 }
 
 const removeImportedCodexProviderRoute = (configToml: string): string => {
-  const lines = configToml.split(/\r?\n/)
+  const lines = migrateCodexMarkers(configToml).split(/\r?\n/)
   const hasMarkedRoute =
     hasCompleteMarkedBlock(lines, IMPORTED_ROUTE_SELECTION_BEGIN, IMPORTED_ROUTE_SELECTION_END) ||
     hasCompleteMarkedBlock(lines, IMPORTED_ROUTE_PROVIDER_BEGIN, IMPORTED_ROUTE_PROVIDER_END)

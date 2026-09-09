@@ -28,7 +28,7 @@ import { installWebRendererContracts } from './api-installer'
 import { i18next, initI18n } from '@/i18n'
 import { applyHtmlLang, resolveInitialLocale } from '@/lib/locale-preference'
 import { applyTheme, resolveInitialTheme } from '@/lib/theme'
-import openScienceLogoSvg from '../../main/remote-access/open-science-logo.svg?raw'
+import brandLogoSvg from '../../main/remote-access/open-science-logo.svg?raw'
 
 // Apply the saved theme before the (async) web API install and the app import below, so the page
 // doesn't paint in light mode and then flip to dark. The Electron renderer does the same at the top
@@ -90,7 +90,7 @@ setConnectionMessage(t('Connecting to remote computer…'))
 
 const connectionLogo = document.getElementById('open-science-connection-logo')
 if (connectionLogo) {
-  connectionLogo.innerHTML = openScienceLogoSvg.replace(
+  connectionLogo.innerHTML = brandLogoSvg.replace(
     '<svg ',
     '<svg aria-hidden="true" focusable="false" '
   )

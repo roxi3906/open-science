@@ -442,7 +442,7 @@ describe('ACP runtime event normalization', () => {
 
   it('preserves a Literature presentation block when the full result is truncated', () => {
     const presentation = JSON.stringify({
-      openScienceLiteraturePresentation: {
+      'open-science-literature-presentation': {
         retrievalMode: 'bm25',
         documentNames: ['paper.pdf'],
         passageCount: 4
@@ -483,7 +483,7 @@ describe('ACP runtime event normalization', () => {
 
   it('recovers a Literature presentation block from an oversized native MCP result envelope', () => {
     const presentation = JSON.stringify({
-      openScienceLiteraturePresentation: {
+      'open-science-literature-presentation': {
         retrievalMode: 'bm25',
         documentNames: ['paper.pdf'],
         passageCount: 6
@@ -523,7 +523,7 @@ describe('ACP runtime event normalization', () => {
     'preserves Library read metadata through the %s transport before truncation',
     (transport) => {
       const presentation = {
-        openScienceLiteraturePresentation: {
+        'open-science-literature-presentation': {
           libraryAction: 'read',
           libraryScope: 'project',
           itemTitles: ['Paper A'],
@@ -582,7 +582,7 @@ describe('ACP runtime event normalization', () => {
 
   it('preserves a bounded Library presentation across sanitized ACP tool identities', () => {
     const presentation = JSON.stringify({
-      openScienceLiteraturePresentation: {
+      'open-science-literature-presentation': {
         libraryAction: 'search',
         libraryScope: 'collection',
         itemTitles: ['Paper A', 'Paper B'],
@@ -631,7 +631,7 @@ describe('ACP runtime event normalization', () => {
 
   it('preserves format_references presentation ahead of its raw citation payload', () => {
     const presentation = JSON.stringify({
-      openScienceLiteraturePresentation: {
+      'open-science-literature-presentation': {
         libraryAction: 'format',
         resultCount: 2
       }
@@ -709,7 +709,7 @@ describe('ACP runtime event normalization', () => {
       content: {
         type: 'text',
         text: JSON.stringify({
-          openScienceLiteraturePresentation: {
+          'open-science-literature-presentation': {
             documentNames: ['paper.pdf'],
             pageStart: 1,
             pageEnd: 5,

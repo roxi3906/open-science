@@ -117,7 +117,7 @@ describe('NotebookNetworkSandboxOwner', () => {
       argv: [
         process.execPath,
         '-e',
-        `require('node:fs').writeFileSync(${JSON.stringify(observation)}, JSON.stringify({ secret: process.env.AWS_SECRET_ACCESS_KEY ?? null, rHome: process.env.R_HOME ?? null })); console.log('OPEN_SCIENCE_R_ACCESS_OK')`
+        `require('node:fs').writeFileSync(${JSON.stringify(observation)}, JSON.stringify({ secret: process.env.AWS_SECRET_ACCESS_KEY ?? null, rHome: process.env.R_HOME ?? null })); console.log('open-science-r-access-ok')`
       ],
       env: command.env,
       annotateStderr: (stderr: string) => stderr,

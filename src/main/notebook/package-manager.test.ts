@@ -824,7 +824,7 @@ describe('installPackages', () => {
 
   it('installs R packages through BiocManager and records the release', async () => {
     const { spawn, calls } = scriptedSpawn([
-      { code: 0, stdout: 'OPEN_SCIENCE_BIOC_VERSION\t3.21\ndone', stderr: '' }
+      { code: 0, stdout: 'open-science-bioc-version\t3.21\ndone', stderr: '' }
     ])
     const result = await installPackages(
       { language: 'r', packages: ['DESeq2'], installer: 'biocmanager' },
@@ -873,7 +873,7 @@ describe('installPackages', () => {
     'does not report %s source metadata after a failed install',
     async (installer, pkg, environment) => {
       const { spawn } = scriptedSpawn([
-        { code: 1, stdout: 'OPEN_SCIENCE_BIOC_VERSION\t3.21\n', stderr: 'install failed' }
+        { code: 1, stdout: 'open-science-bioc-version\t3.21\n', stderr: 'install failed' }
       ])
       const result = await installPackages(
         { language: 'r', packages: [pkg], installer, ...(environment ? { environment } : {}) },

@@ -1,3 +1,9 @@
+import {
+  LEGACY_PAIRING_COOKIE,
+  LEGACY_REMOTE_SESSION_COOKIE,
+  LEGACY_PAIR_STATUS_PATH,
+  readMigratingCookie
+} from '../brand-migration/cookies'
 import { createHash, randomBytes, randomInt, randomUUID, timingSafeEqual } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
@@ -20,8 +26,8 @@ import {
   type StoredTrustedBrowser
 } from './repository'
 
-const PAIRING_COOKIE = 'open_science_remote_pairing'
-const SESSION_COOKIE = 'open_science_remote_session'
+const PAIRING_COOKIE = 'open-science-remote-pairing'
+const SESSION_COOKIE = 'open-science-remote-session'
 const PAIRING_TTL_MS = 10 * 60 * 1_000
 const PAIRING_IDLE_TTL_MS = 30_000
 const PAIRING_RATE_WINDOW_MS = 10 * 60 * 1_000
@@ -93,9 +99,13 @@ const readCookies = (request: IncomingMessage): Map<string, string> => {
   return result
 }
 
-const sessionCookie = (value: string, persistent: boolean): string =>
+const sessionCookie = (
+  value: string,
+  persistent: boolean,
+  ttlMs = TRUSTED_BROWSER_TTL_MS
+): string =>
   `${SESSION_COOKIE}=${encodeURIComponent(value)}; HttpOnly; Secure; SameSite=${persistent ? 'Lax' : 'Strict'}; Path=/${
-    persistent ? `; Max-Age=${TRUSTED_BROWSER_TTL_MS / 1_000}` : ''
+    persistent ? `; Max-Age=${Math.max(0, Math.floor(ttlMs / 1_000))}` : ''
   }`
 
 const pairingCookie = (value: string): string =>
@@ -457,10 +467,29 @@ export class RemoteSessionPairingManager {
       return 'denied'
     }
     if (sessionAccess) {
+      const cookie = readMigratingCookie(
+        request.headers.cookie,
+        SESSION_COOKIE,
+        LEGACY_REMOTE_SESSION_COOKIE
+      )
+      if (cookie.legacy && cookie.value && this.isSessionAccessCurrent(sessionAccess)) {
+        const expiresAt =
+          sessionAccess.kind === 'trusted'
+            ? this.stored.trustedBrowsers.find(({ id }) => id === sessionAccess.sessionId)!
+                .expiresAt
+            : this.oneTimeSessions.get(sessionAccess.sessionId)!.expiresAt
+        response.setHeader('set-cookie', [
+          sessionCookie(cookie.value, sessionAccess.kind === 'trusted', expiresAt - this.now()),
+          clearCookie(LEGACY_REMOTE_SESSION_COOKIE)
+        ])
+      }
       return this.httpAuthorization(request, needsOrigin, authorizationGeneration, sessionAccess)
     }
 
-    if (url.pathname === REMOTE_PAIR_STATUS_PATH && request.method === 'GET') {
+    if (
+      [REMOTE_PAIR_STATUS_PATH, LEGACY_PAIR_STATUS_PATH].includes(url.pathname) &&
+      request.method === 'GET'
+    ) {
       await this.handlePairingStatus(request, response)
       return 'handled'
     }
@@ -624,7 +653,11 @@ export class RemoteSessionPairingManager {
   }
 
   private readPendingCookie(request: IncomingMessage): PendingPairing | undefined {
-    const value = readCookies(request).get(PAIRING_COOKIE)
+    const value = readMigratingCookie(
+      request.headers.cookie,
+      PAIRING_COOKIE,
+      LEGACY_PAIRING_COOKIE
+    ).value
     if (!value) return undefined
     const separator = value.indexOf('.')
     if (separator <= 0) return undefined
@@ -641,7 +674,10 @@ export class RemoteSessionPairingManager {
   ): Promise<void> {
     const pending = this.readPendingCookie(request)
     if (!pending) {
-      response.setHeader('set-cookie', clearCookie(PAIRING_COOKIE))
+      response.setHeader('set-cookie', [
+        clearCookie(PAIRING_COOKIE),
+        clearCookie(LEGACY_PAIRING_COOKIE)
+      ])
       json(response, 200, { status: 'expired' })
       return
     }
@@ -656,14 +692,19 @@ export class RemoteSessionPairingManager {
     if (pending.status === 'rejected' || !pending.grant) {
       this.pending.delete(pending.id)
       this.scheduleExpirationTimer()
-      response.setHeader('set-cookie', clearCookie(PAIRING_COOKIE))
+      response.setHeader('set-cookie', [
+        clearCookie(PAIRING_COOKIE),
+        clearCookie(LEGACY_PAIRING_COOKIE)
+      ])
       json(response, 200, { status: 'rejected' })
       return
     }
 
     response.setHeader('set-cookie', [
       sessionCookie(pending.grant.cookieValue, pending.grant.decision === 'always'),
-      clearCookie(PAIRING_COOKIE)
+      clearCookie(PAIRING_COOKIE),
+      clearCookie(LEGACY_PAIRING_COOKIE),
+      clearCookie(LEGACY_REMOTE_SESSION_COOKIE)
     ])
     this.pending.delete(pending.id)
     this.scheduleExpirationTimer()
@@ -672,7 +713,11 @@ export class RemoteSessionPairingManager {
 
   private async getSessionAccess(request: IncomingMessage): Promise<RemoteSessionAccess> {
     this.pruneExpired()
-    const value = readCookies(request).get(SESSION_COOKIE)
+    const value = readMigratingCookie(
+      request.headers.cookie,
+      SESSION_COOKIE,
+      LEGACY_REMOTE_SESSION_COOKIE
+    ).value
     if (!value) return undefined
     const separator = value.indexOf('.')
     if (separator <= 0) return undefined

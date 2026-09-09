@@ -1,3 +1,9 @@
+import {
+  CURRENT_LEDGER_DDL,
+  LEGACY_LEDGER_NAME,
+  findLedgerTable,
+  migrateLedgerIdentity
+} from '../brand-migration/database-ledger'
 import { literaturePdfProvenanceMigration } from './migrations/0035-literature-pdf-provenance'
 import { permissionApprovalSummaryMigration } from './migrations/0032-permission-approval-summary'
 import { computeJobHarvestRetryMigration } from './migrations/0033-compute-job-harvest-retry'
@@ -1166,14 +1172,12 @@ const verifyCurrentApplicationSchema = async (client: PrismaClient): Promise<voi
 }
 
 const readLedger = async (client: PrismaClient): Promise<LedgerRow[]> => {
-  const table = await client.$queryRaw<Array<{ name: string }>>`
-    SELECT "name" FROM "sqlite_schema"
-    WHERE "type" = 'table' AND "name" = '_open_science_migrations'
-  `
-  if (table.length === 0) return []
-  return client.$queryRaw<LedgerRow[]>`
-    SELECT "id", "checksum" FROM "_open_science_migrations" ORDER BY "id"
-  `
+  const table = await findLedgerTable(client)
+  if (!table) return []
+  return migrationSqlExecutor.query<LedgerRow[]>(
+    client,
+    `SELECT "id", "checksum" FROM "${table}" ORDER BY "id"`
+  )
 }
 
 const hasApplicationTables = async (client: PrismaClient): Promise<boolean> => {
@@ -1181,7 +1185,7 @@ const hasApplicationTables = async (client: PrismaClient): Promise<boolean> => {
     SELECT "name" FROM "sqlite_schema"
     WHERE "type" = 'table'
       AND "name" NOT LIKE 'sqlite_%'
-      AND "name" <> '_open_science_migrations'
+      AND "name" NOT IN ('_open_science_migrations', '_open-science-migrations')
     LIMIT 1
   `
   return rows.length > 0
@@ -1209,7 +1213,7 @@ const quoteSqliteIdentifier = (value: string): string => `"${value.replaceAll('"
 
 const readSnapshotTableNames = (
   client: PrismaClient,
-  schema: 'main' | '_open_science_backup'
+  schema: 'main' | '_open-science-backup'
 ): Promise<Array<{ name: string }>> =>
   migrationSqlExecutor.query(
     client,
@@ -1221,7 +1225,7 @@ const readSnapshotTableNames = (
 
 const readSnapshotSchema = (
   client: PrismaClient,
-  schema: 'main' | '_open_science_backup'
+  schema: 'main' | '_open-science-backup'
 ): Promise<SqliteSchemaObjectRow[]> =>
   migrationSqlExecutor.query(
     client,
@@ -1244,7 +1248,7 @@ const snapshotTableDiffers = async (client: PrismaClient, tableName: string): Pr
     `WITH "current_rows" AS (
        SELECT ${projection}, COUNT(*) FROM "main".${table} GROUP BY ${projection}
      ), "backup_rows" AS (
-       SELECT ${projection}, COUNT(*) FROM "_open_science_backup".${table} GROUP BY ${projection}
+       SELECT ${projection}, COUNT(*) FROM "_open-science-backup".${table} GROUP BY ${projection}
      )
      SELECT (
        EXISTS(SELECT * FROM "current_rows" EXCEPT SELECT * FROM "backup_rows")
@@ -1258,18 +1262,18 @@ const verifyDatabaseMigrationBackup = async (client: PrismaClient, path: string)
   let attached = false
   let failure: unknown
   try {
-    await migrationSqlExecutor.execute(client, 'ATTACH DATABASE ? AS "_open_science_backup"', path)
+    await migrationSqlExecutor.execute(client, 'ATTACH DATABASE ? AS "_open-science-backup"', path)
     attached = true
     const [integrity, currentTables, backupTables, currentSchema, backupSchema] = await Promise.all(
       [
         migrationSqlExecutor.query<SqliteIntegrityCheckRow[]>(
           client,
-          'PRAGMA "_open_science_backup".integrity_check'
+          'PRAGMA "_open-science-backup".integrity_check'
         ),
         readSnapshotTableNames(client, 'main'),
-        readSnapshotTableNames(client, '_open_science_backup'),
+        readSnapshotTableNames(client, '_open-science-backup'),
         readSnapshotSchema(client, 'main'),
-        readSnapshotSchema(client, '_open_science_backup')
+        readSnapshotSchema(client, '_open-science-backup')
       ]
     )
     if (integrity.length !== 1 || integrity[0]?.integrity_check !== 'ok') {
@@ -1306,7 +1310,7 @@ const verifyDatabaseMigrationBackup = async (client: PrismaClient, path: string)
   }
   if (attached) {
     try {
-      await migrationSqlExecutor.execute(client, 'DETACH DATABASE "_open_science_backup"')
+      await migrationSqlExecutor.execute(client, 'DETACH DATABASE "_open-science-backup"')
     } catch (error) {
       failure ??= error
     }
@@ -1565,11 +1569,14 @@ const insertLedgerRow = async (
   client: PrismaClient,
   migration: MigrationManifestEntry
 ): Promise<void> => {
-  await migrationSqlExecutor.execute(client, LEDGER_TABLE_DDL)
-  await client.$executeRaw`
-    INSERT INTO "_open_science_migrations" ("id", "checksum")
-    VALUES (${migration.id}, ${migration.checksum})
-  `
+  const legacy = (await findLedgerTable(client)) === LEGACY_LEDGER_NAME
+  await migrationSqlExecutor.execute(client, legacy ? LEDGER_TABLE_DDL : CURRENT_LEDGER_DDL)
+  await migrationSqlExecutor.execute(
+    client,
+    `INSERT INTO "${legacy ? LEGACY_LEDGER_NAME : '_open-science-migrations'}" ("id", "checksum") VALUES (?, ?)`,
+    migration.id,
+    migration.checksum
+  )
 }
 
 const hasOnlyDeferredPreviewStateForeignKeyViolations = async (
@@ -1886,6 +1893,11 @@ const migrateApplicationDatabaseWithManifest = async (
       throughMigrationId: latest.id,
       includeDeleteAfterSuccess: true
     })
+    try {
+      await migrateLedgerIdentity(client)
+    } catch (error) {
+      throw classifyDatabaseFailure(error, 'migration', latest.id)
+    }
     try {
       options.onCompleted?.(result)
     } catch {

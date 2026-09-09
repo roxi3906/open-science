@@ -27,6 +27,7 @@ const BLOCK_WEIGHT: u64 = 0x0e00_0000_0000_0000;
 const FILTER_ROLES: [&str; 3] = ["permit-v4", "block-v4", "block-v6"];
 
 pub struct FenceDescriptor<'a> {
+    pub legacy_identity: bool,
     pub installation_id: &'a str,
     pub ownership_token: &'a str,
     pub sublayer_key: &'a str,
@@ -70,9 +71,9 @@ struct WfpMemory<T>(NonNull<T>);
 impl<T> WfpMemory<T> {
     // Call only for successful WFP allocations; Drop retains the API's ownership contract.
     fn from_raw(pointer: *mut T) -> Result<Self> {
-        Ok(Self(
-            NonNull::new(pointer).context("Windows Filtering Platform returned no object")?,
-        ))
+        Ok(Self(NonNull::new(pointer).context(
+            "Windows Filtering Platform returned no object",
+        )?))
     }
 
     fn get(&self) -> &T {
@@ -144,8 +145,15 @@ pub fn validate_keys(descriptor: &FenceDescriptor<'_>) -> Result<()> {
 }
 
 fn tag(descriptor: &FenceDescriptor<'_>, role: &str) -> Vec<u8> {
+    // The validated profile identity selects the exact historical tag for cleanup; new profiles
+    // never emit the old spelling, and tags still bind installation, random token and role.
+    let prefix = if descriptor.legacy_identity {
+        "OpenScienceNotebook"
+    } else {
+        "Open-Science-Notebook"
+    };
     format!(
-        "OpenScienceNotebook\0{}\0{}\0{}",
+        "{prefix}\0{}\0{}\0{}",
         descriptor.installation_id, descriptor.ownership_token, role
     )
     .into_bytes()

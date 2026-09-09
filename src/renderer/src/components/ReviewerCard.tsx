@@ -21,7 +21,7 @@ import {
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import { OpenScienceThinkingIndicator } from '@/components/OpenScienceThinkingIndicator'
+import { BrandThinkingIndicator } from '@/components/BrandThinkingIndicator'
 import {
   presentReviewSubmission,
   type PresentedReviewCheck
@@ -260,7 +260,7 @@ export const ReviewerCard = ({
         role="status"
         aria-live="polite"
       >
-        <OpenScienceThinkingIndicator />
+        <BrandThinkingIndicator />
         <span>{t('Reviewing...')}</span>
       </div>
     )

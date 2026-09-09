@@ -6,7 +6,7 @@ import { SETTINGS_FILE_VERSION } from '../../shared/settings'
 import type { AgentConfigFile, AgentFrameworkId } from '../agent-framework'
 import { opencodeTransportProviderId } from '../agent-framework/opencode'
 import { SKILL_IMPORT_SYSTEM_PROMPT_APPEND } from '../skills/mcp-server'
-import { OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION } from '../skills/runtime-mcp-server'
+import { APP_SKILL_RUNTIME_SESSION_OPTION } from '../skills/runtime-mcp-server'
 import type { ResolvedProvider } from './provider-env'
 import type { ProviderRuntimeTarget, RuntimeProviderModelSelection } from './provider-accounts'
 import type { StoredProvider, StoredSettings } from './types'
@@ -804,7 +804,7 @@ describe('AgentBackendResolver configured and explicit targets', () => {
     const instructions = backend.persistentSystemPrompt ?? ''
 
     expect(instructions.indexOf(applicationGuidance)).toBeGreaterThanOrEqual(0)
-    expect(instructions.indexOf('<open_science_user_skill_directories>')).toBeGreaterThan(
+    expect(instructions.indexOf('<open-science-user-skill-directories>')).toBeGreaterThan(
       instructions.indexOf(applicationGuidance)
     )
     await backend.providerTransportLease?.release()
@@ -847,7 +847,7 @@ describe('AgentBackendResolver configured and explicit targets', () => {
     } else {
       expect(instructions).toBe(restrictedPrompt)
     }
-    expect(instructions).not.toContain('<open_science_user_skill_directories>')
+    expect(instructions).not.toContain('<open-science-user-skill-directories>')
     expect(instructions).not.toContain('# Open-Science data connector conventions')
     expect(harness.runtime.materializeAgentSkills).not.toHaveBeenCalled()
     if (testCase.frameworkId === 'claude-code') {
@@ -1611,7 +1611,7 @@ describe('AgentBackendResolver bridge predicates', () => {
       expect(instructions).toContain(
         'Globally Enabled Connector Skills: `mcp-pubmed`, `mcp-literature`, `mcp-custom-chemistry`.'
       )
-      expect(instructions).toContain('`<open_science_specialist_skill_scope>` block')
+      expect(instructions).toContain('`<open-science-specialist-skill-scope>` block')
       expect(instructions).not.toContain('host.mcp("custom-chemistry"')
       expect(instructions).not.toContain('`mcp-openalex`')
       expect(harness.runtime.provisionClaudeRuntimeConfig).toHaveBeenCalledTimes(
@@ -1643,7 +1643,7 @@ describe('AgentBackendResolver bridge predicates', () => {
       { directoryLayout: 'agent-facing' }
     )
     expect(backend.sessionOptions).toEqual({
-      [OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION]: {
+      [APP_SKILL_RUNTIME_SESSION_OPTION]: {
         command: process.execPath,
         entryPath: '/app/main.js',
         root: join('/storage', 'codebuddy', 'skill-runtime')
@@ -1689,7 +1689,7 @@ describe('AgentBackendResolver bridge predicates', () => {
       { directoryLayout: 'agent-facing' }
     )
     expect(backend.sessionOptions).toHaveProperty(
-      OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION,
+      APP_SKILL_RUNTIME_SESSION_OPTION,
       expect.objectContaining({ root: join('/storage', 'codebuddy', 'skill-runtime') })
     )
     expect(backend.persistentSystemPrompt).toBeUndefined()
@@ -1770,7 +1770,7 @@ describe('AgentBackendResolver bridge predicates', () => {
         .developer_instructions as string | undefined
 
       expect(developerInstructions).toBeDefined()
-      const userSkillIndex = developerInstructions?.indexOf('<open_science_user_skill_directories>')
+      const userSkillIndex = developerInstructions?.indexOf('<open-science-user-skill-directories>')
       const connectorIndex = developerInstructions?.indexOf(
         '# Open-Science data connector conventions'
       )

@@ -29,8 +29,8 @@ describe('isNotebookExecuteToolName', () => {
 
   it('matches the underscore-sanitized server form from the responses bridge', () => {
     // The bridge sanitizes the server name to open_science_notebook; normalization must accept it.
-    expect(isNotebookExecuteToolName('mcp__open_science_notebook__notebook_execute')).toBe(true)
-    expect(isNotebookExecuteToolName('mcp__open_science_notebook__bash_execute')).toBe(true)
+    expect(isNotebookExecuteToolName('mcp__app_notebook__notebook_execute')).toBe(true)
+    expect(isNotebookExecuteToolName('mcp__app_notebook__bash_execute')).toBe(true)
   })
 
   it('matches the opencode single-underscore <server>_<tool> form', () => {
@@ -63,7 +63,7 @@ describe('isNotebookExecuteToolName', () => {
     expect(matchNotebookRunTool('mcp__open-science-notebook__notebook_execute')).toBe(
       'notebook_execute'
     )
-    expect(matchNotebookRunTool('mcp__open_science_notebook__repl_execute')).toBe('repl_execute')
+    expect(matchNotebookRunTool('mcp__app_notebook__repl_execute')).toBe('repl_execute')
     expect(matchNotebookRunTool('mcp__acme-db__notebook_execute')).toBeUndefined()
   })
 
@@ -86,9 +86,7 @@ describe('isNotebookExecuteToolName', () => {
 
   it('matches manage_packages only for the canonical notebook server', () => {
     expect(isNotebookManagePackagesToolName('open-science-notebook.manage_packages')).toBe(true)
-    expect(isNotebookManagePackagesToolName('mcp__open_science_notebook__manage_packages')).toBe(
-      true
-    )
+    expect(isNotebookManagePackagesToolName('mcp__app_notebook__manage_packages')).toBe(true)
     expect(isNotebookManagePackagesToolName('mcp__acme-db__manage_packages')).toBe(false)
     expect(isNotebookManagePackagesToolName('manage_packages')).toBe(false)
   })
@@ -97,9 +95,7 @@ describe('isNotebookExecuteToolName', () => {
     expect(matchNotebookMemoryTool('mcp__open-science-notebook__list_memory_categories')).toBe(
       'list_memory_categories'
     )
-    expect(matchNotebookMemoryTool('mcp__open_science_notebook__search_memories')).toBe(
-      'search_memories'
-    )
+    expect(matchNotebookMemoryTool('mcp__app_notebook__search_memories')).toBe('search_memories')
     expect(matchNotebookMemoryTool('mcp.open-science-notebook.remember_memory')).toBe(
       'remember_memory'
     )

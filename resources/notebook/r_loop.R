@@ -1207,11 +1207,11 @@ run <- base::local({
         next
       }
       original <- get(name, envir = env)
-      if (isTRUE(attr(original, "open_science_capture_wrapper", exact = TRUE))) {
+      if (isTRUE(attr(original, "open-science-capture-wrapper", exact = TRUE))) {
         next
       }
       wrapper <- make_wrapper(original)
-      attr(wrapper, "open_science_capture_wrapper") <- TRUE
+      attr(wrapper, "open-science-capture-wrapper") <- TRUE
       was_locked <- bindingIsLocked(name, env)
       if (was_locked) unlockBinding(name, env)
       assign(name, wrapper, envir = env)

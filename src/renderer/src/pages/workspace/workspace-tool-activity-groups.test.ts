@@ -341,10 +341,7 @@ describe('formatActivityGroupTitle', () => {
         'Completed a Notebook run'
       ],
       // Codex/gpt bridge underscore-sanitizes the server name; still categorized as a notebook cell.
-      [
-        { providerToolName: 'mcp__open_science_notebook__notebook_execute' },
-        'Completed a Notebook run'
-      ],
+      [{ providerToolName: 'mcp__app_notebook__notebook_execute' }, 'Completed a Notebook run'],
       // OpenCode flattens the server/tool boundary to a single underscore.
       [{ providerToolName: 'open-science-notebook_notebook_execute' }, 'Completed a Notebook run'],
       [{ providerToolName: 'skill' }, 'Loaded a skill'],

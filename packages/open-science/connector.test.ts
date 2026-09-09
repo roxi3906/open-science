@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { OpenScienceClient } from './index.mjs'
+import { Client } from './index.mjs'
 import { parseCliArgs, runTaskCommand } from './cli.mjs'
 
 const cases = [
@@ -28,7 +28,7 @@ const cases = [
 describe('Connector public client', () => {
   it.each(cases)('%s uses authenticated HTTP', async (method, args, path, verb) => {
     const fetch = vi.fn(async () => new Response(JSON.stringify({ data: { saved: true } })))
-    const client = new OpenScienceClient({
+    const client = new Client({
       baseUrl: 'http://localhost:44100',
       token: 'test-token',
       fetch

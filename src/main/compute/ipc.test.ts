@@ -819,7 +819,7 @@ describe('compute handlers — jobsList', () => {
     output_manifest: undefined,
     harvest_config: undefined,
     timeout_seconds: undefined,
-    remote_workdir: '~/.openscience/jobs/job-1',
+    remote_workdir: '~/.open-science/jobs/job-1',
     remote_handle: undefined,
     exit_code: undefined,
     stdout_tail: undefined,

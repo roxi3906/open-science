@@ -12,7 +12,7 @@ import { LegacyDataMoveDialog } from '@/components/LegacyDataMoveDialog'
 import { LifecycleToast } from '@/components/LifecycleToast'
 import { LanguageSaveToast } from '@/components/LanguageControls'
 import { NotificationLiveToast } from '@/components/NotificationLiveToast'
-import { OpenScienceLogoLoader } from '@/components/OpenScienceLogoLoader'
+import { BrandLogoLoader } from '@/components/BrandLogoLoader'
 import { PermissionUndoSnackbar } from '@/components/PermissionUndoSnackbar'
 import { SessionCatalogRecoveryAlert } from '@/components/SessionCatalogRecoveryAlert'
 import { SessionPersistenceAlert } from '@/components/SessionPersistenceAlert'
@@ -86,7 +86,7 @@ const ApplicationPresentationHost = (): React.JSX.Element => {
         className="flex min-h-svh items-center justify-center bg-background text-foreground"
       >
         <div className="flex flex-col items-center gap-14">
-          <OpenScienceLogoLoader />
+          <BrandLogoLoader />
           <span className="text-sm text-muted-foreground">{t('Loading settings…')}</span>
         </div>
       </main>
@@ -125,7 +125,7 @@ const ApplicationPresentationHost = (): React.JSX.Element => {
         className="flex min-h-svh items-center justify-center bg-background text-foreground"
       >
         <div className="flex flex-col items-center gap-14">
-          <OpenScienceLogoLoader />
+          <BrandLogoLoader />
           <span className="text-sm text-muted-foreground">{t('Loading saved conversations…')}</span>
         </div>
       </main>

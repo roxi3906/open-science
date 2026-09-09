@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { NOTEBOOK_SYSTEM_PROMPT_APPEND } from '../notebook/mcp-server'
 import {
   LOAD_SKILL_TOOL_CALLABLE_NAME,
-  OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION,
+  APP_SKILL_RUNTIME_SESSION_OPTION,
   SKILL_RUNTIME_ALLOWED_NAMES_ENV,
   SKILL_RUNTIME_MCP_SERVER_NAME,
   SKILL_RUNTIME_ROOT_ENV
@@ -159,7 +159,7 @@ describe('claudeCodeFramework', () => {
         hooks: {
           PreToolUse: [{ matcher: 'Bash', hooks: [existingPreToolUseHook] }]
         },
-        [OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION]: {
+        [APP_SKILL_RUNTIME_SESSION_OPTION]: {
           command: '/app/electron',
           entryPath: '/app/main.js',
           root: '/runtime/revision'
@@ -172,7 +172,7 @@ describe('claudeCodeFramework', () => {
       PreToolUse: Array<{ matcher?: string; hooks: PreToolUseCallback[] }>
     }
 
-    expect(options).not.toHaveProperty(OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION)
+    expect(options).not.toHaveProperty(APP_SKILL_RUNTIME_SESSION_OPTION)
     expect(options.toolAliases).toEqual({ Skill: LOAD_SKILL_TOOL_CALLABLE_NAME })
     expect.soft(options.allowedTools).toEqual(['Read'])
     expect(servers[SKILL_RUNTIME_MCP_SERVER_NAME]).toMatchObject({
@@ -218,7 +218,7 @@ describe('claudeCodeFramework', () => {
       skillWhitelist: ['literature-review'],
       skillRuntimeScope: ['literature-review'],
       sessionOptions: {
-        [OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION]: {
+        [APP_SKILL_RUNTIME_SESSION_OPTION]: {
           command: '/app/electron',
           entryPath: '/app/main.js',
           root: '/runtime/revision'
@@ -235,7 +235,7 @@ describe('claudeCodeFramework', () => {
 
   it('keeps the backend Skill runtime disabled without explicit primary-session authority', () => {
     const sessionOptions = {
-      [OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION]: {
+      [APP_SKILL_RUNTIME_SESSION_OPTION]: {
         command: '/app/electron',
         entryPath: '/app/main.js',
         root: '/runtime/revision'
@@ -250,7 +250,7 @@ describe('claudeCodeFramework', () => {
       })
       const options = (setup.meta?.claudeCode as { options: Record<string, unknown> }).options
 
-      expect(options).not.toHaveProperty(OPEN_SCIENCE_SKILL_RUNTIME_SESSION_OPTION)
+      expect(options).not.toHaveProperty(APP_SKILL_RUNTIME_SESSION_OPTION)
       expect(options).not.toHaveProperty('toolAliases')
       expect(options).not.toHaveProperty('mcpServers')
       expect(options).not.toHaveProperty('allowedTools')
@@ -351,7 +351,7 @@ describe('claudeCodeFramework', () => {
         turnPromptReminders: [append]
       }).promptPrefix
     ).toBe(
-      'Use `open_science_notebook_notebook_execute` from `open_science_notebook`, then `open_science_artifacts_write_artifact_file`.'
+      'Use `app_notebook_notebook_execute` from `app_notebook`, then `app_artifacts_write_artifact_file`.'
     )
   })
 
