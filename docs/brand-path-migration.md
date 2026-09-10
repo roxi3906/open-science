@@ -248,6 +248,8 @@ accepts PowerShell `Win32_Process` as sufficient. Windows path and URI algorithm
 another host, but that is not Windows handle or application validation. Linux also requires its
 native metadata tools and sufficient visibility for the occupancy probe; a missing tool is an error.
 
+Pure initialization and repeated empty-receipt startup use the atomic logical lease without
+requiring offline probe tools. Any abandoned-lock recovery still requires the kernel guard.
 Lock recovery is serialized by a kernel lock held by a small child process. On POSIX this requires
 `python3` with `fcntl`; the guard is released when the helper exits or its parent pipe closes, even
 if a recovery is interrupted. The `lock-guard` file is permanent and must not be deleted: retaining
@@ -279,7 +281,8 @@ renaming either original back. An intent does not by itself prove a rename occur
 the actual source, stage, backup and parked manifests. For old interrupted version-1 rollbacks,
 an unprepared participant with no published manifest, or a still-staged verified member together
 with its exact original, provides evidence of non-publication. A missing backup after actual
-publication remains an error. The next successful state write upgrades the receipt; older binaries
+publication remains an error. A version-1 receipt is preserved as `journal-<id>.version-1.json` and upgraded under the lease
+before writable processing or online adapters; older binaries
 that understand only version 1 must not be used for recovery. No database schema or record identity
 changes with this journal version.
 

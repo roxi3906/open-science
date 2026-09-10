@@ -855,7 +855,8 @@ describe('recovery ownership', () => {
     const f = await fixture()
     await mkdir(join(f.old, 'refs'))
     await symlink('../../OpenScience-DEV/uploads/paper.txt', join(f.old, 'refs', 'paper'))
-    expect(cli(f.home, '--execute').status).toBe(0)
+    const executed = cli(f.home, '--execute')
+    expect(executed.status, executed.output).toBe(0)
     expect(cli(f.home, '--retire-aliases').status).not.toBe(0)
     expect(await readFile(join(f.next, 'refs', 'paper'), 'utf8')).toBe('research\n')
   })
@@ -1107,8 +1108,10 @@ describe('independent review recovery regressions', () => {
     await mkdir(child)
     await writeFile(join(child, 'keep'), 'child')
     const mapping = JSON.stringify({ from: child, to: join(f.next, 'Open-Science') })
-    expect(cli(f.home, '--map', mapping, '--execute').status).toBe(0)
-    expect(cli(f.home, '--retire-aliases').status).toBe(0)
+    const executed = cli(f.home, '--map', mapping, '--execute')
+    expect(executed.status, executed.output).toBe(0)
+    const retired = cli(f.home, '--retire-aliases')
+    expect(retired.status, retired.output).toBe(0)
     const result = cli(f.home, '--execute')
     expect(result.status, result.output).toBe(0)
     expect(await readdir(f.next)).not.toContain('OpenScience')
@@ -2258,4 +2261,92 @@ it('releases the kernel guard after recovering processes really exit mid-recover
   const result = cli(f.home, '--execute', '--recover-lock')
   expect(result.status, result.output).toBe(0)
   expect((await readdir(state)).filter((name) => name.includes('.abandoned-'))).toHaveLength(2)
+})
+
+it('initializes and reopens a fresh profile without offline-only probe tools', async () => {
+  const f = await fixture()
+  await rm(f.old, { recursive: true })
+  await rm(f.config, { recursive: true })
+  for (let n = 0; n < 2; n++) {
+    const result = execFileSync(
+      process.execPath,
+      [
+        'scripts/migrate-brand-paths.mjs',
+        '--home',
+        f.home,
+        '--app-data',
+        join(f.home, 'appData'),
+        '--mode',
+        'dev',
+        '--execute'
+      ],
+      { encoding: 'utf8', env: { ...process.env, PATH: '' } }
+    )
+    expect(JSON.parse(result).status).toBe('committed')
+  }
+})
+
+it('requires the kernel guard when restarting an empty rolled-back receipt with new legacy data', async () => {
+  const f = await fixture()
+  await rm(f.old, { recursive: true })
+  await rm(f.config, { recursive: true })
+  expect(cli(f.home, '--execute').status).toBe(0)
+  expect(cli(f.home, '--rollback').status).toBe(0)
+  await mkdir(f.old)
+  await writeFile(join(f.old, 'keep'), 'later data')
+  const { runMigration } = await import('../resources/brand-migration/transaction.mjs')
+  const { acquireKernelGuard } = await import('../resources/brand-migration/lock-guard.mjs')
+  let improperlyAcquired = false
+  await runMigration(
+    {
+      home: f.home,
+      appData: join(f.home, 'appData'),
+      mode: 'dev',
+      execute: true,
+      restartAfterRollback: true
+    },
+    {
+      async onProgress(e: { phase: string }) {
+        if (e.phase !== 'copied') return
+        let other: Awaited<ReturnType<typeof acquireKernelGuard>> | undefined
+        try {
+          other = await acquireKernelGuard(join(`${f.config}.brand-migration`, 'lock-guard'))
+          improperlyAcquired = true
+        } catch (error) {
+          expect(String(error)).toMatch(/kernel lock unavailable or active/)
+        } finally {
+          await other?.release()
+        }
+      }
+    }
+  )
+  expect(improperlyAcquired).toBe(false)
+})
+
+it('replans and acquires the guard if a legacy root appears while the lease is acquired', async () => {
+  const f = await fixture()
+  await rm(f.old, { recursive: true })
+  await rm(f.config, { recursive: true })
+  const { runMigration } = await import('../resources/brand-migration/transaction.mjs')
+  const { acquireKernelGuard } = await import('../resources/brand-migration/lock-guard.mjs')
+  let checked = false
+  await runMigration(
+    { home: f.home, appData: join(f.home, 'appData'), mode: 'dev', execute: true },
+    {
+      async onProgress(e: { phase: string }) {
+        if (e.phase === 'lease-acquired') {
+          await mkdir(f.old)
+          await writeFile(join(f.old, 'keep'), 'late data')
+        }
+        if (e.phase === 'copied') {
+          await expect(
+            acquireKernelGuard(join(`${f.config}.brand-migration`, 'lock-guard'))
+          ).rejects.toThrow(/kernel lock unavailable or active/)
+          checked = true
+        }
+      }
+    }
+  )
+  expect(checked).toBe(true)
+  expect(await readFile(join(f.next, 'keep'), 'utf8')).toBe('late data')
 })

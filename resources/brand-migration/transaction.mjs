@@ -155,7 +155,8 @@ async function lock(
   ownerKind = 'offline',
   profile = {},
   incomplete = [],
-  progress = () => {}
+  progress = () => {},
+  requireGuard = true
 ) {
   await assertPlainAncestors(stateDir)
   await mkdir(stateDir, { recursive: true, mode: 0o700 })
@@ -163,7 +164,11 @@ async function lock(
   const guardStat = await inspect(guardPath)
   if (guardStat && (!guardStat.isFile() || guardStat.nlink !== 1))
     throw new Error('Unsafe kernel lock file')
-  const guard = await acquireKernelGuard(guardPath)
+  let guard
+  const ensureGuard = async () => {
+    guard ??= await acquireKernelGuard(guardPath)
+  }
+  if (requireGuard) await ensureGuard()
   const path = join(stateDir, 'lock')
   const token = randomUUID()
   async function acquire() {
@@ -248,6 +253,7 @@ async function lock(
     if (await inspect(join(stateDir, 'lock-recovery'))) {
       if (!recover)
         throw new Error('Recovery lock exists; use --recover-lock after stopping its owner')
+      await ensureGuard()
       await recoverNode(join(stateDir, 'lock-recovery'), true)
     }
     try {
@@ -258,11 +264,12 @@ async function lock(
         throw new Error(
           `Migration lock exists; stop the owner or use --recover-lock after a crash: ${path}`
         )
+      await ensureGuard()
       await recoverNode(path)
       await acquire()
     }
   } catch (error) {
-    await guard.release()
+    await guard?.release()
     throw error
   }
   const release = async () => {
@@ -272,12 +279,12 @@ async function lock(
       await rm(path)
       await syncDirectory(stateDir)
     } finally {
-      await guard.release()
+      await guard?.release()
     }
   }
   const handoff = async (userData) => {
     if (ownerKind !== 'application') return
-    guard.assertHeld()
+    guard?.assertHeld()
     await durableJson(path, {
       pid: ownerPid,
       token,
@@ -285,9 +292,15 @@ async function lock(
       ...profile,
       userData
     })
-    await guard.release()
+    await guard?.release()
   }
-  return { release, handoff, assertHeld: guard.assertHeld, lease: { path, token } }
+  return {
+    release,
+    handoff,
+    ensureGuard,
+    assertHeld: () => guard?.assertHeld(),
+    lease: { path, token }
+  }
 }
 
 // lsof enumerates cwd, regular descriptors and mapped executable/library files, including
@@ -867,6 +880,18 @@ async function assertCoveredRoots(plan, journal) {
   }
 }
 
+function requiresKernelGuard(plan, options) {
+  if (options.rollback || options.retireAliases || options.resume || options.restartAfterRollback)
+    return true
+  if (plan.journal)
+    return (
+      plan.journal.status !== 'committed' ||
+      plan.journal.mappings.length > 0 ||
+      plan.journal.participants.length > 0
+    )
+  return plan.mappings.some((m) => m.state !== 'initialize')
+}
+
 export async function runMigration(options, deps = {}) {
   const progress = deps.onProgress ?? (() => {})
   const plan = await planMigration(options)
@@ -893,7 +918,8 @@ export async function runMigration(options, deps = {}) {
     release: unlock,
     handoff,
     lease,
-    assertHeld
+    assertHeld,
+    ensureGuard: requireKernelGuard
   } = await lock(
     plan.stateDir,
     options.recoverLock,
@@ -901,7 +927,10 @@ export async function runMigration(options, deps = {}) {
     options.startupOwner ? 'application' : 'offline',
     { userData: plan.userData, relayEligible: !options.allowMultiInstance },
     options.recoverIncompleteLock,
-    progress
+    progress,
+    // Pure initialization and its empty committed receipt move no user files. Atomic lease
+    // creation suffices; any abandoned-lock recovery still acquires the kernel guard above.
+    requiresKernelGuard(plan, options)
   )
   let retainLease = false
   const finish = async (value) => {
@@ -914,10 +943,28 @@ export async function runMigration(options, deps = {}) {
     return value
   }
   try {
+    await progress({ phase: 'lease-acquired' })
     let current = await planMigration(options)
+    if (requiresKernelGuard(current, options)) await requireKernelGuard()
     if (current.blockers.length) throw new Error(current.blockers.join('\n'))
     const journalFile = join(plan.stateDir, 'journal.json')
     let journal = current.journal
+    if (journal?.version === 1) {
+      // Upgrade under the lease before any online adapter can write new recovery fields.
+      if (journal.id !== undefined && !/^[a-f0-9-]{36}$/.test(journal.id))
+        throw new Error('Invalid version-1 receipt identity')
+      const id = journal.id ?? randomUUID()
+      const archive = join(plan.stateDir, `journal-${id}.version-1.json`)
+      const archived = await inspect(archive)
+      if (archived) {
+        if (!archived.isFile() || archived.nlink !== 1)
+          throw new Error(`Unsafe version-1 receipt archive: ${archive}`)
+        if (JSON.stringify(await readJson(archive)) !== JSON.stringify(journal))
+          throw new Error(`Version-1 receipt archive conflict: ${archive}`)
+      } else await durableJson(archive, journal)
+      journal = { ...journal, version: 2, id, platform: journal.platform ?? plan.platform }
+      await durableJson(journalFile, journal)
+    }
     if (journal?.status === 'rolled-back' && options.rollback) return journal
     if (journal?.protectedMigration?.status === 'publishing') {
       ;(deps.assertNoProcesses ?? assertNoProcesses)(
@@ -998,10 +1045,11 @@ export async function runMigration(options, deps = {}) {
         ].filter(Boolean)
       )
     ]
-    ;(deps.assertNoProcesses ?? assertNoProcesses)(busyRoots, [
-      ...(options.ignorePids ?? []),
-      ...(options.startupOwner ? [options.startupOwner] : [])
-    ])
+    if (journal || current.mappings.some((m) => m.state !== 'initialize'))
+      (deps.assertNoProcesses ?? assertNoProcesses)(busyRoots, [
+        ...(options.ignorePids ?? []),
+        ...(options.startupOwner ? [options.startupOwner] : [])
+      ])
     if (!journal) {
       if (options.rollback || options.resume) throw new Error('No migration journal exists')
       journal = await buildJournal(current)
