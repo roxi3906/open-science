@@ -26,6 +26,11 @@ export async function main(argv = process.argv.slice(2)) {
       options.startupOwner = Number(argv[++i])
       if (!Number.isSafeInteger(options.startupOwner) || options.startupOwner !== process.ppid)
         throw new Error('Startup owner must be the parent process')
+    } else if (flag === '--recover-incomplete-lock') {
+      const fingerprint = argv[++i]
+      if (!/^[a-f0-9]{64}$/.test(fingerprint ?? ''))
+        throw new Error('Expected an inspected lock SHA-256 fingerprint')
+      ;(options.recoverIncompleteLock ??= []).push(fingerprint)
     } else if (flag === '--audit-aliases') options.auditAliases = true
     else if (flag === '--retire-aliases') options.retireAliases = true
     else if (flag === '--execute') options.execute = true
@@ -61,6 +66,8 @@ export async function main(argv = process.argv.slice(2)) {
     (options.execute || options.resume || options.rollback || options.retireAliases)
   )
     throw new Error('--dry-run cannot be combined with a write action')
+  if (options.recoverIncompleteLock && !options.recoverLock)
+    throw new Error('--recover-incomplete-lock requires --recover-lock')
   if (options.restartAfterRollback && !options.execute)
     throw new Error('--restart-after-rollback requires --execute')
   if (process.platform === 'win32') {
