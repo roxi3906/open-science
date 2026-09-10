@@ -339,12 +339,22 @@ export async function planMigration(options) {
     await assertPlainAncestors(map.to)
     const old = await inspect(map.from)
     const next = await inspect(map.to)
-    if (old && next) blockers.push(`Path conflict: both ${map.from} and ${map.to} exist`)
+    const targetHandling =
+      old && next
+        ? !(await readdir(map.to)).length
+          ? 'empty'
+          : map.kind === 'logs'
+            ? 'logs'
+            : undefined
+        : undefined
+    if (old && next && !targetHandling)
+      blockers.push(`Path conflict: both ${map.from} and ${map.to} exist`)
     if (map.from !== map.to && (inside(map.from, map.to) || inside(map.to, map.from)))
       blockers.push(`Overlapping migration roots: ${map.from}`)
     mappings.push({
       ...map,
-      state: old ? (next ? 'conflict' : 'move') : next ? 'use-new' : 'initialize'
+      ...(targetHandling ? { targetHandling } : {}),
+      state: old ? (next && !targetHandling ? 'conflict' : 'move') : next ? 'use-new' : 'initialize'
     })
   }
   if (mappings.filter((m) => m.kind === 'data' && ['move', 'use-new'].includes(m.state)).length > 1)
@@ -354,6 +364,8 @@ export async function planMigration(options) {
       if (parent === child) continue
       if (inside(parent.from, child.from) && !inside(parent.to, child.to))
         blockers.push(`Unsupported nested mapping: ${child.from}`)
+      if (child.targetHandling && inside(parent.from, child.from))
+        blockers.push(`Nested target requires explicit reconciliation: ${child.to}`)
       if (parent.to === child.to && parent.from !== child.from)
         blockers.push(`Duplicate migration target: ${child.to}`)
     }
@@ -369,7 +381,8 @@ async function buildJournal(plan) {
   const candidates = activeMaps.map((m) => ({
     from: m.state === 'move' ? m.from : m.to,
     to: m.to,
-    stationary: m.state === 'use-new'
+    stationary: m.state === 'use-new',
+    targetHandling: m.targetHandling
   }))
   if (await inspect(plan.configRoot))
     candidates.push({ from: plan.configRoot, to: plan.configRoot, stationary: true })
@@ -407,12 +420,22 @@ async function buildJournal(plan) {
     const required = (volumeBytes.get(volume) ?? 0) + bytes * 1.1 + 1024 * 1024
     volumeBytes.set(volume, required)
     if (disk.bavail * disk.bsize < required) throw new Error(`Insufficient disk space at ${r.to}`)
+    let previousTarget
+    if (r.targetHandling) {
+      const targetOriginal = await inventory(r.to)
+      if (r.targetHandling === 'empty' && targetOriginal.length !== 1)
+        throw new Error(`Integrity mismatch or new writes at ${r.to}`)
+      const backup = `${r.to}.brand-existing-${id}`
+      if (await inspect(backup)) throw new Error(`Existing-target backup conflict: ${backup}`)
+      previousTarget = { kind: r.targetHandling, backup, original: targetOriginal }
+    }
     participants.push({
       from: r.from,
       to: r.to,
       ...(files ? { files } : {}),
       stage: `${r.to}.brand-stage-${id}`,
       backup: `${r.from}.brand-backup-${id}`,
+      ...(previousTarget ? { previousTarget } : {}),
       original,
       published: undefined
     })
@@ -463,6 +486,18 @@ async function publish(journal, save, progress) {
       continue
     }
     // A saved publishing intent makes either side of each rename recoverable after process death.
+    if (p.previousTarget) {
+      const target = p.previousTarget
+      if (!(await inspect(target.backup))) {
+        if ((await inspect(p.backup)) || !(await inspect(p.stage)))
+          throw new Error(`Existing-target backup is missing: ${target.backup}`)
+        await verify(p.to, target.original)
+        await rename(p.to, target.backup)
+        await syncDirectory(dirname(p.to))
+        await progress({ phase: 'target-backed-up', path: p.to })
+      }
+      await verify(target.backup, target.original)
+    }
     if (!(await inspect(p.backup))) {
       await verify(p.from, p.original)
       await rename(p.from, p.backup)
@@ -478,7 +513,10 @@ async function publish(journal, save, progress) {
     await save()
     await progress({ phase: 'root-published', path: p.to })
   }
-  for (const p of journal.participants) await verify(p.backup, p.original, p)
+  for (const p of journal.participants) {
+    await verify(p.backup, p.original, p)
+    if (p.previousTarget) await verify(p.previousTarget.backup, p.previousTarget.original)
+  }
   await ensureAliases(journal)
   journal.status = 'committed'
   journal.committedAt = new Date().toISOString()
@@ -489,6 +527,7 @@ async function prepare(journal, save, progress, copy) {
   for (const p of journal.participants) {
     if (await inspect(p.stage)) await rm(p.stage, { recursive: true })
     await verify(p.from, p.original, p)
+    if (p.previousTarget) await verify(p.to, p.previousTarget.original)
     if (p.files) await copyBundle(p, copy, verify, syncDirectory)
     else {
       await copy(p.from, p.stage)
@@ -534,7 +573,10 @@ async function prepare(journal, save, progress, copy) {
     await save()
   }
   // Detect source writes during a long cross-filesystem copy before touching any original root.
-  for (const p of journal.participants) await verify(p.from, p.original, p)
+  for (const p of journal.participants) {
+    await verify(p.from, p.original, p)
+    if (p.previousTarget) await verify(p.to, p.previousTarget.original)
+  }
   journal.status = 'prepared'
   await save()
 }
@@ -550,6 +592,21 @@ async function rollback(journal, save, progress) {
     }
     const backup = await inspect(p.backup)
     const parked = `${p.stage}.rolled-back`
+    let originalTargetInPlace = false
+    if (p.previousTarget) {
+      const target = p.previousTarget
+      if (await inspect(target.backup)) {
+        await verify(target.backup, target.original)
+        // Until the source was backed up, or after it was restored, the destination must be free.
+        if (!backup && (await inspect(p.to)))
+          throw new Error(`Unexpected target beside existing-target backup: ${p.to}`)
+      } else {
+        if (backup || journal.status === 'committed')
+          throw new Error(`Existing-target backup is missing: ${target.backup}`)
+        await verify(p.to, target.original)
+        originalTargetInPlace = true
+      }
+    }
     if (backup) {
       await verify(p.backup, p.original)
       if (await inspect(parked)) await verify(parked, expected(p))
@@ -569,7 +626,7 @@ async function rollback(journal, save, progress) {
         throw new Error(`Original backup is missing: ${p.backup}`)
       // A not-yet-published root is recoverable only while its exact original remains.
       await verify(p.from, p.original)
-      if (p.from !== p.to && (await inspect(p.to)))
+      if (p.from !== p.to && !originalTargetInPlace && (await inspect(p.to)))
         throw new Error(`Unexpected target without backup: ${p.to}`)
     }
   }
@@ -606,6 +663,12 @@ async function rollback(journal, save, progress) {
       p.restored = true
       await save()
       await progress({ phase: 'rollback-root-restored', path: p.from })
+    }
+    if (p.previousTarget && (await inspect(p.previousTarget.backup))) {
+      if (await inspect(p.to)) throw new Error(`Rollback target conflict: ${p.to}`)
+      await rename(p.previousTarget.backup, p.to)
+      await syncDirectory(dirname(p.to))
+      await progress({ phase: 'rollback-target-restored', path: p.to })
     }
   }
   journal.status = 'rolled-back'

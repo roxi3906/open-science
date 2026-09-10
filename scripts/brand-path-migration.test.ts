@@ -141,6 +141,236 @@ describe('offline brand migration', () => {
   })
 })
 
+describe('existing migration targets', () => {
+  async function targetFixture(kind: 'empty' | 'logs' = 'empty'): Promise<
+    Awaited<ReturnType<typeof fixture>> & {
+      from: string
+      to: string
+      options: { home: string; appData: string; mode: string; platform?: string; execute: boolean }
+    }
+  > {
+    const f = await fixture()
+    const from = kind === 'logs' ? join(f.home, 'Library', 'Logs', 'Open Science (DEV)') : f.old
+    const to = kind === 'logs' ? join(f.home, 'Library', 'Logs', 'Open-Science (DEV)') : f.next
+    await mkdir(from, { recursive: true })
+    await mkdir(to, { recursive: true, mode: 0o750 })
+    if (kind === 'logs') {
+      await writeFile(join(from, 'main.log'), 'old log\n')
+      await writeFile(join(to, 'main.log'), 'new log\n')
+    }
+    const options = {
+      home: f.home,
+      appData: join(f.home, 'appData'),
+      mode: 'dev',
+      ...(kind === 'logs' ? { platform: 'darwin' } : {}),
+      execute: true
+    }
+    return { ...f, from, to, options }
+  }
+
+  it('plans an empty target without writes, then preserves it through commit and rollback', async () => {
+    const f = await targetFixture()
+    const stat = await lstat(f.to)
+    const plan = cli(f.home)
+    expect(plan.value.blockers).toEqual([])
+    expect(plan.value.mappings).toContainEqual(
+      expect.objectContaining({ from: f.from, state: 'move', targetHandling: 'empty' })
+    )
+    expect(await readdir(f.to)).toEqual([])
+    await expect(lstat(`${f.config}.brand-migration`)).rejects.toMatchObject({ code: 'ENOENT' })
+    const result = cli(f.home, '--execute')
+    expect(result.status, result.output).toBe(0)
+    const journal = JSON.parse(
+      await readFile(join(`${f.config}.brand-migration`, 'journal.json'), 'utf8')
+    )
+    const p = journal.participants.find((p) => p.to === f.to)
+    expect(result.value.existingTargetBackups).toContainEqual({
+      from: f.to,
+      backup: p.previousTarget.backup,
+      kind: 'empty'
+    })
+    expect(await readdir(p.previousTarget.backup)).toEqual([])
+    expect((await lstat(p.previousTarget.backup)).ino).toBe(stat.ino)
+    expect((await lstat(p.previousTarget.backup)).mode).toBe(stat.mode)
+    expect(await readFile(join(f.to, 'uploads', 'paper.txt'), 'utf8')).toBe('research\n')
+    expect(cli(f.home, '--execute').value.id).toBe(result.value.id)
+    expect(cli(f.home, '--rollback').value.status).toBe('rolled-back')
+    expect((await lstat(f.to)).ino).toBe(stat.ino)
+    expect(await readdir(f.to)).toEqual([])
+    expect(await readFile(join(f.from, 'uploads', 'paper.txt'), 'utf8')).toBe('research\n')
+  })
+
+  it.each(['dev', 'packaged'])(
+    'handles an empty %s profile but still rejects a nonempty profile',
+    async (mode) => {
+      const f = await fixture()
+      const profile = mode === 'dev' ? 'Open Science (DEV)' : 'Open Science'
+      const from = join(f.home, 'appData', profile)
+      const to = join(f.home, 'appData', profile.replace('Open Science', 'Open-Science'))
+      await mkdir(from, { recursive: true })
+      await writeFile(join(from, 'Preferences'), 'old preferences')
+      await mkdir(to)
+      expect(cli(f.home, '--mode', mode).value.blockers).toEqual([])
+      await writeFile(join(to, 'Preferences'), 'independent preferences')
+      expect(cli(f.home, '--mode', mode, '--execute').output).toContain('Path conflict')
+      expect(await readFile(join(to, 'Preferences'), 'utf8')).toBe('independent preferences')
+    }
+  )
+
+  it('preserves both versions of same-name logs without merging their contents', async () => {
+    const f = await targetFixture('logs')
+    const { runMigration } = await import('../resources/brand-migration/transaction.mjs')
+    const result = await runMigration(f.options)
+    const p = result.participants.find((p) => p.to === f.to)
+    expect(result.status).toBe('committed')
+    expect(p.previousTarget.kind).toBe('logs')
+    expect(await readFile(join(p.previousTarget.backup, 'main.log'), 'utf8')).toBe('new log\n')
+    expect(await readFile(join(p.backup, 'main.log'), 'utf8')).toBe('old log\n')
+    expect(await readFile(join(f.to, 'main.log'), 'utf8')).toBe('old log\n')
+    await runMigration({ ...f.options, execute: false, rollback: true })
+    expect(await readFile(join(f.to, 'main.log'), 'utf8')).toBe('new log\n')
+    expect(await readFile(join(f.from, 'main.log'), 'utf8')).toBe('old log\n')
+  })
+
+  it('rechecks an empty target after copying and refuses new writes before moving originals', async () => {
+    const f = await targetFixture()
+    const { runMigration } = await import('../resources/brand-migration/transaction.mjs')
+    await expect(
+      runMigration(f.options, {
+        async onProgress(event: { phase: string }) {
+          if (event.phase === 'copied') await writeFile(join(f.to, 'new-user-file'), 'keep')
+        }
+      })
+    ).rejects.toThrow('new writes')
+    expect((await lstat(f.from)).isSymbolicLink()).toBe(false)
+    expect(await readFile(join(f.to, 'new-user-file'), 'utf8')).toBe('keep')
+  })
+
+  it.each(['target-backed-up', 'source-backed-up', 'root-published'])(
+    'recovers both log trees after interruption at %s',
+    async (phase) => {
+      const f = await targetFixture('logs')
+      const { runMigration } = await import('../resources/brand-migration/transaction.mjs')
+      await expect(
+        runMigration(f.options, {
+          onProgress(event: { phase: string; path?: string }) {
+            if (event.phase === phase && [f.from, f.to].includes(event.path ?? ''))
+              throw new Error('injected interruption')
+          }
+        })
+      ).rejects.toThrow('injected interruption')
+      const result = await runMigration({ ...f.options, execute: false, resume: true })
+      expect(result.status).toBe('committed')
+      const p = result.participants.find((p) => p.to === f.to)
+      expect(await readFile(join(p.previousTarget.backup, 'main.log'), 'utf8')).toBe('new log\n')
+      expect(await readFile(join(f.to, 'main.log'), 'utf8')).toBe('old log\n')
+    }
+  )
+
+  it.each(['copied', 'target-backed-up', 'source-backed-up', 'root-published'])(
+    'rolls back both log trees after interruption at %s',
+    async (phase) => {
+      const f = await targetFixture('logs')
+      const { runMigration } = await import('../resources/brand-migration/transaction.mjs')
+      await expect(
+        runMigration(f.options, {
+          onProgress(event: { phase: string; path?: string }) {
+            if (
+              event.phase === phase &&
+              (phase === 'copied' || [f.from, f.to].includes(event.path ?? ''))
+            )
+              throw new Error('injected interruption')
+          }
+        })
+      ).rejects.toThrow('injected interruption')
+      const result = await runMigration({ ...f.options, execute: false, rollback: true })
+      expect(result.status).toBe('rolled-back')
+      expect(await readFile(join(f.from, 'main.log'), 'utf8')).toBe('old log\n')
+      expect(await readFile(join(f.to, 'main.log'), 'utf8')).toBe('new log\n')
+    }
+  )
+
+  it.each(['rollback-root-parked', 'rollback-root-restored', 'rollback-target-restored'])(
+    'resumes interrupted rollback at %s',
+    async (phase) => {
+      const f = await targetFixture('logs')
+      const { runMigration } = await import('../resources/brand-migration/transaction.mjs')
+      await runMigration(f.options)
+      const rollback = { ...f.options, execute: false, rollback: true }
+      await expect(
+        runMigration(rollback, {
+          onProgress(event: { phase: string; path?: string }) {
+            if (event.phase === phase && [f.from, f.to].includes(event.path ?? ''))
+              throw new Error('injected interruption')
+          }
+        })
+      ).rejects.toThrow('injected interruption')
+      expect((await runMigration(rollback)).status).toBe('rolled-back')
+      expect(await readFile(join(f.from, 'main.log'), 'utf8')).toBe('old log\n')
+      expect(await readFile(join(f.to, 'main.log'), 'utf8')).toBe('new log\n')
+    }
+  )
+
+  it('refuses rollback before any root changes if the existing-target backup was modified', async () => {
+    const f = await targetFixture('logs')
+    const { runMigration } = await import('../resources/brand-migration/transaction.mjs')
+    const result = await runMigration(f.options)
+    const p = result.participants.find((p) => p.to === f.to)
+    await writeFile(join(p.previousTarget.backup, 'main.log'), 'later write')
+    await expect(runMigration({ ...f.options, execute: false, rollback: true })).rejects.toThrow(
+      'new writes'
+    )
+    expect((await lstat(f.old)).isSymbolicLink()).toBe(true)
+    expect(await readFile(join(f.to, 'main.log'), 'utf8')).toBe('old log\n')
+  })
+
+  it('leaves both originals intact after a copy failure and can resume', async () => {
+    const f = await targetFixture()
+    const { runMigration } = await import('../resources/brand-migration/transaction.mjs')
+    await expect(
+      runMigration(f.options, {
+        copyTree() {
+          throw new Error('injected copy failure')
+        }
+      })
+    ).rejects.toThrow('injected copy failure')
+    expect(await readdir(f.to)).toEqual([])
+    expect(await readFile(join(f.from, 'uploads', 'paper.txt'), 'utf8')).toBe('research\n')
+    expect((await runMigration({ ...f.options, execute: false, resume: true })).status).toBe(
+      'committed'
+    )
+  })
+
+  it('rejects a forged existing-target backup path without touching either generation', async () => {
+    const f = await targetFixture()
+    const { runMigration } = await import('../resources/brand-migration/transaction.mjs')
+    const result = await runMigration(f.options)
+    const p = result.participants.find((p) => p.to === f.to)
+    p.previousTarget.backup = f.config
+    await writeFile(join(`${f.config}.brand-migration`, 'journal.json'), JSON.stringify(result))
+    await expect(runMigration({ ...f.options, execute: false, rollback: true })).rejects.toThrow(
+      'Invalid journal existing target'
+    )
+    expect((await lstat(f.old)).isSymbolicLink()).toBe(true)
+    expect(await readFile(join(f.to, 'uploads', 'paper.txt'), 'utf8')).toBe('research\n')
+  })
+
+  it('rejects a missing existing-target backup before rolling back any participant', async () => {
+    const f = await targetFixture()
+    const { runMigration } = await import('../resources/brand-migration/transaction.mjs')
+    const result = await runMigration(f.options)
+    const p = result.participants.find((p) => p.to === f.to)
+    await rm(p.previousTarget.backup, { recursive: true })
+    await expect(runMigration({ ...f.options, execute: false, rollback: true })).rejects.toThrow(
+      'Existing-target backup is missing'
+    )
+    expect((await lstat(f.old)).isSymbolicLink()).toBe(true)
+    expect(JSON.parse(await readFile(join(f.config, 'settings.json'), 'utf8')).dataRoot).toBe(
+      f.next
+    )
+  })
+})
+
 describe('migration reference boundaries and recovery', () => {
   it('preserves casing and remaps only exact absolute roots including Windows and file URIs', async () => {
     const { remapPath, hyphenateBrand } = await import('../resources/brand-migration/paths.mjs')
@@ -238,6 +468,78 @@ describe('real SQLite and filesystem transaction', () => {
     db.close()
     return (file = join(f.config, 'open-science.db')) => new DatabaseSync(file)
   }
+  it.each(['database-before-commit', 'root-published'])(
+    'recovers the empty profile and conflicting logs together with the real DB after %s',
+    async (phase) => {
+      const f = await fixture()
+      const openDb = await database(f)
+      const profileFrom = join(f.home, 'appData', 'Open Science (DEV)')
+      const profileTo = join(f.home, 'appData', 'Open-Science (DEV)')
+      const logsFrom = join(f.home, 'Library', 'Logs', 'Open Science (DEV)')
+      const logsTo = join(f.home, 'Library', 'Logs', 'Open-Science (DEV)')
+      for (const path of [profileFrom, profileTo, logsFrom, logsTo])
+        await mkdir(path, { recursive: true })
+      await writeFile(join(profileFrom, 'Preferences'), 'historical preferences')
+      await writeFile(join(logsFrom, 'main.log'), 'old logs')
+      await writeFile(join(logsTo, 'main.log'), 'new logs')
+      const { runMigration } = await import('../resources/brand-migration/transaction.mjs')
+      const options = {
+        home: f.home,
+        appData: join(f.home, 'appData'),
+        mode: 'dev',
+        platform: 'darwin'
+      }
+      await expect(
+        runMigration(
+          { ...options, execute: true },
+          {
+            onProgress(event: { phase: string; path?: string }) {
+              if (event.phase === phase && (phase !== 'root-published' || event.path === profileTo))
+                throw new Error('injected DB and filesystem interruption')
+            }
+          }
+        )
+      ).rejects.toThrow('injected DB and filesystem interruption')
+      let db = openDb()
+      try {
+        expect(db.prepare('SELECT path FROM GrantedLocalRoot').get()).toEqual({ path: f.old })
+      } finally {
+        db.close()
+      }
+      const result = await runMigration({ ...options, resume: true })
+      expect(result.status).toBe('committed')
+      expect(await readFile(join(profileTo, 'Preferences'), 'utf8')).toBe('historical preferences')
+      expect(await readFile(join(f.next, 'uploads', 'paper.txt'), 'utf8')).toBe('research\n')
+      db = openDb()
+      try {
+        expect(db.prepare('SELECT id,path FROM GrantedLocalRoot').all()).toEqual([
+          { id: 'grant', path: f.next }
+        ])
+        expect(db.prepare('SELECT id,description FROM Project').all()).toEqual([
+          { id: 'p', description: f.old }
+        ])
+        expect(db.prepare('PRAGMA foreign_key_check').all()).toEqual([])
+      } finally {
+        db.close()
+      }
+      await runMigration({ ...options, rollback: true })
+      expect(await readdir(profileTo)).toEqual([])
+      expect(await readFile(join(profileFrom, 'Preferences'), 'utf8')).toBe(
+        'historical preferences'
+      )
+      expect(await readFile(join(logsTo, 'main.log'), 'utf8')).toBe('new logs')
+      expect(await readFile(join(logsFrom, 'main.log'), 'utf8')).toBe('old logs')
+      db = openDb()
+      try {
+        expect(db.prepare('SELECT id,path FROM GrantedLocalRoot').all()).toEqual([
+          { id: 'grant', path: f.old }
+        ])
+        expect(db.prepare('PRAGMA foreign_key_check').all()).toEqual([])
+      } finally {
+        db.close()
+      }
+    }
+  )
   it('updates actual schema columns in a transaction without changing content, IDs or relations', async () => {
     const f = await fixture()
     const openDb = await database(f)

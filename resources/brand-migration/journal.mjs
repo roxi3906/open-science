@@ -73,11 +73,25 @@ export async function validateJournal(journal, plan, file) {
         ))
     )
       throw new Error('Invalid journal reference bundle')
-    for (const path of [p.stage, p.backup]) {
+    if (p.previousTarget) {
+      const target = p.previousTarget
+      if (
+        p.files ||
+        p.from === p.to ||
+        target.backup !== `${p.to}.brand-existing-${journal.id}` ||
+        !Array.isArray(target.original) ||
+        !['empty', 'logs'].includes(target.kind) ||
+        (target.kind === 'empty' && target.original.length !== 1) ||
+        (target.kind === 'logs' &&
+          !plan.mappings.some((m) => m.kind === 'logs' && m.from === p.from && m.to === p.to))
+      )
+        throw new Error('Invalid journal existing target')
+    }
+    for (const path of [p.stage, p.backup, p.previousTarget?.backup].filter(Boolean)) {
       if (paths.has(path)) throw new Error('Duplicate journal path')
       paths.add(path)
     }
-    for (const manifest of [p.original, p.published].filter(Boolean)) {
+    for (const manifest of [p.original, p.published, p.previousTarget?.original].filter(Boolean)) {
       if (!Array.isArray(manifest) || manifest[0]?.path !== '' || manifest[0]?.type !== 'directory')
         throw new Error('Invalid journal manifest')
       const entries = new Set()

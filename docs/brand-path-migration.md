@@ -50,7 +50,13 @@ The default standalone action only returns a plan. Execution classifies each map
 - Old only: inventory, copy to a private sibling stage, verify, migrate references, then publish.
 - New only: adopt that root without copying or replacing it. Only changed supported JSON and DB/WAL files enter a reference-bundle transaction; unrelated files and root inodes stay in place. Installed runtimes with old prefixes receive a recorded, audited transition alias.
 - Neither: initialize using the new default; do not manufacture old data.
-- Both: stop with both exact paths. No merge, overwrite, deletion, or silent preference.
+- Both, new directory empty: the plan reports `targetHandling: "empty"`. Preserve that directory
+  in a separate backup, then migrate the old tree. Empty means no entries, including hidden files.
+- Both, known macOS application log roots: the plan reports `targetHandling: "logs"`. Preserve
+  the complete existing new log tree separately, then publish the old logs at the new location.
+  Same-name logs are never overwritten or concatenated; both histories remain accessible.
+- Both, any other nonempty target (including an Electron profile or data root): stop with both
+  exact paths. Nested roots with existing targets also require explicit reconciliation.
 
 Each source tree is inventoried before copying and rechecked before any source rename. Native copy
 preserves file bytes, directory layout, permissions, ACLs and extended attributes; hashes,
@@ -67,6 +73,15 @@ its destination on the destination filesystem. Originals are never deleted. Dura
 precedes publication; file and directory fsync is used where supported. A crash between any root
 rename is resumed from the journal. A failed copy or database transaction leaves originals usable;
 a partial publication blocks normal startup until resumed or rolled back.
+
+An existing empty target or known log target is inventoried under the same migration lock and
+rechecked after staging and immediately before publication. Its original directory is renamed to
+`<new-root>.brand-existing-<transaction-id>` before the source is backed up. This preserves its
+inode, contents and metadata. The durable receipt records both original manifests before any root
+moves. Execution and subsequent dry-run output list these additional archives in
+`existingTargetBackups`; `backups` lists the original source backups. Neither archive is deleted
+automatically. Unexpected writes, missing archives or changed manifests stop recovery instead of
+choosing another tree. Startup uses this same logic automatically, before its writers open.
 
 For stationary roots, only affected files move to the private backup bundle; the root itself stays in place. Every new backup/parking ancestor is persisted before originals move, and cross-directory renames synchronize both parent directories on POSIX.
 
@@ -156,6 +171,10 @@ string replacement. Explicit `--dry-run` cannot be combined with a writing actio
 Resume reuses the saved transaction and validates derived stage/backup paths before touching them.
 Rollback verifies original backups and the published/parked generation, restores originals, and
 retains the newer tree as `<stage>.rolled-back`. Interrupted rollback resumes with `--rollback`.
+If an existing target was archived, rollback also restores that original target to its original
+name, after restoring the old source. Both pre-migration trees are therefore recovered, including
+the empty target or the independent new logs. All backups are checked before rollback changes any
+participant, and interruptions between either restoration step use the same `--rollback` command.
 Rollback refuses when newer files/changes exist; retain both generations and reconcile those changes
 before any restoration. It is not a destructive reset of an app that has already resumed work.
 A completed rollback retains its receipt. Re-run with `--execute --restart-after-rollback`: it archives the old receipt inside the same state directory and starts a new transaction. Normal startup therefore sees the new committed receipt; original backups and parked generations are retained.

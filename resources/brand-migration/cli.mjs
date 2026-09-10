@@ -76,12 +76,18 @@ export async function main(argv = process.argv.slice(2)) {
   const result = await runMigration(options)
   // Manifests stay in the private receipt; stdout is a concise operator-facing plan/result.
   const { journal, participants, ...summary } = result
+  const existingTargetBackups = (participants ?? journal?.participants ?? []).flatMap((p) =>
+    p.previousTarget
+      ? [{ from: p.to, backup: p.previousTarget.backup, kind: p.previousTarget.kind }]
+      : []
+  )
   console.log(
     JSON.stringify(
       {
         ...summary,
         ...(journal ? { status: journal.status, mappings: journal.mappings } : {}),
-        ...(participants ? { backups: participants.map((p) => p.backup) } : {})
+        ...(participants ? { backups: participants.map((p) => p.backup) } : {}),
+        ...(existingTargetBackups.length ? { existingTargetBackups } : {})
       },
       null,
       2
