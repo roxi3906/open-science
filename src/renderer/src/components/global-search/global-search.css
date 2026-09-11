@@ -253,10 +253,12 @@
   opacity: 1;
 }
 .global-search-advanced {
+  display: flex;
   width: 0;
   min-width: 0;
   overflow: hidden;
   opacity: 0;
+  background: var(--bg-200);
   transition:
     width 240ms ease,
     opacity 200ms ease;
@@ -267,22 +269,22 @@
 }
 .search-advanced-island {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 10px;
-  width: 220px;
-  margin: 6px 12px 12px;
+  margin: 12px;
   padding: 12px;
-  border: 1px solid color-mix(in oklab, var(--island-foreground) 14%, transparent);
+  overflow-y: auto;
+  border: 1px solid var(--border);
   border-radius: var(--radius-xl);
-  background: var(--island);
-  color: var(--island-foreground);
+  background: var(--bg-000);
   box-shadow: var(--shadow-menu);
 }
 .search-advanced-title {
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.02em;
-  color: color-mix(in oklab, var(--island-foreground) 72%, transparent);
+  color: var(--muted-foreground);
 }
 .search-subfilters-stacked {
   flex-direction: column;
@@ -294,15 +296,6 @@
 .search-subfilters-stacked [data-slot='select-trigger'] {
   width: 100%;
   max-width: none;
-}
-.search-advanced-island .search-subfilters [data-slot='select-trigger'] {
-  border-color: color-mix(in oklab, var(--island-foreground) 18%, transparent);
-  background: color-mix(in oklab, var(--island-foreground) 6%, transparent);
-  color: var(--island-foreground);
-}
-.search-advanced-island .search-subfilters [data-slot='select-trigger']:hover,
-.search-advanced-island .search-subfilters [data-slot='select-trigger'][data-state='open'] {
-  background: color-mix(in oklab, var(--island-foreground) 12%, transparent);
 }
 /* The detail surface freezes at 55cqw so it does not reflow during the grid transition; when the
    advanced island occupies its fixed 244px track, the detail track is 55% of the remaining width,
@@ -836,13 +829,15 @@
     inset: 0;
     width: auto;
     pointer-events: none;
+    background: transparent;
   }
   .global-search-advanced[data-open='true'] .search-advanced-island {
     pointer-events: auto;
   }
   .global-search-advanced .search-advanced-island {
+    flex: none;
     width: min(240px, calc(100% - 48px));
-    margin: 8px 12px 12px auto;
+    margin: 12px 12px 12px auto;
   }
   .global-search-body[data-expanded='true'] > .global-search-list-pane {
     visibility: hidden;

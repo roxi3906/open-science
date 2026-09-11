@@ -178,8 +178,6 @@
   --color-bg-200: var(--bg-200);
   --color-bg-300: var(--bg-300);
   --color-bg-400: var(--bg-400);
-  --color-island: var(--island);
-  --color-island-foreground: var(--island-foreground);
   --color-border-200: hsl(var(--border-ink-channel) / 0.15);
   --color-border-300: hsl(var(--border-ink-channel) / 0.2);
   --color-border-100: hsl(var(--border-ink-channel));
@@ -279,10 +277,6 @@
   --bg-200: hsl(60 11% 95%);
   --bg-300: hsl(45 12% 93%);
   --bg-400: hsl(45 10% 88%);
-  /* Detached dark "island" surface (e.g. the global-search advanced filter column): a dark fill
-     with its own light foreground, so the panel separates from its surroundings in both themes. */
-  --island: hsl(48 6% 16%);
-  --island-foreground: hsl(60 14% 96%);
   --border-ink-channel: 60 2% 12%;
   --text-000: hsl(0 0% 7%);
   --text-100: var(--muted-foreground);
@@ -366,9 +360,6 @@
   --bg-200: hsl(50 3% 18%);
   --bg-300: hsl(48 3% 22%);
   --bg-400: hsl(46 3% 28%);
-  /* Dark theme keeps the island darker than the darkest shell surface so it still reads detached. */
-  --island: hsl(48 8% 7%);
-  --island-foreground: hsl(48 12% 92%);
   --border-ink-channel: 48 8% 82%;
   --text-000: hsl(48 12% 92%);
   --text-100: hsl(45 5% 62%);

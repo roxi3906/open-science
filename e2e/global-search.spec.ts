@@ -594,19 +594,33 @@ test('toggles the advanced filter island column from the category chips', async 
   const islandGeometry = await island.evaluate((el) => {
     const style = getComputedStyle(el)
     const rect = el.getBoundingClientRect()
+    const track = el.closest('.global-search-advanced')!
+    const trackStyle = getComputedStyle(track)
     const body = el.closest('.global-search-body')!.getBoundingClientRect()
-    const [r, g, b] = style.backgroundColor.match(/\d+/g)!.map(Number)
+    const rgb = (value: string): number[] => value.match(/\d+/g)!.map(Number)
+    const [r, g, b] = rgb(style.backgroundColor)
+    const [gr, gg, gb] = rgb(trackStyle.backgroundColor)
     return {
       borderRadius: style.borderRadius,
-      lightness: (r + g + b) / 3,
+      islandLightness: (r + g + b) / 3,
+      gutterLightness: (gr + gg + gb) / 3,
       gapRight: body.right - rect.right,
-      gapTop: rect.top - body.top
+      gapTop: rect.top - body.top,
+      gapBottom: body.bottom - rect.bottom,
+      height: rect.height,
+      bodyHeight: body.height
     }
   })
   expect(islandGeometry.borderRadius).toBe('12px')
-  expect(islandGeometry.lightness).toBeLessThan(90)
+  // The island matches the other panes' white surface; the light-gray gutter separates it.
+  expect(islandGeometry.islandLightness).toBeGreaterThan(245)
+  expect(islandGeometry.gutterLightness).toBeGreaterThan(200)
+  expect(islandGeometry.gutterLightness).toBeLessThan(islandGeometry.islandLightness - 5)
   expect(islandGeometry.gapRight).toBeGreaterThanOrEqual(12)
-  expect(islandGeometry.gapTop).toBeGreaterThanOrEqual(6)
+  expect(islandGeometry.gapTop).toBeGreaterThanOrEqual(12)
+  expect(islandGeometry.gapBottom).toBeGreaterThanOrEqual(12)
+  // The island fills the full body height like the other panes.
+  expect(islandGeometry.height).toBeGreaterThanOrEqual(islandGeometry.bodyHeight - 25)
   await expect(panel.getByRole('combobox', { name: 'Search scope' })).toBeVisible()
   await panel.getByRole('combobox', { name: 'Result order' }).click()
   await page.getByRole('option', { name: 'Recently updated', exact: true }).click()
