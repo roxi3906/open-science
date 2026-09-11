@@ -10,6 +10,7 @@ import {
   Grid2X2,
   MessageCircle,
   Search,
+  SlidersHorizontal,
   Upload,
   X
 } from 'lucide-react'
@@ -98,6 +99,7 @@ export const GlobalSearchDialog = ({
   const { t, i18n } = useTranslation()
   const locale = resolveLocaleFromTags([i18n.resolvedLanguage ?? i18n.language])
   const listboxId = useId()
+  const advancedPanelId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const loadMoreRef = useRef<HTMLDivElement>(null)
@@ -112,6 +114,7 @@ export const GlobalSearchDialog = ({
   const [days, setDays] = useState(0)
   const [dateReference, setDateReference] = useState(Date.now)
   const [subtype, setSubtype] = useState('all')
+  const [advancedOpen, setAdvancedOpen] = useState(false)
   const updatedAfter = days ? dateReference - days * 86_400_000 : undefined
   const [counts, setCounts] = useState(initialCounts)
   const [selected, setSelected] = useState<SearchResult>()
@@ -557,6 +560,31 @@ export const GlobalSearchDialog = ({
       } else openResult(row)
     }
   }
+  const searchFilterProps = {
+    category,
+    scope: restrictToProject ? ('current' as const) : ('all' as const),
+    canScopeToProject: view === 'workspace' && !!activeProjectId,
+    sort,
+    days,
+    subtype,
+    onScope: (value: string) => {
+      setCurrentProjectOnly(value === 'current')
+      resetSelection()
+    },
+    onSort: (value: SearchSort) => {
+      setSort(value)
+      resetSelection()
+    },
+    onDays: (value: number) => {
+      setDays(value)
+      setDateReference(Date.now())
+      resetSelection()
+    },
+    onSubtype: (value: string) => {
+      setSubtype(value)
+      resetSelection()
+    }
+  }
   return (
     <Dialog.Root
       open={open}
@@ -577,6 +605,7 @@ export const GlobalSearchDialog = ({
           onOpenAutoFocus={(event) => {
             event.preventDefault()
             setCategory('all')
+            setAdvancedOpen(false)
             resetSelection()
             inputRef.current?.focus()
           }}
@@ -685,6 +714,17 @@ export const GlobalSearchDialog = ({
                   </button>
                 )
               })}
+              <button
+                type="button"
+                data-testid="global-search-advanced-toggle"
+                aria-expanded={advancedOpen}
+                aria-controls={advancedPanelId}
+                onClick={() => setAdvancedOpen((open) => !open)}
+                className="search-category-chip search-advanced-toggle transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <SlidersHorizontal aria-hidden="true" />
+                {t('Advanced filters')}
+              </button>
             </div>
           </header>
           <div className="global-search-body min-h-0 flex-1" data-expanded={!!selected}>
@@ -692,31 +732,7 @@ export const GlobalSearchDialog = ({
               className="global-search-list-pane min-h-0 min-w-0 flex flex-col"
               aria-label={t('Search results')}
             >
-              <SearchResultFilters
-                category={category}
-                scope={restrictToProject ? 'current' : 'all'}
-                canScopeToProject={view === 'workspace' && !!activeProjectId}
-                sort={sort}
-                days={days}
-                subtype={subtype}
-                onScope={(value) => {
-                  setCurrentProjectOnly(value === 'current')
-                  resetSelection()
-                }}
-                onSort={(value) => {
-                  setSort(value)
-                  resetSelection()
-                }}
-                onDays={(value) => {
-                  setDays(value)
-                  setDateReference(Date.now())
-                  resetSelection()
-                }}
-                onSubtype={(value) => {
-                  setSubtype(value)
-                  resetSelection()
-                }}
-              />
+              {!advancedOpen && <SearchResultFilters {...searchFilterProps} />}
               <div
                 className="global-search-list min-h-0 flex-1 overflow-auto"
                 ref={listRef}
@@ -961,6 +977,20 @@ export const GlobalSearchDialog = ({
                     onCollapse={collapse}
                   />
                 )}
+              </div>
+            </aside>
+            <aside
+              id={advancedPanelId}
+              data-testid="global-search-advanced"
+              data-open={advancedOpen}
+              aria-hidden={!advancedOpen}
+              inert={!advancedOpen}
+              aria-label={t('Advanced filters')}
+              className="global-search-advanced h-full"
+            >
+              <div className="search-advanced-island">
+                <div className="search-advanced-title">{t('Advanced filters')}</div>
+                {advancedOpen && <SearchResultFilters stacked {...searchFilterProps} />}
               </div>
             </aside>
           </div>

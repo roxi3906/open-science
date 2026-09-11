@@ -63,10 +63,14 @@
 .search-category-chip:hover {
   background: var(--bg-200);
 }
-.search-category-chip[aria-pressed='true'] {
+.search-category-chip[aria-pressed='true'],
+.search-advanced-toggle[aria-expanded='true'] {
   color: var(--primary-foreground);
   background: var(--primary);
   border-color: var(--primary);
+}
+.search-advanced-toggle {
+  margin-left: auto;
 }
 .search-subfilters {
   min-height: 28px;
@@ -233,11 +237,11 @@
 .global-search-body {
   container-type: inline-size;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0fr) auto;
   transition: grid-template-columns 240ms ease;
 }
 .global-search-body[data-expanded='true'] {
-  grid-template-columns: minmax(0, 0.45fr) minmax(0, 0.55fr);
+  grid-template-columns: minmax(0, 0.45fr) minmax(0, 0.55fr) auto;
 }
 .global-search-detail {
   min-width: 0;
@@ -247,6 +251,67 @@
 }
 .global-search-detail[data-open='true'] {
   opacity: 1;
+}
+.global-search-advanced {
+  width: 0;
+  min-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    width 240ms ease,
+    opacity 200ms ease;
+}
+.global-search-advanced[data-open='true'] {
+  width: 244px;
+  opacity: 1;
+}
+.search-advanced-island {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 220px;
+  margin: 6px 12px 12px;
+  padding: 12px;
+  border: 1px solid color-mix(in oklab, var(--island-foreground) 14%, transparent);
+  border-radius: var(--radius-xl);
+  background: var(--island);
+  color: var(--island-foreground);
+  box-shadow: var(--shadow-menu);
+}
+.search-advanced-title {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: color-mix(in oklab, var(--island-foreground) 72%, transparent);
+}
+.search-subfilters-stacked {
+  flex-direction: column;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  min-height: 0;
+  padding: 0;
+}
+.search-subfilters-stacked [data-slot='select-trigger'] {
+  width: 100%;
+  max-width: none;
+}
+.search-advanced-island .search-subfilters [data-slot='select-trigger'] {
+  border-color: color-mix(in oklab, var(--island-foreground) 18%, transparent);
+  background: color-mix(in oklab, var(--island-foreground) 6%, transparent);
+  color: var(--island-foreground);
+}
+.search-advanced-island .search-subfilters [data-slot='select-trigger']:hover,
+.search-advanced-island .search-subfilters [data-slot='select-trigger'][data-state='open'] {
+  background: color-mix(in oklab, var(--island-foreground) 12%, transparent);
+}
+/* The detail surface freezes at 55cqw so it does not reflow during the grid transition; when the
+   advanced island occupies its fixed 244px track, the detail track is 55% of the remaining width,
+   so the surface must subtract the island track or its right edge is clipped. */
+@media (min-width: 741px) {
+  .global-search-body:has(> .global-search-advanced[data-open='true'])
+    .global-search-detail-surface {
+    width: calc(0.55 * (100cqw - 244px));
+  }
 }
 .search-detail-header {
   flex-shrink: 0;
@@ -765,6 +830,20 @@
   .global-search-detail[data-open='true'] {
     pointer-events: auto;
   }
+  .global-search-advanced,
+  .global-search-advanced[data-open='true'] {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    pointer-events: none;
+  }
+  .global-search-advanced[data-open='true'] .search-advanced-island {
+    pointer-events: auto;
+  }
+  .global-search-advanced .search-advanced-island {
+    width: min(240px, calc(100% - 48px));
+    margin: 8px 12px 12px auto;
+  }
   .global-search-body[data-expanded='true'] > .global-search-list-pane {
     visibility: hidden;
   }
@@ -772,6 +851,7 @@
 @media (prefers-reduced-motion: reduce) {
   .global-search-body,
   .global-search-detail,
+  .global-search-advanced,
   .search-recent-session,
   .search-recent-literature,
   .search-recent-file,
