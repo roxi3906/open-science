@@ -602,6 +602,9 @@ test('toggles the advanced filter island column from the category chips', async 
     const [gr, gg, gb] = rgb(trackStyle.backgroundColor)
     return {
       borderRadius: style.borderRadius,
+      borderWidth: style.borderTopWidth,
+      gutterRadiusLeft: trackStyle.borderTopLeftRadius,
+      gutterRadiusRight: trackStyle.borderTopRightRadius,
       islandLightness: (r + g + b) / 3,
       gutterLightness: (gr + gg + gb) / 3,
       gapRight: body.right - rect.right,
@@ -612,6 +615,10 @@ test('toggles the advanced filter island column from the category chips', async 
     }
   })
   expect(islandGeometry.borderRadius).toBe('12px')
+  // No inner border on the island; the gray gutter is rounded on the left side only.
+  expect(islandGeometry.borderWidth).toBe('0px')
+  expect(islandGeometry.gutterRadiusLeft).toBe('12px')
+  expect(islandGeometry.gutterRadiusRight).toBe('0px')
   // The island matches the other panes' white surface; the light-gray gutter separates it.
   expect(islandGeometry.islandLightness).toBeGreaterThan(245)
   expect(islandGeometry.gutterLightness).toBeGreaterThan(200)
