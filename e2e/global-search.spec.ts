@@ -558,6 +558,118 @@ test('keeps saved Notebook output and structured file previews visible inside se
   await dialog.screenshot({ path: testInfo.outputPath('search-molecule.png') })
 })
 
+test('toggles the advanced filter island column from the category chips', async ({
+  app
+}, testInfo) => {
+  await app.completeOnboarding()
+  const page = await app.configureFakeAgent()
+  await suppressWorkspaceStarNudge(page)
+  await page.getByRole('button', { name: 'Search', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Global search' })
+  const toggle = dialog.getByRole('button', { name: 'Advanced filters' })
+  const panel = dialog.getByTestId('global-search-advanced')
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  await expect(toggle).toHaveAttribute('aria-controls', (await panel.getAttribute('id'))!)
+  await expect(panel).toHaveAttribute('data-open', 'false')
+  // The toggle stays the last chip in the category row.
+  expect(
+    await dialog
+      .locator('.global-search-chips')
+      .evaluate(
+        (row) =>
+          row.lastElementChild ===
+          row.querySelector('[data-testid="global-search-advanced-toggle"]')
+      )
+  ).toBe(true)
+  await expect(dialog.locator('.global-search-list-pane .search-subfilters')).toBeVisible()
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  await expect(panel).toHaveAttribute('data-open', 'true')
+  await expect(dialog.locator('.global-search-list-pane .search-subfilters')).toHaveCount(0)
+  await panel.evaluate(async (el) => {
+    await Promise.all(el.getAnimations().map((animation) => animation.finished))
+  })
+  const island = panel.locator('.search-advanced-island')
+  await expect(island).toBeVisible()
+  const islandGeometry = await island.evaluate((el) => {
+    const style = getComputedStyle(el)
+    const rect = el.getBoundingClientRect()
+    const track = el.closest('.global-search-advanced')!
+    const trackStyle = getComputedStyle(track)
+    const body = el.closest('.global-search-body')!.getBoundingClientRect()
+    const rgb = (value: string): number[] => value.match(/\d+/g)!.map(Number)
+    const [r, g, b] = rgb(style.backgroundColor)
+    const [gr, gg, gb] = rgb(trackStyle.backgroundColor)
+    return {
+      borderRadius: style.borderRadius,
+      borderWidth: style.borderTopWidth,
+      gutterRadiusLeft: trackStyle.borderTopLeftRadius,
+      gutterRadiusRight: trackStyle.borderTopRightRadius,
+      islandLightness: (r + g + b) / 3,
+      gutterLightness: (gr + gg + gb) / 3,
+      gapRight: body.right - rect.right,
+      gapTop: rect.top - body.top,
+      gapBottom: body.bottom - rect.bottom,
+      height: rect.height,
+      bodyHeight: body.height
+    }
+  })
+  expect(islandGeometry.borderRadius).toBe('12px')
+  // No inner border on the island; the gray gutter is rounded on the left side only.
+  expect(islandGeometry.borderWidth).toBe('0px')
+  expect(islandGeometry.gutterRadiusLeft).toBe('12px')
+  expect(islandGeometry.gutterRadiusRight).toBe('0px')
+  // The island matches the other panes' white surface; the light-gray gutter separates it.
+  expect(islandGeometry.islandLightness).toBeGreaterThan(245)
+  expect(islandGeometry.gutterLightness).toBeGreaterThan(200)
+  expect(islandGeometry.gutterLightness).toBeLessThan(islandGeometry.islandLightness - 5)
+  expect(islandGeometry.gapRight).toBeGreaterThanOrEqual(12)
+  expect(islandGeometry.gapTop).toBeGreaterThanOrEqual(12)
+  expect(islandGeometry.gapBottom).toBeGreaterThanOrEqual(12)
+  // The island fills the full body height like the other panes.
+  expect(islandGeometry.height).toBeGreaterThanOrEqual(islandGeometry.bodyHeight - 25)
+  await expect(panel.getByRole('combobox', { name: 'Search scope' })).toBeVisible()
+  await panel.getByRole('combobox', { name: 'Result order' }).click()
+  await page.getByRole('option', { name: 'Recently updated', exact: true }).click()
+  await expect(panel.getByRole('combobox', { name: 'Result order' })).toContainText(
+    'Recently updated'
+  )
+  // Selecting a result while the island is open must not clip the detail pane.
+  await page.evaluate(async () => {
+    await window.api.projects.create({
+      name: 'Island clipping check',
+      description: 'Detail pane geometry fixture',
+      agentContext: ''
+    })
+  })
+  await dialog.getByRole('combobox', { name: 'Global search' }).fill('Island clipping check')
+  const projectHit = dialog.locator('[data-search-group="projects"]').getByRole('option')
+  await expect(projectHit).toHaveCount(1)
+  await projectHit.click()
+  await dialog.locator('.global-search-body').evaluate(async (el) => {
+    await Promise.all(el.getAnimations().map((animation) => animation.finished))
+  })
+  const detailGeometry = await dialog.evaluate(() => {
+    const surface = document.querySelector('.global-search-detail-surface')!.getBoundingClientRect()
+    const track = document.querySelector('.global-search-detail')!.getBoundingClientRect()
+    const islandBox = document.querySelector('.search-advanced-island')!.getBoundingClientRect()
+    return {
+      surfaceWidth: surface.width,
+      trackWidth: track.width,
+      surfaceRight: surface.right,
+      islandLeft: islandBox.left
+    }
+  })
+  expect(detailGeometry.surfaceWidth).toBeLessThanOrEqual(detailGeometry.trackWidth + 1)
+  expect(detailGeometry.surfaceRight).toBeLessThanOrEqual(detailGeometry.islandLeft)
+  await dialog.screenshot({ path: testInfo.outputPath('global-search-advanced-island.png') })
+  await dialog.getByRole('button', { name: 'Collapse details' }).click()
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  await expect(panel).toHaveAttribute('data-open', 'false')
+  await expect(dialog.locator('.global-search-list-pane .search-subfilters')).toBeVisible()
+})
+
 test('uses the same preview and information tabs for generated files', async ({
   app
 }, testInfo) => {

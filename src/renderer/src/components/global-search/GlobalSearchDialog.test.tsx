@@ -655,6 +655,34 @@ describe('GlobalSearchDialog', () => {
     act(() => document.querySelector<HTMLButtonElement>('[aria-label="Collapse details"]')!.click())
     expect(panel.dataset.open).toBe('false')
   })
+  it('toggles the advanced filter island from the chip row and restores the inline filter row', async () => {
+    await renderSearch()
+    const toggle = screen.getByRole('button', { name: 'Advanced filters' })
+    const panel = document.querySelector<HTMLElement>('[data-testid="global-search-advanced"]')!
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    expect(toggle.getAttribute('aria-controls')).toBe(panel.id)
+    expect(panel.dataset.open).toBe('false')
+    expect(panel.getAttribute('aria-hidden')).toBe('true')
+    expect(document.querySelector('.global-search-list-pane .search-subfilters')).not.toBeNull()
+    expect(panel.querySelector('.search-subfilters')).toBeNull()
+    act(() => toggle.click())
+    expect(toggle.getAttribute('aria-expanded')).toBe('true')
+    expect(panel.dataset.open).toBe('true')
+    expect(panel.getAttribute('aria-hidden')).toBe('false')
+    expect(document.querySelector('.global-search-list-pane .search-subfilters')).toBeNull()
+    expect(panel.querySelector('.search-subfilters-stacked')).not.toBeNull()
+    await selectFilter('Search scope', 'Current project')
+    await waitFor(() =>
+      expect(window.api.sessions.searchMessages).toHaveBeenLastCalledWith(
+        expect.objectContaining({ projectIds: ['project-a'] })
+      )
+    )
+    act(() => toggle.click())
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    expect(panel.dataset.open).toBe('false')
+    expect(document.querySelector('.global-search-list-pane .search-subfilters')).not.toBeNull()
+    expect(panel.querySelector('.search-subfilters')).toBeNull()
+  })
   it('searches all projects by default and applies an explicit current-project filter', async () => {
     await renderSearch()
     expect(window.api.projectFiles.searchArtifacts).toHaveBeenCalledWith(
