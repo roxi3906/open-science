@@ -23,6 +23,7 @@
     ],
     "connector_mcp_client": ["src/main/credential-identity/recovery.test.ts"],
     "connector_url_admission": ["src/main/credential-identity/recovery.test.ts"],
+    "desktop_composition": ["scripts/windows-update-notice.test.ts"],
     "durable_files": [
       "src/main/credential-identity/recovery.test.ts",
       "src/main/session-package/literature-source.test.ts",

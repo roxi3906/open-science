@@ -11,6 +11,7 @@ import {
 import { join, resolve } from 'node:path'
 
 import { beforeAll, describe, expect, it } from 'vitest'
+import { compileNsisProbe } from './fixtures/windows-update-notice/nsis-probe'
 
 // Requires the real versioned NSIS fixture built by fixtures/windows-update-notice/build.mjs.
 // Opt in on a Windows desktop at medium integrity. Portable CI does not certify native dialogs.
@@ -27,20 +28,13 @@ describe.skipIf(process.platform !== 'win32' || !makensis)(
       const parent = resolve('tmp/nsis-handoff-regression')
       mkdirSync(parent, { recursive: true })
       const root = mkdtempSync(join(parent, `${name}-`))
-      const source = join(root, 'probe.nsi')
-      const executable = join(root, 'probe.exe')
       const preflight = hook.match(
         / {2}Function ensureExistingUninstallerIsWritable\r?\n[\s\S]*? {2}FunctionEnd/
       )?.[0]
       expect(preflight).toBeDefined()
-      writeFileSync(
-        source,
+      const executable = compileNsisProbe(
+        root,
         [
-          'Unicode true',
-          'RequestExecutionLevel user',
-          'SilentInstall silent',
-          `OutFile "${executable}"`,
-          '!include LogicLib.nsh',
           '!define isUpdated \'"0" == "1"\'',
           '!define isForceRun \'"0" == "1"\'',
           '!define UNINSTALL_FILENAME "fixture-uninstaller.exe"',
@@ -57,13 +51,6 @@ describe.skipIf(process.platform !== 'win32' || !makensis)(
           'SectionEnd'
         ].join('\n')
       )
-      const compile = spawnSync(makensis!, ['/V2', source], {
-        encoding: 'utf8',
-        windowsHide: true,
-        timeout: 30000
-      })
-      expect(compile.error).toBeUndefined()
-      expect(compile.status, compile.stdout + compile.stderr).toBe(0)
       const run = spawnSync(executable, [], { encoding: 'utf8', windowsHide: true, timeout: 30000 })
       expect(run.error).toBeUndefined()
       writeFileSync(

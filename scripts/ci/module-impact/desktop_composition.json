@@ -166,6 +166,7 @@
     "scripts/electron-app-fixture.test.ts",
     "scripts/electron-builder-config.test.ts",
     "scripts/windows-protocol-registration.test.ts",
+    "scripts/fixtures/windows-update-notice/nsis-probe.ts",
     "scripts/electron-fixture-teardown.test.ts",
     "scripts/electron-vite-config.test.ts",
     "src/main/composition/notebook-approvals.ts",
